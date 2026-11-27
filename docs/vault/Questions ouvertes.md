@@ -15,9 +15,6 @@ Mode d'emploi :
 - Les 61 questions ouvertes au 25/11 sont aussi exportées en entier dans `docs/questions/questions-ouvertes-2026-11-25.md` (archive de l'ancienne page).
 
 ## En attente de réponse
-Posée le 27/11 ([[Rago Hub]], [[Branches et environnements]]) :
-- q130 : le hook du Rago Hub (`.claude/`, PR #150 à #152) a été fusionné seulement dans la branche de prod, pas dans `staging`. Voulu, ou faut-il aussi le mettre dans `staging` (les fils partis de `staging` n'ont pas le hook) ?
-
 Posées le 13/11 (option Rago Route à 3 $/mois, [[Offres et prix]]) :
 - q108 : le Lifetime paie-t-il aussi l'option ?
 
@@ -77,7 +74,6 @@ Posées le 11/11 (q78 traitée le même jour : Sofiene a demandé la page de ven
 - q96 : [[Page Souris]] gratuite pour tous ? (codée gratuite ; le réglage « Souris 1:1 » reste Premium)
 - q97 : d'autres sorties que Paris, pour que la page Rago Route les annonce ? ([[Page de vente Rago Route]], [[Infrastructure Rago Route]]).
 - q98 : `CERVEAU_GITHUB_TOKEN` mis dans Railway, et dans quels environnements ? (25/11 : la variable existe dans Railway ; reste à confirmer production et staging, et l'accès du jeton à Rago-Client) ([[Cerveau du vault]], [[Variables d'environnement]]).
-- q99 : avant d'annoncer Rago Route, test P0-9 (3 à 5 comptes de l'équipe par Paris en même temps, puis une semaine normale), message à Hypixel, ou les deux ? La réponse de la FAQ sur les blocages reste cachée en attendant ([[Page de vente Rago Route]], [[Proxy]]).
 - q100 : à la sortie de la 1.3.0, le bouton « Get notified on Discord » de l'encart Rago Route de l'accueil devient « Try 3 days free », disparaît ou reste ? ([[page.html]])
 - q101 : Lifetime inclut-il Rago Route ? Le serveur le donne aujourd'hui à toute licence active ; la page cache « Lifetime includes Rago Route too » en attendant ([[route.html]], [[Paiements Stripe]]).
 - q102 : résilier l'essai depuis le site en 2 clics (lien direct vers la résiliation du portail Stripe, en fin de période), ou écrire « two clicks in the app, or anytime from your account » sur les deux pages ? ([[route.html]], [[page.html]], [[Abonnement dans l'app]])

@@ -10,6 +10,8 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 27/11 | **Hook du [[Rago Hub]] aussi dans `staging`** (q130) : « tu peux également mettre le petit réglage claude dans staging » ; `.claude/` recopié de la prod (`ac4107a`) sans changement | fait le 27/11 ([[Branches et environnements]]) |
+| 27/11 | **Rago Route : avant l'annonce, test P0-9 et message à Hypixel** (q99) : Sofiene choisit les deux, le test P0-9 (3 à 5 comptes de l'équipe en même temps par Paris, puis une semaine normale) **et** un message à Hypixel pour déclarer l'adresse de sortie de Paris ; à suivre comme une tâche du Rago Hub ; la réponse de la FAQ sur les blocages reste cachée jusqu'à la fin du test | DÉCIDÉ, pas fait ([[Page de vente Rago Route]], [[Proxy]]) |
 | 27/11 | **Supabase passe en Pro** (25 $/mois) : « je vais passer en pro dès que j'ai ma paye donc le 01/12 ou le 02/12 » (avant les restrictions possibles du 05/12) | DÉCIDÉ, pas encore fait ([[Supabase]]) |
 | 27/11 | **Questions posées dans le chat du Rago Hub**, plus sur la page artefact « Questions du vault Rago » de l'ancien compte : réponse à q129, « ok continuons comme ça ». Le chef de projet du Hub pose les questions à Sofiene ; elles sont écrites dans [[Questions ouvertes]] et retirées dès qu'il répond | DÉCIDÉ ([[Questions ouvertes]], [[Mettre à jour le vault]]) |
 | 27/11 | **PR #143 fermée sans fusion** : « ferme là alors si elle ne sert à rien » (PR ouverte par erreur vers la prod ; son contenu utile est dans `staging` par la PR #149) | exécuté le 27/11, branche gardée ([[Pull requests]]) |
