@@ -9,7 +9,7 @@ maj: 2026-11-27
 
 Réparations faites **à chaque lancement**, sans rien demander : ce qu'une version précédente a laissé sur le PC et qui peut le faire planter (RAG-67), fausser l'annulation (RAG-68, M2) ou faire saccader le stream Discord (priorité « Haute » des jeux, 13/11). Fiche parente : [[Code de l'app (Rust)]]. Fonctionnalité : [[Réparations au lancement]].
 
-Tout est CONFIRMÉ (code de `staging`, 10/11), sauf la priorité des jeux : écrite le 13/11, mise dans `staging` par la PR #PRNUM du 27/11 (pas encore en prod), **jamais testée sur Windows**. Créé le 16/10 ([[Version 1.1.14]]). Incidents : [[Bugs et incidents]].
+Tout est CONFIRMÉ (code de `staging`, 10/11), sauf la priorité des jeux : écrite le 13/11, mise dans `staging` par la PR #155 du 27/11 (pas encore en prod), **jamais testée sur Windows**. Créé le 16/10 ([[Version 1.1.14]]). Incidents : [[Bugs et incidents]].
 
 ## Rôle et place dans l'ensemble
 - `at_startup(sys, ledger, data_dir)` est appelé par `setup` dans [[lib.rs]] juste après le chargement d'`applied.json`, et par [[reset.rs]] avant la remise de la désinstallation (`load_for_uninstall`). Il reçoit le dossier de données de l'app (avant le 13/11 : le dossier `logs`) : il y trouve `logs\`, et `netopt\` pour le [[Packet Optimizer]] ([[netopt.rs]]).

@@ -39,7 +39,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | `recommend(o, pc, m)` | profil conseillé par « Analyser mon PC » (voir plus bas) |
 | `dscpOf(priority)` | 0 → 0 ; < 20 → 32 ; < 40 → 34 ; < 60 → 40 ; < 90 → 46 ; sinon 48 |
 | `computeNet(o)` | valeurs exactes de Windows (voir plus bas) |
-| `engineText(text, lang)` | traduit en français les titres d'étapes et les libellés du tableau « État actuel » envoyés en anglais par le moteur ; le journal détaillé reste en anglais. Depuis la PR #PRNUM du 27/11 : « Above normal CPU priority for Minecraft » → « Minecraft en priorité processeur supérieure à la normale », « above normal » → « supérieure à la normale » (l'ancien titre « High CPU priority for Minecraft » n'est plus envoyé) |
+| `engineText(text, lang)` | traduit en français les titres d'étapes et les libellés du tableau « État actuel » envoyés en anglais par le moteur ; le journal détaillé reste en anglais. Depuis la PR #155 du 27/11 : « Above normal CPU priority for Minecraft » → « Minecraft en priorité processeur supérieure à la normale », « above normal » → « supérieure à la normale » (l'ancien titre « High CPU priority for Minecraft » n'est plus envoyé) |
 
 ## Fonctionnement détaillé
 
