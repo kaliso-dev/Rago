@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, stripe, rago-route]
 fichier: licensing/src/route-addon.js
 lignes: 199
-maj: 2026-11-14
+maj: 2026-11-27
 ---
 # route-addon.js
 
@@ -19,8 +19,10 @@ maj: 2026-11-14
 - `wantsRoute(session)` : un Checkout du Premium ouvert avec la case Rago Route (métadonnée `route: '1'`).
 - `addRouteWithPremium(db, stripe, cfg, {session, sub, license, trial})` (13/11, sur `staging` depuis le 13/11 au soir) : Premium payé avec la case : crée l'abonnement de l'option (`subscriptions.create`, prix de `routePriceFor` : annuel avec un Premium annuel, mensuel sinon et après un essai, même client, carte de l'abonnement Premium ou la première carte du client, `payment_behavior: 'allow_incomplete'`, `off_session`, métadonnées `product`, `license_id`, `user_id`, `checkout_session`) ; avec l'essai (`trial === 'trial'`, réponse de `settleTrial`), `trial_end` = fin de l'essai du Premium ; clé d'idempotence `rago-route-<session>` ; rien si déjà fait pour ce paiement, si le compte a déjà l'option (`owned`) ou sans prix. Journal `route.added_at_checkout`. Une erreur Stripe est journalisée (`failed`), jamais relancée.
 - `followPremium(db, stripe, sub)` : Premium mis à l'arrêt en fin de période : chaque option du compte ou de la licence qui se renouvellerait après (fin de période ≥ fin du Premium moins un jour) passe en `cancel_at_period_end`, notée `stopped_with_premium` ; Premium repris : ces options reprennent. Rien si le compte garde un autre Premium actif.
-- `createRouteCheckout(stripe, cfg, user, customerId, interval, log)` : le Checkout Stripe de l'option seule, avec la **case des CGV obligatoire** comme le Premium (14/11 : « I agree to the Terms of Sale and ask for immediate access to Rago Route… 14-day right of withdrawal… », lien `terms.html#route` ; si Stripe refuse la case, journalisé et Checkout sans elle) (abonnement au prix de `routePriceFor`, métadonnée `interval`, texte « … $3 a month » ou « … $17.99 a year on top of your Premium », retour sur `/checkout/route`).
-- `stopOrphanRoutes(db, stripe)` : passe horaire ([[server.js]]) ; annule dans Stripe une option encore active sans Premium actif, ni pour son compte, ni pour sa licence, ni pour le compte qui a rattaché cette licence (journal `route.subscription_stopped`).
+- `createRouteCheckout(stripe, cfg, user, customerId, interval, log, { lifetime })` : le Checkout Stripe de l'option seule, avec la **case des CGV obligatoire** comme le Premium (14/11 : « I agree to the Terms of Sale and ask for immediate access to Rago Route… 14-day right of withdrawal… », lien `terms.html#route` ; si Stripe refuse la case, journalisé et Checkout sans elle) (abonnement au prix de `routePriceFor`, métadonnée `interval`, texte « … $3 a month » ou « … $17.99 a year on top of your Premium », retour sur `/checkout/route`). Pour un Lifetime payé (`lifetime: true`, 27/11) : métadonnée `plan: lifetime` et texte « a separate subscription, also for Lifetime. $3 a month, on top of your Lifetime. Cancel anytime from your account. ».
+- `stopOrphanRoutes(db, stripe)` : passe horaire ([[server.js]]) ; annule dans Stripe une option encore active sans Premium actif, ni pour son compte, ni pour sa licence, ni pour le compte qui a rattaché cette licence (journal `route.subscription_stopped`). Aussi appelée par le webhook juste après un remboursement ou un litige qui révoque une licence (27/11), pour qu'un Lifetime remboursé perde son option tout de suite.
+- `routeOfCharge(db, stripe, charge)` (27/11) : l'option payée par une charge remboursée ou contestée, retrouvée par sa facture (`charge.invoice`, ou `invoicePayments.list` du payment intent), sinon `null` (jamais d'exception).
+- `stopRouteForCharge(db, stripe, route, reason)` (27/11) : annule tout de suite cette option seule (jamais le Premium ni le Lifetime), journal `route.subscription_stopped` avec `by: refunded|disputed` ; une erreur Stripe (autre que « introuvable ») est relancée pour que Stripe renvoie l'événement.
 
 ## Liens avec le reste
 - [[app.js]] : `/buy/route`, `/checkout/route`, bloc « Rago Route » de la page compte ([[views.js]]), et `/api/v1/route/token`, qui demande l'option en production (erreur `route_option`, 402) ; sur le serveur de test, les comptes `ROUTE_TESTERS` n'ont pas à la payer.

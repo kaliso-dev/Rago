@@ -44,7 +44,7 @@ const API_ERRORS = {
   // Rago Route (2026-11-08)
   route_closed: [403, "Rago Route isn't open to this account yet."],
   // Rago Route option (2026-11-13): $3 a month on top of Premium
-  route_option: [402, 'Rago Route is an option: $3 a month or $17.99 a year on top of Premium. Add it from your account, then turn Rago Route on again.'],
+  route_option: [402, 'Rago Route is a separate subscription, also for Lifetime: $3 a month or $17.99 a year on top of Premium. Add it from your account, then turn Rago Route on again.'],
   rate_limited: [429, 'Too many attempts. Wait a few minutes and try again.'],
   // Sign-in to the app through the browser, with Google or Discord (2026-11-04)
   no_subscription: [404, 'There is no subscription to change on this account.'],
@@ -488,6 +488,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
   }
 
   // ---------- Rago Route option (2026-11-13): $3 a month or $17.99 a year, for an account with an active Premium ----------
+  // Lifetime included and never free (Sofiene, 2026-11-27: « il faut que rago route soit un abonnement à prendre en plus du lifetime »).
   // The app's Rago Route tab sends here (signed in on the site first). Its own subscription, paid with the same Stripe
   // customer as Premium when there is one, so the account's portal shows both. It stops with Premium (hourly sweep).
   app.get('/buy/route', requireUser, async (c) => {
@@ -501,7 +502,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     // ?interval=month|year picks; without it, like the Premium (yearly with a yearly Premium, monthly otherwise).
     const asked = c.req.query('interval');
     const interval = asked === 'year' || asked === 'month' ? asked : license.plan === 'year' ? 'year' : 'month';
-    const session = await RO.createRouteCheckout(stripe, cfg, user, previous?.stripe_customer_id || null, interval, log);
+    // Lifetime (2026-11-27): the option alone too, its own subscription tied to the account.
+    const session = await RO.createRouteCheckout(stripe, cfg, user, previous?.stripe_customer_id || null, interval, log, { lifetime: L.paidLifetime(license) });
     return c.redirect(session.url, 303);
   });
 
@@ -875,7 +877,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     owned: ['notice', 'You already have Rago Optimizer Premium. No need to buy it twice.'],
     route: ['notice', 'Rago Route is added to your Premium. Turn it on from the Rago Route tab of the app.'],
     routeowned: ['notice', 'Rago Route is already part of your Premium.'],
-    routenopremium: ['error', 'Rago Route is an option of Premium: get Premium first, then add Rago Route.'],
+    routenopremium: ['error', 'Rago Route is an option of Premium (monthly, yearly or Lifetime): get Premium first, then add Rago Route.'],
     routesoon: ['error', 'The Rago Route option opens soon. Try again later.'],
     reset: ['notice', 'Device freed. Sign in to Rago Optimizer on your new PC to activate it.'],
     duplicate: ['error', V.html`This account already has Premium, so the new purchase was not added and its subscription was stopped. ${V.supportLink(cfg, 'Contact support on Discord')} to get the extra payment back.`],
@@ -1440,8 +1442,9 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
     // Device freed or re-bound since this license token was issued.
     if (license.token_version !== claims.tv) return fail(c, 'invalid_token');
     if (cfg.staging && !cfg.routeTesters.includes(user.email)) return fail(c, 'route_closed');
-    // The option ($3 a month, 2026-11-13). The testers of the test server (ROUTE_TESTERS) don't pay for it there, and
-    // the free trial of Premium has everything, Rago Route included, until it ends.
+    // The option ($3 a month, 2026-11-13), for every plan, Lifetime included (2026-11-27). The testers of the test
+    // server (ROUTE_TESTERS) don't pay for it there, and the free trial of Premium has everything, Rago Route
+    // included, until it ends.
     const option = cfg.staging ? null : await RO.routeOption(db, user.id);
     const trial = cfg.staging || option ? null : await RO.trialEnd(db, license, cfg.trialDays);
     if (!cfg.staging && !option && !trial) return fail(c, 'route_option');

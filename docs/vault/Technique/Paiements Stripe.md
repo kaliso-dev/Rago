@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, serveur, stripe, paiement]
-maj: 2026-11-14
+maj: 2026-11-27
 ---
 # Paiements Stripe
 
@@ -43,6 +43,9 @@ Décidé par Sofiene le 04/11. `GET /buy?trial=1` : carte demandée (`payment_me
 - **Produit live « Rago Route »** : description passée en anglais le 14/11 (« Rago Optimizer Premium option: the anti-lag tunnel for Minecraft (beta). »), car Stripe l'affiche sur sa page de paiement. Deux sessions Checkout live d'aperçu créées par Claude le 14/11 pour les captures (`metadata.preview`), jamais payées, expirent seules le 15/11 (le connecteur ne sait pas les fermer avant).
 - **Constaté le 14/11 dans le portail live** (q111) : « Changer de formule » laisse aussi changer la **quantité** du Premium (`adjustable_quantity`), ce qui ferait payer plusieurs Premium pour une seule licence ; proposé à Sofiene de le couper (pas encore fait).
 - **Premium annulé** (depuis le compte, l'app ou le portail, `cancel_at_period_end`) : une option qui se renouvellerait après la fin du Premium est mise à l'arrêt en même temps (`followPremium`, colonne `stopped_with_premium`) ; un essai annulé à temps ne coûte donc rien pour Rago Route non plus. Premium repris : l'option reprend. Pas si le compte garde un autre Premium (Lifetime).
+- **Lifetime (27/11, PR #157 vers `staging`, non fusionnée)** : Sofiene, « il faut que rago route soit un abonnement à prendre en plus du lifetime » (réponse à q101 et q108). Le Lifetime n'a pas d'abonnement Stripe où accrocher l'option : il la prend **seule**, par `/buy/route` (même parcours que « Already Premium? » : Checkout en mode `subscription` sur `STRIPE_PRICE_ROUTE` ou `STRIPE_PRICE_ROUTE_YEARLY`, mensuel par défaut, client Stripe du Lifetime, métadonnées `product: rago-route`, `user_id`, `plan: lifetime`, texte « a separate subscription, also for Lifetime »). Rattachée au compte (`user_id`), elle tourne tant que le Lifetime est actif ; `followPremium` ne la touche pas (pas d'abonnement Premium) ; `/route/token` la demande comme pour tout Premium (déjà le cas dans le code de la 1.3.0 en prod, voir plus bas). Cas limites : un Lifetime qui l'a déjà → `/account?n=routeowned` ; paiement de l'option raté → Rago Route reste tant que Stripe réessaie (`past_due`), s'arrête en `unpaid` ou `canceled`, revient s'il est payé ; **Lifetime remboursé ou contesté** → licence révoquée et option annulée tout de suite dans le webhook (`stopOrphanRoutes` appelé après `revokeForCharge`, plus d'attente de la passe horaire) ; Lifetime révoqué à la main (`npm run admin -- revoke`) → option annulée à la passe horaire. Une licence offerte (`source: grant`, plan `lifetime`) garde les textes « Premium ».
+- **Remboursement ou litige d'un paiement de l'option** (corrigé le 27/11) : `routeOfCharge` retrouve l'abonnement payé par la facture de la charge (`charge.invoice`, ou `invoicePayments.list` du payment intent sur les versions récentes de l'API) ; si c'est une option, **seule l'option** est annulée (`stopRouteForCharge`, audit `route.subscription_stopped` avec `by: refunded|disputed`). Avant, `revokeForCharge` révoquait aussi le Premium mensuel ou annuel du même client Stripe. Une erreur Stripe à l'annulation fait échouer le webhook, que Stripe renvoie.
+- **Les 5 Lifetime vendus** : d'après le code de la branche de prod (1.3.0, 22/11), `/route/token` demande déjà l'option à toute licence hors essai, Lifetime compris : ils n'ont donc **pas** Rago Route gratuit aujourd'hui et ne perdent rien à la mise en prod de cette PR. La consigne du 27/11 disait l'inverse (« ils perdront Rago Route ») : **À VÉRIFIER** avec Sofiene (un Lifetime a-t-il eu Rago Route sans l'option ? veut-il les prévenir que l'option existe pour eux ?).
 - Webhook : `checkout.session.completed` et les événements d'abonnement d'une option vont dans la table `route_subscriptions` ([[Table route_subscriptions]], [[route-addon.js]]), jamais dans `licenses`.
 - Passe horaire : une option encore active sans Premium actif est annulée dans Stripe (`stopOrphanRoutes`).
 
@@ -52,7 +55,7 @@ Les 10 événements à cocher dans la destination Stripe (`WEBHOOK_EVENTS`) :
 |---|---|
 | `checkout.session.completed`, `checkout.session.async_payment_succeeded` | Crée la licence (si payée), règle l'essai, e-mail d'achat, arrête l'abonnement remplacé par un Lifetime |
 | `customer.subscription.created`, `.updated`, `.deleted`, `.paused`, `.resumed`, `invoice.paid` | **Relit l'abonnement chez Stripe** (l'ordre d'arrivée n'importe pas) puis `syncSubscription` : plan, fin de période, résiliation prévue ; `active`, `trialing` ou `past_due` = Premium ; sinon licence `revoked` (`subscription_ended`) ; un abonnement qui redevient actif rend la licence |
-| `charge.refunded` (remboursement **total** seulement), `charge.dispute.created` | Licence révoquée (`refunded` / `disputed`), parrainage annulé, abonnement Stripe annulé |
+| `charge.refunded` (remboursement **total** seulement), `charge.dispute.created` | Paiement d'une option Rago Route : seule l'option est annulée (27/11). Sinon : licence révoquée (`refunded` / `disputed`), parrainage annulé, abonnement Stripe annulé, options Rago Route du compte annulées tout de suite |
 
 - Signature vérifiée avec `STRIPE_WEBHOOK_SECRET` ; refus journalisé au plus toutes les 10 min.
 - Un événement d'un autre mode (test reçu par le serveur live ou l'inverse) est accusé mais **jamais appliqué**.

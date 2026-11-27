@@ -3,7 +3,7 @@ import Stripe from 'stripe';
 import { audit } from './db.js';
 import { fulfillCheckoutSession, revokeForCharge, setLicenseStatus, syncSubscription } from './licensing.js';
 import { codeFull, getAffiliate, voidReferrals } from './affiliates.js';
-import { addRouteWithPremium, followPremium, isRouteCheckout, isRouteSubscription, routePriceText, syncRouteSubscription } from './route-addon.js';
+import { addRouteWithPremium, followPremium, isRouteCheckout, isRouteSubscription, routeOfCharge, routePriceText, stopOrphanRoutes, stopRouteForCharge, syncRouteSubscription } from './route-addon.js';
 
 export function createStripe(cfg) {
   return cfg.stripeSecretKey ? new Stripe(cfg.stripeSecretKey) : null;
@@ -414,11 +414,17 @@ export async function handleStripeEvent(db, event, { stripe, cfg = {}, onLicense
       // Full refunds only; a partial refund (e.g. a goodwill discount) keeps the license.
       if (event.type === 'charge.refunded' && !obj.refunded) break;
       const reason = event.type === 'charge.refunded' ? 'refunded' : 'disputed';
+      // A Rago Route payment (2026-11-27): only the option stops. Before, its refund revoked the monthly or yearly
+      // Premium of the same Stripe customer.
+      const route = await routeOfCharge(db, stripe, obj, log);
+      if (route) { label = `route:${await stopRouteForCharge(db, stripe, route, reason, log)}`; break; }
       let customer = idOf(obj.customer);
       if (!customer && obj.charge && stripe) customer = idOf((await stripe.charges.retrieve(idOf(obj.charge))).customer);
       const revoked = await revokeForCharge(db, { paymentIntent: idOf(obj.payment_intent), customer }, reason);
       await voidReferrals(db, revoked.map((l) => l.id), reason);
       await cancelSubscriptions(stripe, revoked, log);
+      // A refunded Lifetime (or subscription) with Rago Route: the option stops now, not at the hourly sweep.
+      if (revoked.length) await stopOrphanRoutes(db, stripe, log);
       label = `revoked:${revoked.length}`;
       break;
     }

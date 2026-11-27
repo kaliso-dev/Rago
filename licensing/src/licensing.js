@@ -242,7 +242,7 @@ const activeLicenseForUser = (db, userId) =>
 
 const SUBSCRIPTION_PLANS = ['month', 'year'];
 /** A Lifetime bought with Stripe (2026-10-16), which replaces a subscription. A Lifetime given by the team doesn't. */
-const paidLifetime = (lic) => lic?.plan === 'lifetime' && (lic.source ?? 'stripe') === 'stripe';
+export const paidLifetime = (lic) => lic?.plan === 'lifetime' && (lic.source ?? 'stripe') === 'stripe';
 
 /**
  * Whether the account's active license stops the purchase `incoming` ({ plan, source }; none: a subscription). An

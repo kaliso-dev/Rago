@@ -4,6 +4,9 @@
 // 6 months free like Premium, so yearly Premium with the option stays well under Lifetime).
 // Its own subscription, not an item of the Premium one: Stripe puts only one billing interval in a subscription, and
 // yearly and Lifetime players buy it too. /route/token asks for an active Premium AND an active option.
+// Lifetime too (Sofiene, 2026-11-27, q101 and q108: « il faut que rago route soit un abonnement à prendre en plus du
+// lifetime »): a Lifetime has no Stripe subscription to hang the option on, so it buys it alone (/buy/route), tied to
+// the account; it goes on as long as the Lifetime stays active, and stops right away when the Lifetime is refunded.
 import { audit } from './db.js';
 import { subscriptionFacts } from './licensing.js';
 
@@ -140,7 +143,7 @@ export async function followPremium(db, stripe, sub, log = console) {
   return n;
 }
 
-/** Checkout for the option alone, monthly or yearly (routePriceFor), for a signed-in account with Premium. */
+/** Checkout for the option alone, monthly or yearly (routePriceFor), for a signed-in account with Premium (Lifetime included). */
 // EU law, like Premium (billing.js termsText): immediate access only waives the 14-day withdrawal right if the buyer asks.
 const routeTermsText = (cfg) => `I agree to the [Terms of Sale](${cfg.siteUrl}/terms.html#route) and ask for immediate access to Rago Route. I understand I lose my 14-day right of withdrawal once it starts, and that payments aren't refunded.`;
 
@@ -148,10 +151,12 @@ const routeTermsText = (cfg) => `I agree to the [Terms of Sale](${cfg.siteUrl}/t
  * The Checkout of the option alone, with the required terms checkbox like Premium. Stripe refuses that checkbox until
  * the Terms URL is set in its dashboard: then it is logged and the checkout still opens.
  */
-export async function createRouteCheckout(stripe, cfg, user, customerId, interval = 'month', log = console) {
+export async function createRouteCheckout(stripe, cfg, user, customerId, interval = 'month', log = console, { lifetime = false } = {}) {
   const choice = routePriceFor(cfg, interval);
-  const metadata = { product: ROUTE_PRODUCT, user_id: user.id, interval: choice.interval };
-  const submit = { message: `Rago Route, the anti-lag tunnel for Minecraft: ${routePriceText(choice.interval)} on top of your Premium. Cancel anytime from your account. It stops with your Premium.` };
+  const metadata = { product: ROUTE_PRODUCT, user_id: user.id, interval: choice.interval, ...(lifetime ? { plan: 'lifetime' } : {}) };
+  const submit = { message: lifetime
+    ? `Rago Route, the anti-lag tunnel for Minecraft: a separate subscription, also for Lifetime. ${routePriceText(choice.interval)}, on top of your Lifetime. Cancel anytime from your account.`
+    : `Rago Route, the anti-lag tunnel for Minecraft: ${routePriceText(choice.interval)} on top of your Premium. Cancel anytime from your account. It stops with your Premium.` };
   const build = (terms) => stripe.checkout.sessions.create({
     mode: 'subscription',
     line_items: [{ price: choice.price, quantity: 1 }],
@@ -196,4 +201,48 @@ export async function stopOrphanRoutes(db, stripe, log = console) {
     }
   }
   return n;
+}
+
+/**
+ * The option a charge paid for (refund or dispute of a Rago Route payment), or null. Found through the charge's
+ * invoice: `charge.invoice` on older Stripe API versions, the invoice payments of its payment intent on newer ones.
+ * Never throws: a Stripe error means « not an option payment » and the Premium rules apply.
+ */
+export async function routeOfCharge(db, stripe, charge, log = console) {
+  if (!stripe || !charge) return null;
+  try {
+    let invoice = idOf(charge.invoice);
+    const pi = idOf(charge.payment_intent);
+    if (!invoice && pi && stripe.invoicePayments?.list) {
+      invoice = idOf((await stripe.invoicePayments.list({ payment: { type: 'payment_intent', payment_intent: pi }, limit: 1 }))?.data?.[0]?.invoice);
+    }
+    if (!invoice) return null;
+    const inv = typeof charge.invoice === 'object' && charge.invoice?.id === invoice ? charge.invoice : await stripe.invoices.retrieve(invoice);
+    const subId = idOf(inv?.parent?.subscription_details?.subscription ?? inv?.subscription);
+    return subId ? await db.get('SELECT * FROM route_subscriptions WHERE stripe_subscription_id = ?', [subId]) : null;
+  } catch (err) {
+    log.error?.('[stripe] charge not matched to a Rago Route option:', err.message);
+    return null;
+  }
+}
+
+/**
+ * A Rago Route payment refunded in full or disputed: only the option stops (now, in Stripe and here), never the
+ * Premium or the Lifetime it was added to. A Stripe error is thrown (Stripe retries the event). Returns the status.
+ */
+export async function stopRouteForCharge(db, stripe, route, reason, log = console) {
+  try {
+    const sub = await stripe.subscriptions.cancel(route.stripe_subscription_id);
+    await syncRouteSubscription(db, sub, route.user_id);
+  } catch (err) {
+    if (err?.statusCode === 404 || err?.code === 'resource_missing') {
+      await db.run("UPDATE route_subscriptions SET status = 'canceled', updated_at = ? WHERE stripe_subscription_id = ?", [Date.now(), route.stripe_subscription_id]);
+    } else {
+      // Thrown: the webhook answers an error and Stripe sends the event again, so the option is never left billing.
+      log.error?.(`[stripe] Rago Route option ${route.stripe_subscription_id} not canceled after ${reason}:`, err.message);
+      throw err;
+    }
+  }
+  await audit(db, 'route.subscription_stopped', { userId: route.user_id, licenseId: route.license_id, detail: { subscription: route.stripe_subscription_id, by: reason } });
+  return 'canceled';
 }

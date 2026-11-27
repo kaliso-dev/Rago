@@ -230,7 +230,7 @@ export function loginPage(cfg, { email = '', error, notice, purchased = false, n
     : String(next || '').startsWith('/buy/route') && !purchased
       ? html`<p class="overline rise">Rago Route</p>
         <h1 class="display rise d1">Welcome back.</h1>
-        <p class="lede rise d2">Sign in with your Premium account to add Rago Route. You pay on Stripe next, then turn it on from the Rago Route tab of the app.</p>`
+        <p class="lede rise d2">Sign in with your Premium or Lifetime account to add Rago Route. You pay on Stripe next, then turn it on from the Rago Route tab of the app.</p>`
     : html`<p class="overline rise">${purchased ? 'Rago Optimizer Premium' : 'Rago Optimizer account'}</p>
       <h1 class="display rise d1">${purchased ? 'Payment confirmed.' : 'Welcome back.'}</h1>
       <p class="lede rise d2">${purchased ? 'Sign in and we add the license to your account.' : 'Sign in to get your license key and download Rago Optimizer.'}</p>`;
@@ -628,17 +628,19 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
   };
 
   // Rago Route option (2026-11-13): $3 a month or $17.99 a year on top of Premium, its own subscription, managed in the same portal.
+  // A paid Lifetime takes it too, as its own subscription (2026-11-27). A granted license keeps the Premium wording.
+  const lifetimePlan = license?.plan === 'lifetime' && (license.source ?? 'stripe') === 'stripe';
   const routeSect = () => {
     if (!active || (!routeOption && !routeOnSale)) return '';
     const end = routeOption && Number(routeOption.current_period_end);
     if (routeOption) {
       const stops = routeOption.cancel_at_period_end;
       return sect('sect-route', html`<p class="overline">Rago Route</p><span class="badge ${stops ? 'badge-off' : 'badge-ok'}"><i></i>${stops ? `Stops ${end ? fmtDate(end) : 'soon'}` : 'Active'}</span>`,
-        html`<p class="muted small">The anti-lag tunnel for Minecraft, ${routeOption.billing_interval === 'year' ? '$17.99 a year' : '$3 a month'} on top of your Premium.${end ? ` ${stops ? 'It stops on' : 'Next payment on'} ${fmtDate(end)}.` : ''} It stops with your Premium.</p>`,
+        html`<p class="muted small">The anti-lag tunnel for Minecraft, ${routeOption.billing_interval === 'year' ? '$17.99 a year' : '$3 a month'} on top of your ${lifetimePlan ? 'Lifetime' : 'Premium'}.${end ? ` ${stops ? 'It stops on' : 'Next payment on'} ${fmtDate(end)}.` : ''}${lifetimePlan ? ' Cancel anytime: your Lifetime stays.' : ' It stops with your Premium.'}</p>`,
         html`<form method="post" action="/account/billing" class="inline" data-busy="Opening…"><button class="btn btn-ghost btn-sm" type="submit">${ICON.card}<span>Manage or cancel</span></button></form>`);
     }
     return sect('sect-route', html`<p class="overline">Rago Route</p><span class="badge badge-off"><i></i>Option</span>`,
-      html`<p class="muted small">The anti-lag tunnel for Minecraft (beta): your game goes through the Rago servers by several paths at once, and lost packets are sent again right away. ${routeYearly ? '$3 a month or $17.99 a year (6 months free)' : '$3 a month'} on top of your Premium, cancel anytime.</p>`,
+      html`<p class="muted small">The anti-lag tunnel for Minecraft (beta): your game goes through the Rago servers by several paths at once, and lost packets are sent again right away. ${lifetimePlan ? 'Rago Route is a separate subscription, also for Lifetime: ' : ''}${routeYearly ? '$3 a month or $17.99 a year (6 months free)' : '$3 a month'} on top of your ${lifetimePlan ? 'Lifetime' : 'Premium'}, cancel anytime.</p>`,
       routeYearly
         ? html`<a class="btn btn-primary btn-sm" href="/buy/route?interval=year">Add Rago Route · $17.99/year</a> <a class="btn btn-ghost btn-sm" href="/buy/route?interval=month">$3/month</a>`
         : html`<a class="btn btn-primary btn-sm" href="/buy/route?interval=month">Add Rago Route · $3/month</a>`);

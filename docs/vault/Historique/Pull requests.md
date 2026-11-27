@@ -174,6 +174,7 @@ Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08
 | 152 | Rago Hub : hook v3 (tâches en direct, texte en cours, outils hub.py) | `rago-hub-hook` → prod | 26/11 11:22 | 26/11 11:24 | fusionnée | [[Rago Hub]] ; recopiée dans `staging` le 27/11 ; dernier commit de la prod au 27/11 (`ac4107a`) | Rago Hub (À VÉRIFIER) |
 | 153 | Vault : version finale regroupée sur staging | `vault-final` → `staging` | 26/11 18:56 | 26/11 19:00 | fusionnée | Vault regroupé avant le passage au nouveau compte ; reprend les #71 et #106 | Rago Hub (chef) |
 | 154 | Vault : PR #143 fermée, PR #71/#106 fermées, Rago Hub en prod | `claude/pr143-vault-update-8po627` → `staging` | 27/11 | 27/11 | fusionnée | Vault seulement (et point 4 de `CLAUDE.md`) | Rago Hub (fil HUB-767f02) |
+| 157 | Rago Route : abonnement à part aussi pour le Lifetime | `claude/rago-route-lifetime-subscription-wpg03a` → `staging` | 27/11 | — | ouverte | Décision du 27/11 (q101, q108) : option Rago Route seule pour un Lifetime, remboursement d'un paiement de l'option sans toucher au Premium, site et vault ([[Paiements Stripe]]) ; les #154 à #156 sont décrites par leurs fils | fil HUB-d1451f |
 | 158 | Hook Rago Hub dans staging (q130) + vault : q130 et q99 traitées | `claude/pr143-vault-update-8po627` → `staging` | 27/11 | 27/11 | fusionnée | `.claude/` recopié de la prod (`ac4107a`) ; vault | Rago Hub (fil HUB-767f02) |
 
 ## Ce qui est arrivé sur `staging` sans PR
