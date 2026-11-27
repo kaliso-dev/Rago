@@ -1,7 +1,7 @@
 ---
 type: référence
 tags: [sources]
-maj: 2026-11-12
+maj: 2026-11-27
 ---
 # Sources
 
@@ -11,7 +11,7 @@ Où trouver le détail que ce vault résume. Retour à [[Projet]].
 `README.md`, `DEVELOPPEMENT.md`, `licensing/docs/MISE-EN-LIGNE.md` ([[Publier une version]]), `app/docs/CORRECTIONS.md` ([[Catalogue des tweaks]]), `brand/` ([[Charte graphique]]).
 
 ## Dossier partagé du projet Claude (`/mnt/project-files/`)
-Les fils du projet Claude y ont accès, mais pas ce dépôt. Le dossier est en **lecture seule** et les gros fichiers y restent.
+Les fils du projet Claude y ont accès, mais pas ce dépôt. Le dossier est en **lecture seule** et les gros fichiers y restent. **Copie (27/11)** : tout ce dossier, sauf `refonte-design/` (laissé volontairement), est téléchargé sur le Mac de Sofiene dans `/Users/kaliso/Desktop/Rago data ` ([[Reprendre sur un nouveau compte Claude]]).
 
 Liste complète au **10/11/2026**, dossier par dossier, plus `rago-route-page/` (11/11) ; les dossiers `admin/`, `cerveau/` et `synapse/` (modifiés le 10/11) et `conseils-jeu/`, `couleurs-resolution/`, `presets-graphiques/` et `souris/` (11/11) n'y sont pas encore décrits. Chaque dossier renvoie à la note qui l'exploite.
 
@@ -29,6 +29,11 @@ Liste complète au **10/11/2026**, dossier par dossier, plus `rago-route-page/` 
 | `rago-route-page/` | `version-gameplay/` : la version actuelle du 11/11 (haut de page sur ordinateur et sur téléphone, planche des animations du fonctionnement) ; à la racine : la version du matin avant ses corrections (vidéo de la page, 1 min 38, et 4 captures) ; `refonte/` : 4 captures de la refonte du 11/11 après-midi, remplacée (celle encore sur `staging`) ; `refonte/analyses/` : les 8 analyses (produit et code, preuves, problèmes des joueurs, ExitLag, autres outils, charte, critique de la page, offre) | [[Page de vente Rago Route]] |
 | `rago-route/` | `install.sh` du 08/11, **identique** à `proxy/install.sh` du dépôt au 10/11 | [[Infrastructure Rago Route]] |
 | `refonte-glass/` | les 6 documents de la 1.2.0, captures, `installateur-test/`, `optimisations-sources/` (fichiers de Sofiene du 21/10) | [[Documents de la 1.2.0]], [[Version 1.2.0]], [[Refonte glass]] |
+| `refonte-design/` | captures de chaque page et état (site, compte, e-mails, admin, Cerveau, app) faites du 14 au 21/11 sur `staging` (`907c95e`), inventaires, `constats-design.md` (381 défauts), `textes-hors-ecran.md`, plugin Figma (3,6 Go). Non emporté sur le nouveau compte (Sofiene, 25/11 ; absent de `Rago data `) : reste sur l'ancien | [[New Brand Rago]] |
+| `sortie-1.3.0/` | exe de prod 1.3.0 et son `.sig` (run 270), zip, annonces Discord (`annonce-everyone.txt`, `annonce-premium.txt`, `salon-rago-route.txt`), GIF et captures Rago Route avant / avec | [[Version 1.3.0]] |
+| `stream-discord/` | correctif **jamais poussé** des saccades du stream Discord (`stream-discord-correctif-complet.patch`) et son patch de vault | [[Bugs et incidents]] |
+| `support-clients/` | `premium-detail-bedrock.md` : détail du Premium pour un client Bedrock (22/11), en anglais et en français | [[Offres et prix]] |
+| `vault-patches/` | patchs du 11 au 14/11 (Rago Route option et page, prix, 4G gardée avec le Wi-Fi, polices), déjà dans `staging` | [[Journal]] |
 | `site/` | `rago-route/` : captures de la page et de la section Rago Route du site (07/11) | [[Site]] |
 | `site-1.2/` | captures et aperçu vidéo de la section Nouveautés de la 1.2 (19 et 20/10) | [[Site]] |
 | `stripe/` | `ventes-stripe-2026-11-04.md` : copie de la note des ventes du 04/11 | [[Ventes Stripe]] |
@@ -44,6 +49,8 @@ Supprimés le 10/11 à la demande de Sofiene (q58) :
 - les anciens patchs `vault/maj-*`, sauf `maj-2026-11-10-point/`, qui est encore là.
 
 ## Ailleurs
+- Dossier partagé du projet Claude « [[New Brand Rago]] » : `rago-redesign/` (maquettes v5 `rendus-v5/`, kit `marque/`, scripts `outils/`, captures `app-strict/`, `images/` et `sources.md`). Pas visible depuis ce projet.
+- Passage sur un nouveau compte Claude (25/11) : ce qu'il faut emporter, [[Reprendre sur un nouveau compte Claude]].
 - Artefacts GitHub Actions (exe) : expirent après 90 jours ; ceux de la 1.1.10 le 08/01/2027.
 - Docs Claude : script YouTube « What's new » ([[Vidéos YouTube]]).
 - Artefacts Claude cités par l'étude de marché : rapport « Rago : le marché et la nouvelle app » et fonctions de la dernière maquette ([[Étude de marché de novembre 2026]]).

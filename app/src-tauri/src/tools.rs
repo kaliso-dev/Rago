@@ -721,7 +721,7 @@ pub fn power_plans() -> Vec<PowerPlan> {
         .stdout(Stdio::piped())
         .stderr(Stdio::null())
         .output()
-        .map(|o| parse_powercfg_list(&String::from_utf8_lossy(&o.stdout)))
+        .map(|o| parse_powercfg_list(&shell::decode_output(&o.stdout)))
         .unwrap_or_default()
 }
 

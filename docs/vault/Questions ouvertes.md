@@ -1,21 +1,20 @@
 ---
 type: pilotage
 tags: [pilotage, à-décider, à-vérifier]
-maj: 2026-11-25
+maj: 2026-11-27
 ---
 # Questions ouvertes
 
 Ce que le vault ne sait pas encore. **Retirer chaque question dès que Sofiene y répond**, et mettre à jour les notes concernées ([[Mettre à jour le vault]]). Voir [[Décisions]] et [[État actuel]].
 
-**Où Sofiene répond** : la page « Questions du vault Rago » (https://claude.ai/artifact/1mqjZuFNVqGT5JhBmG6HPk). Règle du 01/11 : **dès qu'un Claude a une question, il l'ajoute lui-même sur cette page, sans attendre ni demander dans le fil** (« désormais tu devras le faire automatiquement »).
+**Où Sofiene répond** (décision du 27/11, réponse à q129 : « ok continuons comme ça ») : dans le **chat du Rago Hub**. La page artefact « Questions du vault Rago » de l'ancien compte est abandonnée ([[Décisions]]). Règle du 01/11, toujours valable : **dès qu'un Claude a une question, il la pose lui-même, sans attendre** (« désormais tu devras le faire automatiquement »).
 
-Mode d'emploi (outil ArtifactData, collection `questions`) :
-- **Poser** : créer un document `qNN` (numéro suivant) avec `num`, `titre`, `question`, `contexte` (ce qu'on sait, en une phrase), `choix` (2 à 4 réponses courtes ; « Je ne sais pas » est ajouté par la page), `precision` (facultatif, texte d'aide du champ libre), `statut: "ouverte"`, `reponse: {choix: null, texte: ""}`. Une question = un sujet, en mots simples.
-- **Lire** : au début de chaque tâche, lister les questions `ouverte` qui ont une réponse (`reponse.choix` ou `reponse.texte`).
-- **Traiter** : mettre le vault à jour selon la réponse, puis passer la question en `statut: "traitée"` avec `traitement` (ce qui a été fait, en une phrase). Si la réponse demande une précision, réécrire `question` et `contexte`, vider `reponse` et laisser `ouverte`.
-- Dire à Sofiene dans le fil, en une ligne, quand de nouvelles questions l'attendent.
+Mode d'emploi :
+- **Poser** : ajouter la question ici, avec le numéro suivant (`qNN`), une ligne : la question en mots simples et la note concernée ; écrire « À VÉRIFIER » dans la note en attendant ; puis la transmettre à Sofiene par le chef de projet du Rago Hub (commande `chef` de `.claude/hooks/hub.py`), en une ligne.
+- **Traiter** : dès que Sofiene répond, mettre le vault à jour selon la réponse ([[Décisions]] si c'est une décision) et **retirer** la question de cette note.
+- Les 61 questions ouvertes au 25/11 sont aussi exportées en entier dans `docs/questions/questions-ouvertes-2026-11-25.md` (archive de l'ancienne page).
 
-## En attente de réponse sur la page
+## En attente de réponse
 Posées le 13/11 (option Rago Route à 3 $/mois, [[Offres et prix]]) :
 - q108 : le Lifetime paie-t-il aussi l'option ?
 
@@ -31,18 +30,25 @@ Posées le 23/11, pendant la refonte de l'app sur les maquettes v5 (fil « refon
 - q116 : échec du nettoyage de la RAM écrit en vert dans la barre en jeu ([[Overlay.tsx]]).
 - q117 : le Packet Optimizer en gratuit montre l'écran verrouillé avec les 4 outils gratuits, au lieu de l'écran « part of Premium » ([[Packet Optimizer]], [[NetOpt.tsx]]).
 
-Posée le 24/11, après la réunion de Rago Route en une seule section de l'accueil :
-- q118 : ce que devient la section « Three ways in », qui garde ses trois démos mais plus de globe ([[page.html]]).
-- q119 : les flux d'Asie s'arrêtent à la Sibérie ; l'Extrême-Orient demanderait de pivoter ou de rapetisser le globe ([[make_planet.py]]).
+Posée le 25/11, après le test Windows de Sofiene (PR #139) :
+- q121 : la barre en jeu sort-elle encore du jeu (autre page, jeu réduit) une fois la 1.2.1 quittée ? ([[Barre en jeu]])
 
-Posée le 25/11, en mettant l'aperçu du dashboard dans le héros de l'accueil :
-- q120 : la seule capture du dashboard qu'on a date d'une version plus ancienne (212 tweaks au lieu de 218) ; demander une capture à jour ([[page.html]], [[Fichiers publiés du site]]).
+Posée le 13/11 (fil « Corriger les saccades du stream Discord ») :
+- q109 : les joueurs dont le stream Discord saccade ont-ils la version publique ou l'exe de test ? Le correctif (jeu en « Supérieure à la normale ») attend aussi la décision de Sofiene ([[Bugs et incidents]]).
+
+Posées le 24/11 sur l'accueil v6 (PR #136, [[New Brand Rago]]) :
+- q118 : que devient la section « Three ways in » une fois les cartes Rago Route passées au-dessus du globe ?
+- q119 : les flux d'Asie s'arrêtent à la Sibérie (Tokyo, Pékin et Séoul sont de l'autre côté du globe) : on garde ?
+- q120 : la capture du dashboard sur l'accueil date du site v5 (« 212 tweaks ») : capture à jour à envoyer.
+
+Posées le 25/11 par les fils des autres projets (serveur Minecraft, voir leur vault) : q122 à q127.
+
+Posées le 25/11, passage sur le nouveau compte Claude ([[Reprendre sur un nouveau compte Claude]]) :
+- q128 : le dossier `rago-redesign/` du projet [[New Brand Rago]] (maquettes, kit, scripts qui génèrent le CSS de l'app) est téléchargé avec le reste dans `/Users/kaliso/Desktop/Rago data ` (27/11) : faut-il aussi le mettre dans le dépôt ?
 
 Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, q46 le 10/11 à 15 h, voir [[Décisions]]) :
-- q65 : réglages Railway de prod (Wait for CI, Watch Paths, Healthcheck, moniteur) ; Sofiene demande à Claude de vérifier et de le lui rappeler ([[Railway]]).
 
 Posées le 10/11 au soir (q70 à q93), après la relecture complète du code pour le vault détaillé (dossier `Code/`) :
-- q70 : l'exe de test et le vrai exe partagent la même licence sur un PC ([[license.rs]]).
 - q73 : 4 réglages de carte graphique jamais grisés ([[meta.py]]).
 - q74 : provenance et licence de NVIDIA Profile Inspector ([[Configuration Tauri]]).
 - q75 : 73 ou 68 réglages gratuits affichés ; `FREE_TWEAKS` sur Railway ([[sync_tweaks.py]], [[config.js]]).
@@ -55,7 +61,6 @@ Posées le 10/11 au soir (q70 à q93), après la relecture complète du code pou
 - q83 : textes en retard dans le code (README, `FREE_TWEAKS`, commentaires).
 - q84 : l'e-mail d'achat renvoie vers un ticket Discord même avec le bot ([[mailer.js]]).
 - q85 : un jeu retiré de la bibliothèque ne peut plus être réaffiché ([[Games.tsx]]).
-- q86 : PR #71 (bot communauté en prod) ouverte depuis le 01/11 ([[Bot communauté Discord]]).
 - q87 : code de la pop-up promo recréé en live ? ([[Promotions et affiliation]]).
 - q88 : à quoi sert la vidéo [[Logo création d'Adam]].
 - q89 : copie des exe 1.1.10 avant le 08/01/2027 ([[Synthèse de reprise du 15-10]]).
@@ -68,8 +73,7 @@ Posées le 11/11 (q78 traitée le même jour : Sofiene a demandé la page de ven
 - q94 : [[Graphismes des jeux]] gratuits pour tous ou Premium ? (le code les laisse gratuits)
 - q96 : [[Page Souris]] gratuite pour tous ? (codée gratuite ; le réglage « Souris 1:1 » reste Premium)
 - q97 : d'autres sorties que Paris, pour que la page Rago Route les annonce ? ([[Page de vente Rago Route]], [[Infrastructure Rago Route]]).
-- q98 : `CERVEAU_GITHUB_TOKEN` mis dans Railway, et dans quels environnements ? ([[Cerveau du vault]], [[Variables d'environnement]]).
-- q99 : avant d'annoncer Rago Route, test P0-9 (3 à 5 comptes de l'équipe par Paris en même temps, puis une semaine normale), message à Hypixel, ou les deux ? La réponse de la FAQ sur les blocages reste cachée en attendant ([[Page de vente Rago Route]], [[Proxy]]).
+- q98 : `CERVEAU_GITHUB_TOKEN` mis dans Railway, et dans quels environnements ? (25/11 : la variable existe dans Railway ; reste à confirmer production et staging, et l'accès du jeton à Rago-Client) ([[Cerveau du vault]], [[Variables d'environnement]]).
 - q100 : à la sortie de la 1.3.0, le bouton « Get notified on Discord » de l'encart Rago Route de l'accueil devient « Try 3 days free », disparaît ou reste ? ([[page.html]])
 - q101 : Lifetime inclut-il Rago Route ? Le serveur le donne aujourd'hui à toute licence active ; la page cache « Lifetime includes Rago Route too » en attendant ([[route.html]], [[Paiements Stripe]]).
 - q102 : résilier l'essai depuis le site en 2 clics (lien direct vers la résiliation du portail Stripe, en fin de période), ou écrire « two clicks in the app, or anytime from your account » sur les deux pages ? ([[route.html]], [[page.html]], [[Abonnement dans l'app]])
@@ -84,9 +88,8 @@ Posées le 11/11 (q78 traitée le même jour : Sofiene a demandé la page de ven
 - Valorant en 4:3 étiré (1440×1080) : les sources lues le 11/11 ne confirment pas que le jeu remplit l'écran sans réglage de plus ; à vérifier en jeu ([[Couleurs et résolution]]).
 - CS2 : valeurs de `setting.aspectratiomode` dans `cs2_video.txt` (0 = 4:3 ou 5:4, 1 = 16:9, 2 = 16:10, d'après la doc de la communauté) à confirmer dans un vrai fichier ([[Couleurs et résolution]]).
 - `app/src/data/pros.json` : quelques saturations de pros CS2 viennent de pages lues en résumé (prosettings.net coupé) ; à relire page par page avant la sortie ([[Couleurs et résolution]]).
-- Les 1.2.0 installées reçoivent-elles bien la 1.2.1 ? Le serveur la propose à 100 % (vérifié le 11/11 sur `/api/v1/update/status`) ; reste à le voir sur un PC en 1.2.0 ([[Mise à jour automatique]])
+- Les PC en 1.2.x reçoivent-ils bien la 1.3.0 ? Le serveur la propose à 100 % (vérifié le 25/11 sur `/api/v1/update/status`) ; reste à le voir sur un PC en 1.2.1 ([[Mise à jour automatique]])
 - Railway prod a-t-il chargé les bases DB-IP (`/admin/reseau`) ? ([[Proxy]])
-- La clé de mise à jour Tauri est-elle sauvegardée hors du PC ? ([[Clés et secrets]])
 - Remise du profil NVIDIA sur un vrai PC NVIDIA ([[Remise à zéro]]).
 - Identité du vendeur absente des conditions de vente ; TVA (RAG-20 annulée sans raison) : voir [[Conformité juridique]].
 - Barre en jeu pendant une partie par Rago Route : pas de ping affiché, le jeu étant connecté à `127.0.0.1` (déduit du code, [[gameping.rs]]) ; à voir sur Windows.

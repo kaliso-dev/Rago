@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, interface]
 fichier: app/src/lib/api.ts
-lignes: 1763
-maj: 2026-11-24
+lignes: 1767
+maj: 2026-11-25
 ---
 # api.ts
 
@@ -50,7 +50,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 | `LicenseState`, `LicenseStatus`, `LoginResult`, `LicenseError` | état `active`/`none`/`expired`/`unconfigured`, e-mail, offre, indice de clé, échéance, `needsRefresh`, `deviceName` ; connexion `activationRequired` ou `active` | [[license.rs]] |
 | `ItemStatus`, `ItemEvent`, `LogEvent`, `DoneEvent`, `ResetDone` | événements d'un lot (statut par élément, ligne de journal, fin avec `ok`, `failed`, `skipped`, `restoreFailed`, `cancelled`, `logFile`) ; remise à zéro en arrière-plan (`ok`, `failed`) | [[runner.rs]], [[reset.rs]] |
 
-### L'interface `Api` : 88 membres, 71 commandes Tauri, 13 événements
+### L'interface `Api` : 89 membres, 72 commandes Tauri, 13 événements
 Chaque ligne : nom dans `api` → commande Rust (paramètres) → ce que fait le simulateur.
 
 **Système et moteur des tweaks**
@@ -144,6 +144,7 @@ Chaque ligne : nom dans `api` → commande Rust (paramètres) → ce que fait le
 | `overlayInfo()` | `overlay_info` | mode `panel` (`pill` avec `?pill`), jeu de la partie de démo (« VALORANT », ou celui de `?game=`, depuis le 24/11 ; avant « Minecraft »), `passive` avec `?passive`, rappel avec `?nudge` |
 | `overlayLive()` | `overlay_live` | FPS 238–252, ping 21–25, `pingEstimate` avec `?estimate` |
 | `overlayClose()` / `overlaySetPin(pin)` / `overlayOpenApp(page?)` | `overlay_close` / `overlay_set_pin` / `overlay_open_app { page }` | rien / note l'épingle / rien |
+| `otherRagoRunning()` | `other_rago_running` | `false` (ajouté le 25/11, PR #139 : avertissement de l'exe de test dans [[TitleBar.tsx]]) |
 | `onOverlayMode(cb)` / `onGoto(cb)` | événements `overlay:mode` / `app:goto` | bus local |
 
 **Licence**

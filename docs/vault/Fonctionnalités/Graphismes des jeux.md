@@ -2,13 +2,13 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, jeux, graphismes]
 version_app: 1.3.0
-maj: 2026-11-11
+maj: 2026-11-25
 ---
 # Graphismes des jeux
 
 Case **« in-game graphics »** du jeu en tête de la page « Jeux » (depuis le 23/11, maquette v5 : trois onglets Performance, Balanced, Quality dans la rangée preset / graphismes / résolution / saturation ; avant, une carte sous le jeu) : comme le préréglage OptiFine de Minecraft, **trois niveaux en un clic**, écrits dans les réglages du jeu lui-même. Demandée par Sofiene le 11/11/2026 (feature 3 de son message : « Tu vois l'optimization Optifine dans Minecraft […] Il faut la meme pour tout les jeux valorant fortnite csgo etc etc, avec un choix qualité max, un choix le plus utiliser et optimiser entre performance et agreabilité et enfin le settings avec tout au plus bas »). Code : [[gamecfg.rs]] (moteur), `useGraphics` et la case « in-game graphics » de [[Games.tsx]] (interface, depuis le 23/11), [[graphics.ts]] (textes). Page : [[Bibliothèque de jeux]].
 
-**Statut (11/11)** : **dans `staging`** depuis le 11/11 (PR #94, fusionnée avec les autres nouveautés du 11/11 par la PR #92, sur « Push toutes les modification vers stagging pour que je puisse test la version test » de Sofiene), pour la version test ; part avec la [[Version 1.3.0]] (Sofiene, 11/11 à 09:20 UTC : « version fianle »). **Jamais testée sur Windows** ([[Règles de travail]]) : les clés de Valorant, Fortnite et Apex viennent de fichiers publiés par des joueurs, pas d'une documentation des éditeurs. **Gratuit ou Premium : À DÉCIDER** par Sofiene (q94 sur la page « Questions du vault Rago », 11/11 ; pour l'instant le code la laisse gratuite, sans verrou). Ticket [[Linear]] : RAG-92 (« In Review »).
+**Statut** : **en prod dans la [[Version 1.3.0]] depuis le 22/11** ; avant, dans `staging` depuis le 11/11 (PR #94, fusionnée avec les autres nouveautés du 11/11 par la PR #92, sur « Push toutes les modification vers stagging pour que je puisse test la version test » de Sofiene), pour la version test ; part avec la [[Version 1.3.0]] (Sofiene, 11/11 à 09:20 UTC : « version fianle »). **Jamais testée sur Windows** ([[Règles de travail]]) : les clés de Valorant, Fortnite et Apex viennent de fichiers publiés par des joueurs, pas d'une documentation des éditeurs. **Gratuit ou Premium : À DÉCIDER** par Sofiene (q94 sur la page « Questions du vault Rago », 11/11 ; pour l'instant le code la laisse gratuite, sans verrou). Ticket [[Linear]] : RAG-92 (« In Review »).
 
 ## Les trois niveaux
 | Niveau (app en anglais) | Sous-titre | Idée |

@@ -119,10 +119,26 @@ export function RunOverlay() {
                 <div className="cur">
                   {isDone ? (
                     run.error ? (
-                      <p className="er3">
-                        <I n="alert" />
-                        {run.error}
-                      </p>
+                      <>
+                        <p className="er3">
+                          <I n="alert" />
+                          {run.error}
+                        </p>
+                        {/* refus Premium du moteur : se connecter (ou se reconnecter) d'ici, 25/11 */}
+                        {!premium && run.error === t("err.premium_required") && (
+                          <button
+                            type="button"
+                            className="btn sm red"
+                            onClick={() => {
+                              close();
+                              setUpsell("signin");
+                            }}
+                          >
+                            <I n="user" />
+                            {t("free.signIn")}
+                          </button>
+                        )}
+                      </>
                     ) : (
                       <>
                         <p className="sum">{t("run.summary", { ok: finished - failed - skipped, total, s: formatNumber(lang, seconds) })}</p>

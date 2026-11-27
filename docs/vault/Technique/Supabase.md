@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, supabase, base-de-données]
-maj: 2026-11-13
+maj: 2026-11-27
 ---
 # Supabase
 
@@ -10,7 +10,7 @@ Base de données Postgres et fichiers (Storage) du [[Serveur de licences]]. Seul
 ## Projets
 | Projet | Pour | Remarques |
 |---|---|---|
-| Projet de prod (nommé `rago` dans le guide) | serveur Railway de prod | région conseillée par le guide : West EU (Paris), `aws-0-eu-west-3` ; **offre gratuite** (Sofiene, 10/11, q66), donc sans sauvegarde quotidienne. **URGENT** : e-mail de Supabase du 04/11 (« Your org Rago Optimizer exceeded its usage quota », lu par Claude le 10/11) : l'organisation **Rago Optimizer** a dépassé son quota, surtout la **bande passante sortante (egress) au-delà de 5,5 Go** ; tolérance jusqu'au **05/12/2026**, puis « Fair Use Policy » : **restrictions du service possibles** (pas une suppression annoncée). Cause probable : les installateurs et les mises à jour automatiques sont téléchargés depuis le Storage. Solutions : passer l'organisation en **Pro** (25 $/mois, quota bien plus grand, sauvegardes quotidiennes) ou baisser l'egress (servir l'exe ailleurs). Choix de Sofiene (10/11) : « je passerai en pro avant décembre ou alors on migrera de supabase vers un autre service je te tiendrai au courant avant le 5 décembre » ; option retenue pas encore connue. Voir aussi [[Clés et secrets]] |
+| Projet de prod (nommé `rago` dans le guide) | serveur Railway de prod | région conseillée par le guide : West EU (Paris), `aws-0-eu-west-3` ; **offre gratuite** (Sofiene, 10/11, q66), donc sans sauvegarde quotidienne. **URGENT** : e-mail de Supabase du 04/11 (« Your org Rago Optimizer exceeded its usage quota », lu par Claude le 10/11) : l'organisation **Rago Optimizer** a dépassé son quota, surtout la **bande passante sortante (egress) au-delà de 5,5 Go** ; tolérance jusqu'au **05/12/2026**, puis « Fair Use Policy » : **restrictions du service possibles** (pas une suppression annoncée). Cause probable : les installateurs et les mises à jour automatiques sont téléchargés depuis le Storage. Solutions : passer l'organisation en **Pro** (25 $/mois, quota bien plus grand, sauvegardes quotidiennes) ou baisser l'egress (servir l'exe ailleurs). Choix de Sofiene (10/11) : « je passerai en pro avant décembre ou alors on migrera de supabase vers un autre service je te tiendrai au courant avant le 5 décembre ». **Décision du 27/11 : passage en Pro** le 01/12 ou le 02/12, dès sa paye (« je vais passer en pro dès que j'ai ma paye donc le 01/12 ou le 02/12 ») ; pas encore fait au 27/11. Voir aussi [[Clés et secrets]] |
 | `rago-staging` | serveur Railway de staging | offre gratuite : **se met en pause après une semaine sans activité** (le serveur de staging ne démarre plus : relancer le projet dans Supabase). Ne jamais y copier la base de prod |
 
 Connexion : `DATABASE_URL` = URI du **Session pooler** (port 5432). Clés : `SUPABASE_URL` (`https://<ref>.supabase.co`) et `SUPABASE_SERVICE_ROLE_KEY` (clé legacy `eyJ…` ou nouvelle `sb_secret_…`, les deux marchent). Valeurs : seulement dans Railway, jamais ici ([[Clés et secrets]]).
@@ -59,7 +59,7 @@ Une note par table (chaque colonne, son type, son défaut, qui l'écrit et qui l
 Préférer `npm run admin -- show <email>` (depuis `licensing/`, avec le `DATABASE_URL` voulu dans le terminal) au SQL Editor : il croise compte, licence, PC, événements et achats non rattachés. Le SQL Editor de Supabase sert à lire ; toute écriture passe par une commande `admin` ou une PR.
 
 ## Sauvegarde de la clé de signature
-`npm run admin -- export-keys` affiche `LICENSE_SIGNING_KEY` et `SESSION_SECRET` : à garder dans le gestionnaire de mots de passe de Sofiene et en variables Railway, pour ne plus dépendre de la base. **Pas fait au 10/11** (q67) : la clé de signature n'existe que dans la base Supabase de prod. À faire avant toute autre chose. Sans terminal, la même chose se lit dans Supabase → SQL Editor (`server_secrets`, lignes `license_signing_key` et `session_secret`) ; la valeur ne sort jamais de l'écran de Sofiene vers un chat ou un fichier. Ne **pas** la mettre dans les variables Railway sans Claude : une valeur mal collée y remplacerait la clé en service.
+`npm run admin -- export-keys` affiche `LICENSE_SIGNING_KEY` et `SESSION_SECRET` : à garder dans le gestionnaire de mots de passe de Sofiene et en variables Railway, pour ne plus dépendre de la base. **Fait le 10/11** (lue dans le SQL Editor et rangée par Sofiene dans son gestionnaire de mots de passe, voir [[Clés et secrets]]). Sans terminal, la même chose se lit dans Supabase → SQL Editor (`server_secrets`, lignes `license_signing_key` et `session_secret`) ; la valeur ne sort jamais de l'écran de Sofiene vers un chat ou un fichier. Ne **pas** la mettre dans les variables Railway sans Claude : une valeur mal collée y remplacerait la clé en service.
 
 ## Code
 

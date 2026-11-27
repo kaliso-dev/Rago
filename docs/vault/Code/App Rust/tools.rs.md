@@ -3,7 +3,7 @@ type: code
 tags: [code, app, rust, windows]
 fichier: app/src-tauri/src/tools.rs
 lignes: 997
-maj: 2026-11-11
+maj: 2026-11-25
 ---
 # tools.rs
 
@@ -88,7 +88,7 @@ Pas listées : les applis du Microsoft Store qui démarrent seules (tâches de d
 | `struct PowerPlan {guid, name, active}` | `name` : nom donné par Windows, dans sa langue |
 | `POWER_PLANS` | `Get-CimInstance -Namespace root\cimv2\power -ClassName Win32_PowerPlan` (noms en UTF-8 quelle que soit la langue) |
 | `parse_power_plans(json)` | GUID tiré de `InstanceID` par `parse_scheme`, en minuscules ; nom vide → le GUID ; doublons écartés |
-| `parse_powercfg_list(sortie)` | repli sans WMI : `powercfg /list`, nom entre parenthèses (les parenthèses du nom sont gardées : « Rago (Low Latency) »), actif si la ligne finit par `*` |
+| `parse_powercfg_list(sortie)` | repli sans WMI : `powercfg /list`, sortie lue par `shell::decode_output` (UTF-8, sinon page de code OEM de la console : « Recommandé par HP » n'est plus abîmé, 25/11, PR #139), nom entre parenthèses (les parenthèses du nom sont gardées : « Rago (Low Latency) »), actif si la ligne finit par `*` |
 | `power_plans()` | WMI, sinon `powercfg.exe /list` |
 | `set_power_plan(guid)` | seulement un GUID de la liste : `powercfg.exe /setactive <guid>`, puis relit ; `Err("Windows refused the change")` si le mode n'est pas actif (mode imposé par une stratégie d'entreprise ou d'école) |
 

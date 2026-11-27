@@ -19,6 +19,18 @@ html.poster body::after{position:fixed}
 .topbar .wc span{cursor:pointer}
 .topbar .wc span:hover{background:var(--bg-3);color:var(--ink)}
 .topbar .wc span.x:hover{background:var(--red);color:var(--red-ink)}
+/* compte (25/11) : « Sign in » ou « Premium » juste avant les boutons de la fenêtre ; serveur de test ou démo en gris */
+.topbar .tb-env{font-family:var(--cond);font-weight:800;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);white-space:nowrap}
+.topbar .tb-env.warn{display:inline-flex;align-items:center;gap:7px;color:var(--red);cursor:help}
+.topbar .tb-env.warn svg{width:14px;height:14px}
+.topbar .tb-acc{margin-left:auto;display:flex;align-items:center}
+.topbar .tb-acc + .wc{margin-left:14px}
+.topbar .tb-acc .btn svg{width:13px;height:13px}
+.topbar .tb-plan{position:relative;isolation:isolate;display:inline-flex;align-items:center;gap:7px;height:32px;padding:0 15px;color:var(--ink);font-family:var(--cond);font-weight:800;font-size:13px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer}
+.topbar .tb-plan::before{content:"";position:absolute;inset:0;z-index:-1;transform:skewX(var(--skew));border:1px solid rgba(255,59,48,.5);background:rgba(255,59,48,.1)}
+.topbar .tb-plan:hover::before{background:rgba(255,59,48,.2)}
+.topbar .tb-plan svg{width:12px;height:12px;color:var(--red);stroke-width:3}
+html.round .topbar .tb-plan::before{border-radius:9px}
 /* la barre de défilement (10 px) prend sa place sur la marge droite : la page garde la largeur de la maquette */
 .main{position:absolute;left:236px;right:0;top:86px;bottom:0;margin:0;padding:0 30px 44px 40px;overflow-x:hidden;overflow-y:auto;scrollbar-gutter:stable}
 .main::-webkit-scrollbar{width:10px}
@@ -146,7 +158,13 @@ button.run:disabled{cursor:default;opacity:.45}
 .pg-mod .tw:not(.pend):not(.undo):not(.drift):not(.blk):not(.adv):hover{border-color:var(--line-2);background:var(--bg-4)}
 .pg-mod button.tw.adv:hover{border-color:var(--ink-3)}
 .pg-mod .tw .pop{visibility:hidden;opacity:0;pointer-events:none;transition:opacity .12s,visibility 0s .12s}
-.pg-mod .tw:hover .pop,.pg-mod .tw:has(:focus-visible) .pop{visibility:visible;opacity:1;transition:opacity .15s .35s,visibility 0s .35s}
+.pg-mod .tw .pop.show{visibility:visible;opacity:1;pointer-events:auto;transition:opacity .15s,visibility 0s}
+.pg-mod .tw:has(.pop.show){z-index:6}
+/* icône info (25/11) : seule à ouvrir la bulle */
+.pg-mod .tw .inf{flex:none;display:grid;place-items:center;width:22px;height:22px;margin:-4px 0;padding:0;border:0;background:none;color:var(--ink-3);cursor:pointer;border-radius:6px}
+.pg-mod .tw .inf svg{width:15px;height:15px}
+.pg-mod .tw .inf:hover,.pg-mod .tw .inf.open{color:var(--ink);background:rgba(255,255,255,.08)}
+.pg-mod .tw .inf:focus-visible{outline:2px solid var(--red);outline-offset:1px}
 .pg-mod .tw:has(.pick-menu) .pop{display:none}
 .pg-mod .tw.focused{animation:mod-focus 1.8s ease-out}
 @keyframes mod-focus{0%,35%{box-shadow:0 0 0 2px var(--red),0 0 30px rgba(255,59,48,.35)}100%{box-shadow:0 0 0 2px transparent}}
@@ -528,6 +546,8 @@ html.round .pg-settings .kb.rec span{border-radius:7px}
 .w5 .clw.end::after{opacity:0}
 .w5 .clw::after{transition:opacity .2s}
 /* écran d'exécution : toute la fenêtre, page dessous très floutée ; on y déplace la fenêtre */
+/* refus Premium : bouton « Sign in » sous le message (25/11) */
+.w5 .cur .er3 + .btn{margin-top:14px}
 /* les maquettes des fenêtres ne chargent pas printicons.js : icônes imprimées des boutons à 15 px (rago5.css) */
 .w5 .btn svg.pi{width:15px;height:15px}
 .w5 > .runw{position:absolute;inset:0}

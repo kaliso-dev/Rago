@@ -16,6 +16,10 @@ svg.spin{animation:spin 1s linear infinite}
 /* grain d'impression (poster.css) sur la barre seulement : sur toute la fenêtre, il se verrait sur le jeu */
 .ovw .igp::after{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:url(../assets/s5/img/fx/grain.svg) 0 0/240px 240px;opacity:.06}
 .igpill{left:0;top:0}
+/* verre presque opaque (Sofiene, 25/11 : « il faut que la game bar soit beaucoup plus opaque car on ne voit rien ») :
+   la maquette laisse voir le jeu au travers, ce qui rend les chiffres illisibles sur une scène claire */
+.ovw .igp.igglass{background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,0) 38%),rgb(10,10,11)}
+.igpill.igglass{background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.015)),rgba(10,10,11,.96)}
 
 /* les listes défilent quand l'écran est petit (la barre rétrécit), sans barre de défilement ; la marge du bas laisse
    le dernier réglage sortir du fondu */

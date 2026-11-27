@@ -1,0 +1,1011 @@
+[
+ {
+  "num": 73,
+  "titre": "4 réglages de carte graphique jamais grisés",
+  "question": "4 réglages de carte graphique (nv_preemption, nv_advanced, nv_kboost pour NVIDIA, amd_advanced pour AMD) restent cliquables sur un PC qui n'a pas cette carte. On les grise comme les autres ?",
+  "contexte": "Les autres réglages de carte graphique ont une condition (requires) dans meta.py, pas ces 4 (lu le 10/11). Sur une autre carte, ils ne font rien ou échouent.",
+  "choix": [
+   "Oui, les griser",
+   "Non, c'est voulu"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 74,
+  "titre": "NVIDIA Profile Inspector livré avec l'app",
+  "question": "L'app livre une version modifiée de NVIDIA Profile Inspector (« Modified by DeadManWalking », version 3.5.0.0). Tu sais d'où elle vient et si on a le droit de la distribuer ?",
+  "contexte": "Dans le dépôt depuis la 1.1.5 (07/10). Sa licence n'est écrite nulle part dans le projet.",
+  "choix": [
+   "Je sais d'où elle vient (préciser)",
+   "Il faut vérifier sa licence"
+  ],
+  "precision": "D'où elle vient",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 75,
+  "titre": "Nombre de réglages gratuits affiché",
+  "question": "Quel nombre de réglages gratuits afficher partout : 73 (la liste free.json) ou 68 (les réglages en double comptés une fois, comme les 218 du total) ?",
+  "contexte": "Au 10/11 : l'accueil du site et l'app disent 73, la page Tweaks du site dit 68, la page compte du serveur dit 11 (FREE_TWEAKS par défaut ; sa valeur sur Railway n'est pas connue).",
+  "choix": [
+   "73",
+   "68"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 76,
+  "titre": "Image de partage du site : « 199 tweaks »",
+  "question": "L'image qui s'affiche quand on colle le lien du site (Discord, réseaux) dit encore « 199 tweaks ». On la refait avec quel chiffre ?",
+  "contexte": "Image du 09/10 (og-image.png). Le site dit « Nearly 220 tweaks », le catalogue en a 218.",
+  "choix": [
+   "218 tweaks",
+   "Nearly 220 tweaks"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 77,
+  "titre": "Étoiles Google des avis",
+  "question": "Les étoiles Google (la note des avis dans les résultats de recherche) ajoutées le 17/10 ont disparu du site, sans doute dans une fusion. On les remet ?",
+  "contexte": "Code ajouté le 17/10 (RAG-33, à partir de 10 avis), absent de staging et de la prod le 10/11.",
+  "choix": [
+   "Oui, les remettre",
+   "Non"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 79,
+  "titre": "Protection d'avant le lancement du site",
+  "question": "La protection d'avant le lancement du site (launch-gate, qui ne bloque plus rien depuis le 10/10) tourne encore à chaque visite. On la retire ?",
+  "contexte": "Elle coûte un appel Netlify par visite. La retirer touche aussi le serveur (rago_preview) et la politique de confidentialité.",
+  "choix": [
+   "Oui, la retirer",
+   "Non, la garder"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 80,
+  "titre": "GitHub Pages publie le vault",
+  "question": "GitHub Pages est toujours actif et publie le vault de la branche de prod sur une adresse github.io. Tu peux le couper (GitHub, Settings, Pages) ?",
+  "contexte": "Vu le 10/11 : une note du vault et CLAUDE.md y répondent. Le README demande déjà de couper Pages. Claude ne peut pas changer ce réglage.",
+  "choix": [
+   "Oui, je le coupe",
+   "Non, on laisse"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 81,
+  "titre": "Deux branches à supprimer",
+  "question": "Les branches claude/project-thread-tzbch5 (2 commits du vault sur Supabase, jamais proposés) et trailer-4k-footage (17 rushes vidéo) peuvent-elles être supprimées ?",
+  "contexte": "tzbch5 semble dépassée par les notes suivantes ; trailer-4k-footage était un transfert temporaire. Supprimer une branche est définitif.",
+  "choix": [
+   "Oui, les deux",
+   "Seulement tzbch5",
+   "Non, garde-les"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 82,
+  "titre": "Fichiers qui ne servent plus",
+  "question": "On supprime ce qui ne sert plus : site/recherche-conversion.md, app/tools/fix_free_bat.py, l'ancien workflow app/ci/build-windows.yml, le Dockerfile de la racine, la dépendance npm geist et le mode plein écran de LicenseGate ?",
+  "contexte": "Rien de tout ça n'est utilisé dans staging (lu le 10/11). Rien n'est supprimé sans ton accord.",
+  "choix": [
+   "Oui, tout",
+   "Une partie (préciser)",
+   "Non, on garde"
+  ],
+  "precision": "Lesquels garder",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 83,
+  "titre": "Textes en retard dans le code",
+  "question": "Je corrige les textes en retard : README de l'app et du serveur (« 11 réglages gratuits »), FREE_TWEAKS par défaut à 11, et des commentaires qui disent « exe de test » ou « Premium » pour ce qui a changé ?",
+  "contexte": "Relevés le 10/11 dans staging. Ça ne change rien pour les joueurs, sauf FREE_TWEAKS qui s'affiche sur la page compte.",
+  "choix": [
+   "Oui, corrige-les",
+   "Non"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 84,
+  "titre": "E-mail d'achat et rôle Discord",
+  "question": "L'e-mail d'achat dit toujours d'ouvrir un ticket Discord pour avoir le rôle Pro, alors que le bot le donne tout seul avec « Link Discord » sur la page compte. On change le texte ?",
+  "contexte": "Lu dans mailer.js le 10/11.",
+  "choix": [
+   "Oui, renvoyer vers Link Discord",
+   "Non, garder le ticket"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 85,
+  "titre": "Réafficher un jeu retiré de la bibliothèque",
+  "question": "Dans la bibliothèque de jeux, un jeu retiré ne peut plus être réaffiché : la commande existe mais aucun bouton ne l'appelle. On ajoute un bouton ?",
+  "contexte": "Lu dans Games.tsx et api.ts le 10/11 (games_unhide jamais appelé).",
+  "choix": [
+   "Oui, ajouter le bouton",
+   "Non, c'est voulu"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 86,
+  "titre": "PR #71 : bot communauté Discord en prod",
+  "question": "La PR #71 (bot communauté Discord vers la prod) est ouverte depuis le 01/11. Abel a-t-il fait le test prévu, et que fait-on de la PR ?",
+  "contexte": "Ta réponse du 01/11 : le tester et le passer en prod. Tant que DISCORD_COMMUNITY=1 n'est pas sur Railway prod, la fusionner ne change rien.",
+  "choix": [
+   "Test fait, on la fusionne",
+   "Pas encore testé",
+   "La fermer"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 87,
+  "titre": "Code de la pop-up promo en live",
+  "question": "As-tu recréé le code de la pop-up promo dans le Stripe live ? Le 17/10, il n'existait qu'en mode test, donc la pop-up ne marchait pas en prod.",
+  "contexte": "Commande donnée le 17/10 : npm run admin -- popup <CODE> 50. La suite n'est écrite nulle part.",
+  "choix": [
+   "Oui, c'est fait",
+   "Non",
+   "La pop-up ne sert plus"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 88,
+  "titre": "Vidéo du logo « Création d'Adam »",
+  "question": "La vidéo du logo du 02/11 (le R entre les mains de « La Création d'Adam ») devait servir à quoi, et a-t-elle été utilisée ?",
+  "contexte": "Les fichiers sont dans le dossier partagé (marketing/logo-creation-adam). Rien dans le vault ne dit à quoi elle sert.",
+  "choix": [
+   "Utilisée (préciser où)",
+   "Pas encore utilisée",
+   "Abandonnée"
+  ],
+  "precision": "Où",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 89,
+  "titre": "Copie des exe 1.1.10",
+  "question": "As-tu gardé une copie des exe de la 1.1.10 ? La seule copie connue est dans des artefacts GitHub qui seront effacés le 08/01/2027.",
+  "contexte": "Proposé le 15/10 dans la synthèse de reprise ; la suite n'est pas connue.",
+  "choix": [
+   "Oui, j'ai une copie",
+   "Non, il faut la faire",
+   "Pas besoin"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 90,
+  "titre": "Messages de démarchage des partenaires",
+  "question": "Les messages de démarchage des partenaires disaient « the app measures ping before and after », ce qui est faux. Ils ont été corrigés, ou ne servent plus ?",
+  "contexte": "Relevé le 15/10. Les messages ne sont pas dans le dépôt ; le vault ne sait pas s'ils ont été corrigés.",
+  "choix": [
+   "Corrigés",
+   "Ne servent plus",
+   "Pas encore corrigés"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 91,
+  "titre": "Statistiques de visite du site",
+  "question": "Cloudflare Web Analytics (statistiques de visite du site) avait été proposé. L'as-tu installé, ou utilises-tu autre chose ?",
+  "contexte": "Proposé dans un fil d'octobre, resté sans suite dans le vault.",
+  "choix": [
+   "Installé",
+   "Autre outil (préciser)",
+   "Rien pour l'instant"
+  ],
+  "precision": "Quel outil",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 92,
+  "titre": "Idées de l'étude de marché",
+  "question": "Parmi les idées de l'étude de marché de novembre (codes cadeaux, pass 1 an, page pour les parents, presets par jeu, page « Mes changements »…), une est-elle prévue ?",
+  "contexte": "Aucune n'est notée comme prévue ou abandonnée dans le vault (Étude de marché de novembre 2026).",
+  "choix": [
+   "Aucune pour l'instant",
+   "Oui (préciser lesquelles)"
+  ],
+  "precision": "Lesquelles",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 93,
+  "titre": "Les 5 tâches d'Abel dans Linear",
+  "question": "Ton « il faut supprimer tout ça » (q64) vise aussi les 5 tâches d'Abel dans Linear ? Je les passe en « Canceled » ?",
+  "contexte": "Lu dans Linear le 10/11 : RAG-35 (créateurs Minecraft) et RAG-39 (vidéos avant/après) sont « In Progress », RAG-51 (GIVEAWAY), RAG-54 (partner discord) et RAG-56 (YOUTUBE) sont « Todo », aucune touchée depuis le 11/10.",
+  "choix": [
+   "Oui, annule-les",
+   "Non, Abel les garde"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 94,
+  "titre": "Graphismes des jeux : gratuit ou Premium",
+  "question": "La nouvelle carte « Graphismes du jeu » (Performance, Équilibré ou Qualité en un clic pour Valorant, Fortnite, CS2, Apex, Marvel Rivals et The Finals) est-elle gratuite pour tous, ou réservée au Premium ?",
+  "contexte": "Codée le 11/11 sur une branche à part, pas encore dans l'app ; pour l'instant le code la laisse gratuite, sans cadenas. Dans la page Jeux, « Optimiser et jouer » est déjà Premium.",
+  "choix": [
+   "Gratuite pour tous",
+   "Premium",
+   "Performance gratuit, le reste Premium"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 96,
+  "titre": "Page Souris : gratuite ou Premium",
+  "question": "La nouvelle page Souris (fréquence réelle, test de double clic, logiciels entre la souris et le jeu, calcul de sensibilité) est-elle gratuite pour tous ?",
+  "contexte": "Tu as demandé de l'ajouter à la version finale (« + mouse »). Elle est codée gratuite, sans cadenas, dans la PR #96 vers staging ; le réglage « Souris 1:1 » de la page Latence reste Premium.",
+  "choix": [
+   "Gratuite pour tous",
+   "Premium",
+   "Tests gratuits, sensibilité Premium"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 97,
+  "titre": "Rago Route : d'autres sorties que Paris ?",
+  "question": "La page de vente de Rago Route dit que la sortie est à Paris et que Rago Route n'est pas fait pour jouer depuis hors d'Europe. Des sorties dans d'autres régions sont-elles prévues, pour que la page les annonce ?",
+  "contexte": "Le vault parle de nouvelles sorties à acheter, sans lieu ni date. En attendant, la nouvelle page dit « Made for Europe, tested from France » et que, depuis l'Amérique du Nord, le détour n'aiderait pas.",
+  "choix": [
+   "Non, Paris seulement pour l'instant",
+   "Oui, bientôt (dis où)",
+   "Plus tard, sans date"
+  ],
+  "precision": "Où et quand",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 98,
+  "titre": "Jeton du Cerveau dans Railway",
+  "question": "As-tu mis CERVEAU_GITHUB_TOKEN dans Railway, et dans quels environnements ?",
+  "contexte": "Le 11/11 tu as demandé quelle valeur mettre, puis dit « tout est bon ». Sans ce jeton, le Cerveau de l'admin s'arrêtera quand le dépôt passera en privé.",
+  "choix": [
+   "Oui, en prod et en staging",
+   "Seulement en prod",
+   "Pas encore"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 99,
+  "titre": "Rago Route : Hypixel et l'adresse partagée",
+  "question": "Avant d'annoncer Rago Route, on fait le test P0-9 (3 à 5 comptes de l'équipe qui jouent par Paris en même temps, puis une semaine normale), tu écris à Hypixel, ou les deux ?",
+  "contexte": "Hypixel bloque un compte quand son activité paraît inhabituelle. Avec Rago Route, tous les joueurs arrivent par la même adresse à Paris, et des joueurs racontent des blocages avec ExitLag. La réponse de la FAQ est prête et reste cachée tant que le test manque.",
+  "choix": [
+   "Les deux",
+   "Le test seulement",
+   "J'écris à Hypixel seulement",
+   "Ni l'un ni l'autre"
+  ],
+  "precision": "Qui fait le test, et avec quels comptes",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 100,
+  "titre": "Accueil : le bouton « Get notified on Discord »",
+  "question": "L'encart Rago Route de l'accueil garde le bouton « Get notified on Discord », qui date de l'attente. À la sortie de la 1.3.0, on le remplace par « Try 3 days free », on le retire, ou on le garde ?",
+  "contexte": "Le texte et le schéma de l'encart disent maintenant la même chose que la nouvelle page (branche du fil, pas encore sur staging). L'autre bouton, « Discover Rago Route », mène à la page.",
+  "choix": [
+   "Le remplacer par l'essai",
+   "Le retirer",
+   "Le garder"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 101,
+  "titre": "Lifetime et Rago Route",
+  "question": "Lifetime inclut-il Rago Route ? Aujourd'hui le serveur le donne aux comptes Lifetime, mais rien n'est décidé. La page de vente peut-elle l'écrire, même si un plan « Ultimate » arrive un jour ?",
+  "contexte": "En attendant, la nouvelle page cache « Lifetime includes Rago Route too » et « and Lifetime » (visibles seulement sur staging). Les CGV disent que Lifetime vaut Premium « for as long as Rago Optimizer Premium is offered ». Si c'est « Non », le serveur doit changer : il donne le jeton Rago Route à toute licence active.",
+  "choix": [
+   "Oui, tant que Rago Route est dans Premium",
+   "Oui, sans condition",
+   "Non, Rago Route reste aux abonnés"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 102,
+  "titre": "Résilier l'essai depuis le site en 2 clics",
+  "question": "Pour que « Cancel in two clicks from your account » soit vrai sur le site, on ajoute un lien qui ouvre directement la résiliation dans le portail Stripe, avec une résiliation en fin de période ? Sinon, les pages disent « two clicks in the app, or anytime from your account ».",
+  "contexte": "Dans l'app : 2 clics depuis Settings (Cancel trial, puis confirmer), et Premium reste jusqu'à la fin de l'essai. Sur le site : connexion, page compte, portail Stripe, annuler, confirmer, soit 3 clics ou plus ; le réglage du portail (fin de période ou tout de suite) n'est pas vérifié par le code. La nouvelle page Rago Route dit déjà « in the app, or anytime from your account » ; l'accueil dit encore « two clicks from your account ».",
+  "choix": [
+   "Oui, lien direct et fin de période",
+   "Non, on garde « in the app »"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 103,
+  "titre": "Abonné non connecté : un 2e abonnement possible",
+  "question": "Un abonné Premium qui n'est pas connecté au site peut payer un 2e abonnement, essai compris. On le bloque côté serveur après le paiement (même e-mail ou même carte), ou la ligne « Already Premium? » de la page suffit ?",
+  "contexte": "D'après l'analyse de l'offre du 11/11 (lecture du code, pas encore vérifié sur staging), le serveur ne l'empêche que si le joueur est connecté. Risque : un double prélèvement, donc un remboursement et un joueur mécontent. La nouvelle page ajoute sous le bouton d'essai : « Already Premium? Rago Route is already yours: update Rago Optimizer, then open Network, then Rago Route. »",
+  "choix": [
+   "Le bloquer côté serveur",
+   "La ligne sur la page suffit"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 104,
+  "titre": "« Card required » alors que PayPal passe aussi",
+  "question": "L'accueil et la page Rago Route disent « Card required » sous le bouton d'essai. Si le paiement de l'essai propose aussi PayPal, on écrit « Card or PayPal required » sur les deux pages ?",
+  "contexte": "Le code demande un moyen de paiement à l'essai (payment_method_collection: always) sans dire lequel : Stripe montre ceux qui sont activés dans le tableau de bord. Au 04/11, 8 paiements réussis sur 39 étaient en PayPal et 12 en Link (Link paie avec une carte). Je n'ai pas vérifié si PayPal apparaît sur le paiement de l'essai : à regarder sur un vrai paiement d'essai. À noter : « un essai par personne » compare l'e-mail et l'empreinte de la carte ; avec PayPal, seul l'e-mail compte.",
+  "choix": [
+   "Oui, « Card or PayPal required »",
+   "Non, on garde « Card required »"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 105,
+  "titre": "Titre de la page Rago Route",
+  "question": "La page reprend le titre du matin, « Lose packets, not fights. ». Il laisse entendre qu'on ne perd plus de combats, alors que la règle du site est de ne jamais promettre le hitreg. On le garde, ou on prend celui de la refonte, « Lost packets shouldn't freeze your game. » ?",
+  "contexte": "Tu as préféré la version du matin le 11/11 à 14 h 20, donc j'ai remis son titre. L'image de partage (media/og-route.png) a été refaite avec ce titre ; si tu changes, je la refais aussi.",
+  "choix": [
+   "On garde « Lose packets, not fights. »",
+   "On prend « Lost packets shouldn't freeze your game. »"
+  ],
+  "precision": "Ou propose un autre titre",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 108,
+  "titre": "Option Rago Route pour les Lifetime",
+  "question": "Un joueur Lifetime paie-t-il aussi l'option Rago Route à 3 $ par mois, ou Rago Route est-il compris dans le Lifetime ?",
+  "contexte": "Codé le 13/11 : tout Premium actif, Lifetime compris, doit prendre l'option à 3 $ par mois pour allumer Rago Route. La phrase du site sur le Lifetime reste cachée en prod (porte q101).",
+  "choix": [
+   "Le Lifetime paie aussi les 3 $ par mois",
+   "Rago Route compris dans le Lifetime"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 109,
+  "titre": "Version des clients au stream Discord qui saccade",
+  "question": "Les clients dont le stream Discord saccade ont-ils la 1.2.1 publique ou l'exe de test de staging ?",
+  "contexte": "La 1.2.1 force le jeu en priorité Haute seulement par les presets et le Packet Optimizer ; l'exe de test de staging le fait en plus pour chaque jeu, par défaut (« Jeu en priorité haute »).",
+  "choix": [
+   "La 1.2.1 publique",
+   "L'exe de test de staging",
+   "Les deux selon les clients"
+  ],
+  "precision": "Si tu sais quels presets ils ont appliqués, écris-le ici.",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 110,
+  "titre": "Carte refusée à la fin de l'essai",
+  "question": "Dans Stripe, quand la carte est refusée et que tous les nouveaux essais de paiement échouent, l'abonnement est-il annulé, marqué impayé, ou laissé « en retard » ?",
+  "contexte": "Tant que Stripe réessaie la carte (statut « en retard »), l'app garde le Premium et Rago Route. Si Stripe laisse l'abonnement « en retard » sans fin, le joueur garde tout sans payer. Le réglage est dans Stripe > Paramètres > Billing > Abonnements et e-mails > Gérer les paiements échoués.",
+  "choix": [
+   "Annuler l'abonnement",
+   "Marquer comme impayé",
+   "Laisser en retard"
+  ],
+  "precision": "Si tu veux, écris combien de jours Stripe réessaie la carte.",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 111,
+  "titre": "Quantité dans le portail client",
+  "question": "Je coupe le changement de quantité dans le portail client Stripe live ?",
+  "contexte": "« Changer de formule » dans le portail client live permet aussi de changer la quantité du Premium : un joueur pourrait payer 2 Premium pour une seule licence. Rago Route n'y est pas proposé, c'est voulu.",
+  "choix": [
+   "Oui, coupe-le",
+   "Non, laisse comme ça"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 112,
+  "titre": "Fenêtre Premium du Packet Optimizer",
+  "question": "Depuis la 1.3.0, la fenêtre Premium « Unlock all 218 tweaks » (petit titre « This tweak is part of Premium ») du Packet Optimizer ne s'ouvre presque plus. On la garde pour la refonte du design ?",
+  "contexte": "En gratuit, la page Packet Optimizer est verrouillée depuis la 1.3.0, et « Get Premium » ouvre la fenêtre Premium générale. Cette fenêtre-ci ne s'ouvre plus que si le serveur refuse d'appliquer pour un compte Premium (licence perdue entre-temps ; NetOpt.tsx:172 depuis la refonte du 23/11, PR #123, qui la garde en attendant ta réponse). Sa capture pour la refonte est faite sur ce cas, simulé dans la démo.",
+  "choix": [
+   "Oui, on la garde pour ce cas",
+   "Non, on montre la fenêtre Premium générale à la place"
+  ],
+  "precision": "Ou dis ce que l'app doit montrer quand le serveur refuse",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 113,
+  "titre": "Récompense Discord affichée comme récompense d'affiliation",
+  "question": "Sur la page compte, une licence gagnée sur Discord affiche « Affiliate reward » dans la carte Clé de licence, mais « Discord reward » dans la carte Formule. Quel nom garde-t-on partout ?",
+  "contexte": "La carte Clé de licence écrit « Rago Optimizer Premium · Affiliate reward » pour toute récompense, sauf un cadeau de l'équipe (views.js:314-316). La carte Formule écrit « Discord reward » et « Earned by inviting players to the Rago Discord » (views.js:553-559), mais garde le lien « Open affiliate program ». Repéré pendant les captures pour la refonte.",
+  "choix": [
+   "« Discord reward » partout pour une récompense Discord",
+   "Laisser « Affiliate reward » dans la carte Clé de licence"
+  ],
+  "precision": "Dis aussi si le lien « Open affiliate program » doit rester pour une récompense Discord.",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 114,
+  "titre": "Abonnement terminé : pastille « Monthly » dans la carte Formule",
+  "question": "Quand un abonnement est terminé, la carte Formule garde la pastille « Monthly » (ou « Yearly ») à côté de « Your subscription ended on… ». On met un badge « Ended » comme dans la carte Clé de licence ?",
+  "contexte": "La carte Clé de licence montre le badge gris « Ended ». La carte Formule garde la pastille du rythme de paiement : quand l'abonnement est terminé, seuls la phrase et les boutons changent (views.js:571-575). Repéré pendant les captures pour la refonte.",
+  "choix": [
+   "Oui, badge « Ended » aussi dans la carte Formule",
+   "Non, garder « Monthly » ou « Yearly »"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 115,
+  "titre": "Achat de test : badge « Test purchase » et texte « revoked »",
+  "question": "Une licence d'achat de test affiche le badge « Test purchase », mais le texte dit « This license was revoked. » On écrit un texte propre à l'achat de test ?",
+  "contexte": "Le badge vient de views.js:501. Les phrases (views.js:548, 559, 567 et 579) n'ont pas de cas pour l'achat de test et retombent sur « This license was revoked. ». Repéré pendant les captures pour la refonte.",
+  "choix": [
+   "Oui, un texte propre à l'achat de test",
+   "Non, « revoked » suffit"
+  ],
+  "precision": "Si oui, écris le texte voulu.",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 116,
+  "titre": "Barre en jeu : échec du nettoyage de la RAM écrit en vert",
+  "question": "Dans la barre en jeu, « Nettoyage impossible, réessaie » s'affiche en vert, comme un succès. On le passe en orange, comme les autres erreurs de la barre ?",
+  "contexte": "Overlay.tsx:147 met le message d'échec dans la même ligne verte que le succès (classe ov-cleaned, overlay.css:188). La page Outils l'affiche bien comme une erreur (Tools.tsx:143). Repéré pendant les captures pour la refonte.",
+  "choix": [
+   "Oui, en orange comme les erreurs",
+   "Non, laisser en vert"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 117,
+  "titre": "Packet Optimizer en gratuit : écran verrouillé",
+  "question": "Dans l'app refaite, le Packet Optimizer en gratuit montre le vrai écran, verrouillé : un clic sur un preset ou un curseur ouvre l'offre Premium, mais les 4 outils réseau et « restore » marchent. Avant, c'était un écran à part « The Packet Optimizer is part of Premium ». On garde cette version ?",
+  "contexte": "La maquette v5 n'a pas d'écran gratuit pour le Packet Optimizer, ni de « Diagnostic avancé » dans le test réseau : ses outils (stabilité, bufferbloat, MTU) sont maintenant dans la rangée « tools » du Packet Optimizer, gratuits comme avant, et « current state » devient gratuit aussi. Appliquer reste Premium (PR #123, dans staging depuis le 23/11).",
+  "choix": [
+   "Oui, on garde l'écran verrouillé avec les outils",
+   "Non, remettre l'écran « part of Premium »",
+   "Écran verrouillé, mais outils réservés au Premium"
+  ],
+  "precision": "Ou dis ce que le joueur gratuit doit voir sur cet onglet",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 118,
+  "titre": "Que devient la section « Three ways in » ?",
+  "question": "Les cartes Rago Route sont maintenant au-dessus du globe, dans la section Rago Route. La section « Three ways in » (chercher un tweak, partir d'un preset, point de restauration) existe toujours, juste avant, avec son titre et ses trois cartes qui arrivent sur une courbe, mais sans globe. On la garde comme ça ?",
+  "contexte": "Tu as demandé de mettre les cartes Rago Route au-dessus du globe « à la place » des cartes actuelles, sans dire ce que devenaient ces trois démos. Je les ai laissées dans leur propre section, rien n'est perdu.",
+  "choix": [
+   "Oui, on la garde telle quelle",
+   "La supprimer, ces trois démos sont déjà ailleurs",
+   "La remettre dans la section Features, comme avant le 24/11"
+  ],
+  "precision": "Ou dis ce que tu veux voir à cet endroit de la page.",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 119,
+  "titre": "Les flux d'Asie s'arrêtent à la Sibérie",
+  "question": "Le globe est cadré sur le haut de la Terre, l'Europe au centre. J'ai pu ajouter des flux depuis Novossibirsk, Iakoutsk (130° est, aussi loin que le Japon) et Astana, mais Tokyo, Pékin et Séoul sont trop au sud : ils sont de l'autre côté du globe dans ce cadrage. On garde comme ça ?",
+  "contexte": "Pour faire entrer l'Extrême-Orient, il faudrait soit faire pivoter le globe vers l'est (l'Europe partirait sur la gauche), soit le rapetisser pour montrer une bande plus profonde (il ne remplirait plus le bas de l'écran).",
+  "choix": [
+   "On garde : Sibérie et Asie centrale suffisent",
+   "Pivoter le globe vers l'est pour avoir la Chine et le Japon",
+   "Rapetisser le globe pour montrer plus de la Terre"
+  ],
+  "precision": "Ou dis quelles villes tu veux voir sur le globe.",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 120,
+  "titre": "La capture du dashboard sur l'accueil date d'une ancienne version",
+  "question": "L'aperçu du dashboard que je viens de mettre sur la première page du site est la capture faite pour le site v5. Elle affiche « 212 tweaks » alors que l'app en compte 218 aujourd'hui, et sa barre latérale n'a pas la ligne du plan gratuit. Tu m'envoies une capture à jour du dashboard ?",
+  "contexte": "C'est la seule capture du dashboard qu'on a dans le dépôt (2 880 × 1 800, faite le 22/11 pour le héros du site v5). En attendant, elle est en place sur l'accueil, réduite en 1 600 × 1 000.",
+  "choix": [
+   "Je t'envoie une capture à jour",
+   "Garde celle-là, le chiffre n'a pas d'importance",
+   "Refais-la toi-même depuis l'app"
+  ],
+  "precision": "Si tu envoies une capture : plein écran du dashboard, fenêtre de l'app seule, au moins 1 600 px de large.",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 121,
+  "titre": "La barre en jeu sort encore du jeu sans la 1.2.1 ?",
+  "question": "Tu as vu la barre en jeu t'envoyer sur une autre page et ton jeu se fermer ou se réduire. Sur ton PC, la vraie 1.2.1 tournait en même temps que l'exe de test, et ses deux barres s'ouvrent sur Alt+X. Quand tu refais le test avec la 1.2.1 quittée (icône près de l'horloge, clic droit, Quitter), est-ce que ça arrive encore ?",
+  "contexte": "Je n'ai rien changé à la façon dont la barre prend le premier plan : la barre de la 1.2.1 ouverte en même temps est la cause la plus probable. Si ça arrive encore, il me faut le nom du jeu et son mode d'affichage (plein écran, fenêtré sans bordure).",
+  "choix": [
+   "Non, ça ne le fait plus",
+   "Oui, ça le fait encore",
+   "Pas encore retesté"
+  ],
+  "precision": "Si ça le fait encore : quel jeu, et en plein écran ou en fenêtré sans bordure ?",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 122,
+  "titre": "Qui est le compte qRago (Owner) ?",
+  "question": "Dans le serveur Minecraft Rago Practice, le compte Minecraft qRago est l'Owner (le PNJ « [OWNER] qRago », les outils Owner, le skin de RagoBot) et kaliso_dev est le Dev. À qui est le compte qRago ?",
+  "contexte": "Le code et le suivi disent « le propriétaire » sans donner de nom. Le vault doit savoir qui joue sous quel compte.",
+  "choix": [
+   "C'est mon compte",
+   "C'est le compte d'Abel",
+   "C'est un compte partagé"
+  ],
+  "precision": "Si c'est quelqu'un d'autre, dis qui.",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 123,
+  "titre": "Sur quel PC tourne le serveur de test Minecraft ?",
+  "question": "Le serveur de test de Rago Practice (dossier C:\\Users\\rgabe\\Rago, versions installées par Claude après ton accord) tourne sur quel PC ?",
+  "contexte": "Le suivi parle de « ton PC » ; le vault doit le dire pour qu'un nouveau Claude sache où installer.",
+  "choix": [
+   "Mon PC Windows",
+   "Le PC d'Abel",
+   "Un autre PC"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 124,
+  "titre": "Fermer la PR #48 (events) du serveur Minecraft ?",
+  "question": "La PR #48 de network-server-rago (poudre rouge et annonce des events toutes les 20 s) est dépassée : la même chose est codée dans la PR #47. Je la ferme ?",
+  "contexte": "#48 partait de l'ancienne version des events ; #47 contient la version testée en CI le 22/11.",
+  "choix": [
+   "Oui, ferme-la",
+   "Non, laisse-la ouverte"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 125,
+  "titre": "Et la PR #10 (CI sous Java 25) ?",
+  "question": "La PR #10 de network-server-rago (vérifier aussi le serveur sous Java 25 en CI) est ouverte depuis le 11/11 et a 83 commits de retard. On la garde, on la refait sur la branche actuelle, ou on la ferme ?",
+  "contexte": "Le serveur de test démarre aujourd'hui sous Java 17 ; la CI teste Java 8 et 21.",
+  "choix": [
+   "La fermer",
+   "La refaire sur la branche actuelle",
+   "La laisser comme elle est"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 126,
+  "titre": "Rago Practice et Rago Client : un seul projet ?",
+  "question": "Le serveur Minecraft Rago Practice est-il un projet à part, ou une partie du projet Rago Client (le client Minecraft) ?",
+  "contexte": "Le vault de Rago Optimizer le note « À VÉRIFIER » depuis le 10/11. Le serveur n'exige pas Rago Client et a un PNJ « Rago Client » au lobby.",
+  "choix": [
+   "Un projet à part",
+   "Une partie de Rago Client",
+   "Les deux vont ensemble mais restent séparés"
+  ],
+  "precision": "",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 127,
+  "titre": "L'adresse rago.gg du serveur Minecraft est-elle prise ?",
+  "question": "Le jeu affiche l'adresse « rago.gg » (sidebar, Tab) et le suivi dit que le domaine est à acheter par toi. Quel domaine sera celui du serveur, et est-il acheté ?",
+  "contexte": "Le site attend aussi son domaine (RAGO_SITE_URL). Aucun site Netlify n'existe encore pour Rago Practice.",
+  "choix": [
+   "rago.gg, pas encore acheté",
+   "rago.gg, déjà acheté",
+   "Un autre domaine"
+  ],
+  "precision": "Si c'est un autre domaine, écris-le.",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 128,
+  "titre": "Dossier rago-redesign du projet New Brand Rago",
+  "question": "Le dossier rago-redesign/ du projet New Brand Rago (maquettes v5, kit de marque, scripts qui génèrent le CSS de l'app) ne passera pas tout seul sur le nouveau compte Claude. Que fait-on ?",
+  "contexte": "Sans les scripts de rendus-v5/outils/, les fichiers générés de app/src/s5/ ne peuvent plus être refaits. Sa taille n'est pas connue de ce fil.",
+  "choix": [
+   "Le mettre dans le dépôt (sans les grosses images)",
+   "Je le télécharge et je le remets dans le nouveau projet",
+   "Les deux"
+  ],
+  "precision": "Précise si une partie peut être jetée.",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 129,
+  "titre": "Page des questions sur le nouveau compte",
+  "question": "Cette page « Questions du vault Rago » appartient à l'ancien compte Claude. Sur le nouveau compte, on la garde comment ?",
+  "contexte": "Les questions ouvertes sont recopiées dans la note Questions ouvertes du vault, donc rien n'est perdu. Mais un Claude du nouveau compte ne pourra peut-être pas écrire sur cette page.",
+  "choix": [
+   "La partager avec le nouveau compte et la garder",
+   "Un Claude du nouveau compte en recrée une avec les questions ouvertes",
+   "Plus de page : questions dans le fil et le vault seulement"
+  ],
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 130,
+  "titre": "Document de pilotage du client",
+  "question": "Le code et les PR de Rago Client citent un « document de pilotage » (identifiants D-14, D-42, D-55, B-06, N-20, M01...). Où est-il ?",
+  "contexte": "Il n'est pas dans le dépôt Rago-Client. Sans lui, le nouveau Claude ne connaîtra que les décisions recopiées dans le code.",
+  "choix": [
+   "Dans un fichier du projet Claude du client",
+   "Dans un Google Doc ou un autre outil",
+   "Il n'existe plus"
+  ],
+  "precision": "Si tu peux, donne le lien ou le nom du fichier : je le mettrai dans le vault.",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 131,
+  "titre": "Comment le client sera distribué",
+  "question": "Le launcher télécharge Rago depuis les releases GitHub, mais le dépôt Rago-Client est privé et aucune release n'est publiée (un brouillon v1.11.2). Comment veux-tu distribuer le client ?",
+  "contexte": "La PR #49 (ouverte) fait télécharger depuis ton propre hôte signé (dl.rago.gg), avec un domaine et un stockage R2 à prendre.",
+  "choix": [
+   "Hôte signé de la PR #49",
+   "Releases GitHub, dépôt repassé en public",
+   "Pas encore décidé"
+  ],
+  "precision": "Dis aussi le domaine prévu si tu le sais.",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 132,
+  "titre": "Base de données de Rago Network",
+  "question": "Sur Render, as-tu mis la base Neon (DATABASE_URL) au service rago-network ?",
+  "contexte": "Le 25/11, le serveur répond mais compte 0 joueur. Sans base Neon, les points, coffres et cosmétiques gagnés sont perdus à chaque réveil du serveur.",
+  "choix": [
+   "Oui, elle est mise",
+   "Non, pas encore",
+   "Je ne sais pas, vérifie avec moi"
+  ],
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 133,
+  "titre": "Clé Google de la traduction du chat",
+  "question": "La clé Google Cloud Translation (GOOGLE_TRANSLATE_KEY) est-elle posée sur Render pour la traduction du chat ?",
+  "contexte": "Sans elle, la traduction (Ctrl + clic sur un message) répond « translate_off ».",
+  "choix": [
+   "Oui",
+   "Non, pas encore",
+   "Je ne veux plus de traduction"
+  ],
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 134,
+  "titre": "Prix et boutique de Rago+",
+  "question": "Rago+ (tous les cosmétiques et le R rose) existe dans le client et le serveur, mais il n'y a ni prix ni boutique : le bouton dit « bientôt ». Quel prix, et où l'acheter ?",
+  "contexte": "Aujourd'hui seul /rago plus (ton compte) peut le donner.",
+  "choix": [
+   "Pas encore décidé",
+   "Abonnement mensuel, prix à préciser",
+   "Avec le Premium de Rago Optimizer"
+  ],
+  "precision": "Écris le prix si tu l'as.",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 135,
+  "titre": "Date de lancement du client",
+  "question": "Quand veux-tu lancer Rago Client au public ?",
+  "contexte": "Rien n'est publié ; 7 PR sont ouvertes ; le site vitrine (PR #24) n'est pas en ligne.",
+  "choix": [
+   "Pas de date encore",
+   "Ce mois-ci",
+   "Après la nouvelle marque"
+  ],
+  "precision": "Une date si tu l'as.",
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 136,
+  "titre": "Nouvelle marque pour le client",
+  "question": "Le client (menus, launcher, site vitrine) doit-il passer au design de la nouvelle marque Rago (projet New Brand Rago) ?",
+  "contexte": "Il utilise aujourd'hui son propre look : verre dépoli, rouge #E43136, police Inter.",
+  "choix": [
+   "Oui, comme l'app et le site",
+   "Non, il garde son look",
+   "Plus tard"
+  ],
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ },
+ {
+  "num": 137,
+  "titre": "Permission d'OptiFine",
+  "question": "As-tu une permission écrite de l'auteur d'OptiFine (sp614x) pour livrer OptiFine dans Rago ?",
+  "contexte": "La licence d'OptiFine l'interdit sans son accord. Le 29/10 tu as dit qu'il était d'accord ; le vault doit savoir où est la preuve.",
+  "choix": [
+   "Oui, par e-mail",
+   "Oui, sur Discord",
+   "Non, pas par écrit"
+  ],
+  "statut": "ouverte",
+  "reponse": {
+   "choix": null,
+   "texte": ""
+  }
+ }
+]

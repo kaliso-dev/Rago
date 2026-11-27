@@ -1,11 +1,11 @@
 ---
 type: technique
 tags: [technique, app]
-maj: 2026-11-23
+maj: 2026-11-25
 ---
 # App Windows (`app/`)
 
-Vue produit de l'app (écrans, stack, fichiers). Fonctionnement interne précis (démarrage, 93 commandes, événements, scellement) : [[Architecture de l'app]]. Code fichier par fichier : [[Code de l'app (Rust)]]. Voir aussi [[Architecture]], [[Historique des versions]], [[Développer et tester]].
+Vue produit de l'app (écrans, stack, fichiers). Fonctionnement interne précis (démarrage, 94 commandes, événements, scellement) : [[Architecture de l'app]]. Code fichier par fichier : [[Code de l'app (Rust)]]. Voir aussi [[Architecture]], [[Historique des versions]], [[Développer et tester]].
 
 ## Navigation (barre latérale)
 Ordre de la charte v5 (PR #108 du 22/11, sur `staging`, jamais testée sur Windows ; la prod garde l'ancien ordre : Optimiser, En jeu, Avancé).
@@ -13,7 +13,7 @@ Ordre de la charte v5 (PR #108 du 22/11, sur `staging`, jamais testée sur Windo
 - **Play** : Jeux ([[Bibliothèque de jeux]]) · Affichage ([[Couleurs et résolution]]) · Hitreg · Souris ([[Page Souris]]) · [[Mode jeu]] · Minecraft · [[RBW Mod]]
 - **Pro** : Mode expert · Restaurer (historique, retour arrière)
 - En bas : carte « Plan gratuit » ([[Licence dans l'app]]) ou, en Premium, carte « This PC » (réglages allumés, état administrateur), Paramètres ([[Paramètres de l'app]]), devise « Every millisecond counts. » et bouton Discord.
-- **Look** : charte v5 « Match day » ([[Charte graphique]]) : grands titres penchés sur pinceau rouge, écran de démarrage RAGO, icône R rouge sur tuile blanche. Depuis le 23/11, les pages sont refaites une à une avec le HTML et le CSS exacts des maquettes v5 ([[Maquettes v5 dans l'app (s5)]]) : tableau de bord, Jeux, choix du preset, Display et les pages des modules (PR #122) (réglages en carreaux sur 3 colonnes, détail au survol, barre « apply » en bas).
+- **Look** : charte v5 « Match day » ([[Charte graphique]]) : grands titres penchés sur pinceau rouge, écran de démarrage RAGO, icône R rouge sur tuile blanche. Depuis le 23/11, les pages sont refaites une à une avec le HTML et le CSS exacts des maquettes v5 ([[Maquettes v5 dans l'app (s5)]]) : tableau de bord, Jeux, choix du preset, Display et les pages des modules (PR #122) (réglages en carreaux sur 3 colonnes, détail ouvert au clic sur l'icône info de chaque réglage depuis le 25/11, barre « apply » en bas ; cartes d'une même rangée alignées sans vide depuis le 25/11, PR #137).
 - Recherche de tweak (palette), [[Barre en jeu]] (fenêtre séparée `overlay.html`), icône près de l'horloge ([[Arrière-plan et démarrage]]).
 Contenu des modules : [[Catalogue des tweaks]]. Fonctionnement interne : [[Moteur des tweaks]], [[Réparations au lancement]], [[Pendant la partie]], [[Partage et support]].
 
@@ -30,7 +30,7 @@ Contenu des modules : [[Catalogue des tweaks]]. Fonctionnement interne : [[Moteu
 - Pages React (`app/src/pages/`) : `Dashboard`, `Analysis`, `Games`, `ModulePage`, `Network`, `NetOpt`, `NetTest`, `RouteTab`, `Share`, `Tools`, `Settings`. FR/EN (`lib/i18n.ts`, anglais par défaut, tutoiement en français).
 
 ## Fichiers écrits sur le PC
-`%LOCALAPPDATA%\Rago\license.bin`, `scripts.bin`, `account.bin` (DPAPI) ; `%APPDATA%\gg.rago.optimizer\applied.json`, `history.json`, `logs\`, `backup\*.reg`, et les autres fichiers listés dans [[Code de l'app (Rust)]] (section « Les fichiers sur disque »). Les logs d'un joueur : `%APPDATA%\gg.rago.optimizer\logs` ([[Problèmes joueurs]]).
+`%LOCALAPPDATA%\Rago\license.bin`, `scripts.bin`, `account.bin` (DPAPI ; exe de test : dossier `Rago (gg.rago.optimizer.staging)`) ; `%APPDATA%\gg.rago.optimizer\applied.json`, `history.json`, `logs\`, `backup\*.reg`, et les autres fichiers listés dans [[Code de l'app (Rust)]] (section « Les fichiers sur disque »). Les logs d'un joueur : `%APPDATA%\gg.rago.optimizer\logs` ([[Problèmes joueurs]]).
 
 ## Licence côté app
 Jeton JWT EdDSA de 30 jours (`LICENSE_TOKEN_DAYS` du serveur) vérifié hors ligne, rafraîchi par l'interface au démarrage puis toutes les 24 h ([[license.rs]]) ; empreinte PC = 2 sur 3 parmi MachineGuid, UUID SMBIOS, n° de série carte mère. Voir [[Serveur de licences]] et [[Clés et secrets]].

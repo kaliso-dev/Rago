@@ -1,7 +1,7 @@
 ---
 type: carte
 tags: [version]
-maj: 2026-11-22
+maj: 2026-11-25
 ---
 # Historique des versions
 
@@ -21,7 +21,7 @@ Carte des versions de l'app. Voir [[App Windows]], [[Publier une version]], [[Jo
 | 1.2.1 | 29/10 | collecte des tests réseau ; **en prod depuis le 31/10** (exe et `.sig` déposés par Sofiene) | [[Version 1.2.1]] |
 | 1.2.9 | 29/10 | numéro d'un **exe de test staging** seulement (pour qu'aucune mise à jour de test ne le remplace) | [[Mise à jour automatique]] |
 | 1.2.2 | 01/11 | preset Minecraft PvP à 20 réglages, désinstallation des applis gratuite (PR #70) : **jamais sortie seule**, entrée dans la 1.3.0 le 04/11 | [[Version 1.3.0]] |
-| 1.3.0 | 04/11 → | 73 réglages gratuits dont 30 actifs, connexion Google/Discord, essai 3 jours, Analyse du PC ; depuis le 10/11 (PR #76) la grosse sortie avec Rago Route (Beta) : **sur `staging`, pas sortie** | [[Version 1.3.0]] |
-| 1.4.0 | 22/11 → | la 1.3.0 de `staging` + la charte v5 « Match day » dans toute l'app (PR #108, vers `staging`) ; jamais testée sur Windows, pas publiée | [[Charte graphique]] |
+| 1.3.0 | 04/11 → | 73 réglages gratuits dont 30 actifs, connexion Google/Discord, essai 3 jours, Analyse du PC ; depuis le 10/11 (PR #76) la grosse sortie avec Rago Route (Beta) : **en prod depuis le 22/11** (PR #105, exe du run 270, mise à jour automatique à 100 %) ; avant, sur `staging` | [[Version 1.3.0]] |
+| 1.4.0 → 1.4.1 | 22/11 → | la 1.3.0 + la charte v5 « Match day » dans toute l'app (1.4.0, PR #108), puis l'app refaite à l'identique des maquettes (1.4.1, PR #119 à #139) : **dans `staging`, pas publiée**, un seul test Windows (25/11) | [[Version 1.4.1]] |
 
 Attention : 1.1.11, 1.1.12 et 1.1.13 désignent chacune **deux contenus différents** (exe envoyés à Sofiene). Ne jamais réutiliser ces numéros.

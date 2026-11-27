@@ -3,7 +3,7 @@ type: code
 tags: [code, app, rust, carte]
 fichier: app/src-tauri/
 lignes: 23 431 (43 fichiers .rs de src/), plus build.rs 66, embed_scripts.rs 98, netopt/*.ps1 932
-maj: 2026-11-11
+maj: 2026-11-25
 ---
 # Code de l'app (Rust)
 
@@ -23,7 +23,7 @@ Tout est CONFIRMÉ (code de `staging`, 11/11 : les 6 fonctionnalités de la PR #
 | Module | Lignes | Rôle |
 |---|---|---|
 | [[main.rs]] | 6 | lance `rago_hub_lib::run()`, sans console en release |
-| [[lib.rs]] | 1 499 | état partagé, 93 commandes, démarrage (`run()`) |
+| [[lib.rs]] | 1 546 | état partagé, 94 commandes, démarrage (`run()`) |
 | [[instance.rs]] | 283 | une seule instance : mutex Windows, réveil de la fenêtre déjà ouverte, attente de la désinstallation |
 | [[background.rs]] | 294 | préférences d'arrière-plan, icône près de l'horloge, tâche planifiée de lancement avec Windows |
 | [[icon.rs]] | 189 | extrait l'icône d'un exe en PNG (bibliothèque de jeux) |
@@ -40,7 +40,7 @@ Tout est CONFIRMÉ (code de `staging`, 11/11 : les 6 fonctionnalités de la PR #
 | [[reset.rs]] | 522 | remise à zéro : fin de licence, désinstallation (`--reset-tweaks`) |
 | [[seal.rs]] | 156 | chiffrement des scripts et des fichiers natifs (HMAC-SHA256), clés hors ligne et par version |
 | [[assets.rs]] | 139 | déchiffre `LowLatency.pow` et `extremelatencylow.nip` dans un dossier temporaire (`%RAGO_RES%`) |
-| [[shell.rs]] | 65 | lance un programme sans fenêtre, droits administrateur |
+| [[shell.rs]] | 94 | lance un programme sans fenêtre, droits administrateur, texte d'une sortie en page de code de la console |
 | [[reg.rs]] | 110 | lecture du registre (vue 64 bits), une seule écriture |
 | [[minecraft.rs]] | 185 | préréglages OptiFine (`optionsof.txt`, copie gardée avant d'écrire) |
 | [[rbw.rs]] | 178 | état de ce que lit le vérificateur de Ranked Bedwars (lecture seule, [[RBW Mod]]) |
@@ -48,7 +48,7 @@ Tout est CONFIRMÉ (code de `staging`, 11/11 : les 6 fonctionnalités de la PR #
 ### Licence et compte
 | Module | Lignes | Rôle |
 |---|---|---|
-| [[license.rs]] | 691 | licence : empreinte du PC, connexion (mot de passe ou navigateur), activation, jeton signé vérifié hors ligne, clé des scripts, coffre DPAPI |
+| [[license.rs]] | 719 | licence : empreinte du PC, connexion (mot de passe ou navigateur), activation, jeton signé vérifié hors ligne, clé des scripts, coffre DPAPI |
 | [[account.rs]] | 326 | compte : nom public, photo, avis, abonnement, prix des offres ([[Abonnement dans l'app]]) |
 
 ### Le PC
@@ -70,8 +70,8 @@ Tout est CONFIRMÉ (code de `staging`, 11/11 : les 6 fonctionnalités de la PR #
 | [[session.rs]] | 665 | [[Pendant la partie]] : carte graphique performante, plan d'alimentation, jeu en priorité haute, défait après ; vérifications et conseils |
 | [[mouse.rs]] | 107 | [[Page Souris]] : logiciels de remappage, de macro, de clic automatique ou du fabricant lancés (lecture seule) |
 | [[tips.rs]] | 416 | [[Conseils au lancement du jeu]] : jeu à conseils, réglages cochés, applis gourmandes, écran, Game DVR |
-| [[fps.rs]] | 286 | FPS du jeu par PresentMon, résumé de la dernière partie |
-| [[flows.rs]] | 382 | serveur du jeu en cours trouvé dans le journal réseau du noyau (ETW) |
+| [[fps.rs]] | 294 | FPS du jeu par PresentMon, résumé de la dernière partie |
+| [[flows.rs]] | 390 | serveur du jeu en cours trouvé dans le journal réseau du noyau (ETW) |
 | [[gameping.rs]] | 408 | ping du jeu en cours (Minecraft, TCP ou ICMP) |
 
 ### Réseau
@@ -183,12 +183,12 @@ Ils sont écoutés par [[store.tsx]] et les pages de l'interface.
 | `<data>\backup\<empreinte>.reg` | [[backup.rs]] | exports de clés entières avant leur suppression |
 | `<data>\run\` (`*.cmd`, `res-<pid>-<ms>\`, `nvidia-defaults.nip`) | [[runner.rs]], [[assets.rs]] | scripts et fichiers natifs en clair le temps d'un lot ; vidé au démarrage |
 | `%SystemRoot%\Temp\<identifiant>\` | [[assets.rs]] | repli des fichiers natifs ; vidé au démarrage |
-| `%LOCALAPPDATA%\Rago\license.bin`, `scripts.bin` | [[license.rs]] | jeton de licence et clé des scripts, chiffrés (DPAPI) |
-| `%LOCALAPPDATA%\Rago\account.bin` | [[account.rs]] | compte en cache, chiffré |
+| `%LOCALAPPDATA%\Rago\license.bin`, `scripts.bin` (exe de test : `%LOCALAPPDATA%\Rago (gg.rago.optimizer.staging)\`) | [[license.rs]] | jeton de licence et clé des scripts, chiffrés (DPAPI) |
+| `account.bin`, même dossier | [[account.rs]] | compte en cache, chiffré |
 | `optionsof.txt.rago-<horodatage>(.bak, .none)` à côté d'`optionsof.txt` | [[minecraft.rs]] | copie avant les préréglages OptiFine |
 | `<fichier de réglages du jeu>.rago-original` (GameUserSettings.ini, cs2_video.txt, videoconfig.txt) | [[gamecfg.rs]] | copie avant les graphismes des jeux |
 
-À VÉRIFIER : `%LOCALAPPDATA%\Rago\` n'a pas de suffixe staging, alors que `<data>` en a un : l'exe de test et le vrai partagent donc la licence et le compte (voir [[license.rs]]).
+Depuis le 25/11 (PR #139), l'exe de test a aussi son propre dossier de jetons : partagé, il faisait perdre la connexion Premium dès que le vrai Rago tournait à côté (voir [[license.rs]]).
 
 ## Le registre et les objets Windows que l'app touche elle-même
 En dehors des scripts des réglages ([[Scripts embarqués (JSON)]]) :
@@ -196,7 +196,7 @@ En dehors des scripts des réglages ([[Scripts embarqués (JSON)]]) :
 - **Lu** : `HKLM\SOFTWARE\Microsoft\Cryptography` `MachineGuid` (empreinte, [[license.rs]]) ; `HKLM\SYSTEM\Select` `Current` et `…\Control\Power` `HibernateEnabled` ([[backup.rs]]) ; `GameConfigStore`, `GameDVR`, `PushNotifications` ([[analysis.rs]] ; les deux premiers aussi par [[tips.rs]] pendant une partie) ; clés des launchers et `Uninstall` ([[games.rs]]) ; clés lues par le vérificateur RBW ([[rbw.rs]]).
 - **Pilotes, écran et fichiers des jeux** ([[display.rs]]) : saturation NVIDIA (NVAPI) et AMD (ADL), rampe gamma, mode d'affichage temporaire (jamais écrit dans le registre), clés de résolution des fichiers de réglages de Valorant, Fortnite et CS2 ; lit `HKCU\Software\Valve\Steam` `SteamPath` et `HKLM\SOFTWARE\WOW6432Node\Valve\Steam` `InstallPath`.
 - **Tâche planifiée** « Rago Optimizer » (ou « Rago Optimizer Staging ») : lancement avec Windows ([[background.rs]]), supprimée à la désinstallation ([[Installateur NSIS]]).
-- **Objets nommés** : `Local\<identifiant>.instance` et `Local\<identifiant>.show` ([[instance.rs]]) ; session ETW « Rago-GamePing » ([[flows.rs]]) ; session PresentMon « RagoOptimizerFps » ([[fps.rs]]).
+- **Objets nommés** : `Local\<identifiant>.instance` et `Local\<identifiant>.show` ([[instance.rs]]) ; session ETW « Rago-GamePing » ([[flows.rs]]) ; session PresentMon « RagoOptimizerFps » ([[fps.rs]]). L'exe de test a les siennes depuis le 25/11 (« Rago-GamePing-Test », « RagoOptimizerFpsTest ») : avec les mêmes noms, chacun arrêtait celle de l'autre.
 
 ## À savoir avant de modifier
 - Ajouter une commande : la fonction dans le module, `#[tauri::command]` dans [[lib.rs]], l'enregistrer dans `generate_handler!`, puis l'appel dans [[api.ts]]. Une commande de plugin demande aussi une permission dans `capabilities/` ([[Configuration Tauri]]).

@@ -1,11 +1,11 @@
 ---
 type: historique
 tags: [historique]
-maj: 2026-11-11
+maj: 2026-11-27
 ---
 # Pull requests
 
-Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08/10) à la #91 (11/11). Source : l'API GitHub, lue le 10/11 vers 16:30 UTC puis vers 18:49 pour les #84 à #87, et le 11/11 vers 00:50 pour les #88 à #91, et les fils du projet Claude ([[Fils du projet]]). Statut : CONFIRMÉ (API GitHub et fils), sauf mention contraire. Voir aussi [[Chronologie du projet]], [[Branches et environnements]], [[Historique des versions]] et [[CI GitHub Actions]].
+Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08/10) à la #153 (26/11), plus les #154 et #158 (27/11) ; les #155 à #157 sont suivies par d'autres fils. Source : l'API GitHub, lue le 10/11 vers 16:30 UTC puis vers 18:49 pour les #84 à #87, et le 11/11 vers 00:50 pour les #88 à #91, le 27/11 pour les #142 à #153 et la fermeture des #71, #106 et #143, et les fils du projet Claude ([[Fils du projet]]). Statut : CONFIRMÉ (API GitHub et fils), sauf mention contraire. Voir aussi [[Chronologie du projet]], [[Branches et environnements]], [[Historique des versions]] et [[CI GitHub Actions]].
 
 ## Comment lire ce tableau
 - **Heures en UTC**, comme GitHub. Paris avait 2 heures d'avance jusqu'au 24/10, puis 1 heure à partir du 25/10.
@@ -13,9 +13,10 @@ Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08
 - Une PR « fusionnée » l'a été sur un mot de Sofiene (« fusionne », « push », « vsy push »…), jamais d'office ([[Décisions]]).
 - **Fil d'origine** : le fil du projet Claude qui a ouvert la PR. Les PR #1 à #51 viennent d'un projet Claude plus ancien, d'avant le 15/10 : ses fils ne sont pas consultables depuis le projet actuel. Le passage d'un projet à l'autre est raconté dans [[Synthèse de reprise du 15-10]].
 
-## Chiffres au 11/11 (00:50 UTC)
-- **94 PR** (11/11, 08:50 UTC) : 82 fusionnées, 11 fermées sans fusion, 1 ouverte (#71).
-- Cible : 47 vers la prod, 43 vers `staging`, 1 vers une autre branche.
+## Chiffres au 27/11
+- **153 PR** : 137 fusionnées, 15 fermées sans fusion, 1 ouverte (#136 accueil du site v6). Fermées sans fusion le 26/11 : #71 (bot communauté vers la prod, code déjà en prod par la #105) et #106 (vault de la 1.3.0, repris par la #153) ; le 27/11 : #143 (ouverte par erreur vers la prod).
+- Cible des #95 à #153 : 10 vers la prod (#101, #103, #105, #114, #117, #143, #145, #150, #151, #152), 49 vers `staging`. Les #150 à #152 ([[Rago Hub]]) sont allées directement en prod ; leur `.claude/` a été recopié dans `staging` le 27/11 (q130). Pour les #1 à #94, compté le 11/11 : 47 vers la prod, 43 vers `staging`, 1 vers une autre branche.
+- PR #107 à #141 : la refonte v5 et v6 du [[New Brand Rago]]. PR #142 à #149 : cerveaux des autres projets dans le [[Cerveau du vault]] et vault du passage au nouveau compte ; #150 à #152 : [[Rago Hub]] ; #153 : vault regroupé.
 - Fermées sans fusion, entre autres : #16, #21, #24, #26, #28, #46, #47, #50, #51, #69. Les branches de ces PR sont gardées (décision du 01/11, [[Branches et environnements]]).
 - Jusqu'au 12/10, une PR vers `staging` était souvent suivie d'une PR « port en prod » qui reprenait le même travail (#25 → #27, #29 → #30, #31 + #32 → #33, #34 à #37 → #38, #39 + #41 + #42 → #43, #44 → #45). Depuis la 1.2, la prod n'a plus reçu que des PR ciblées (#59, #61, #63, #66 à #68, #72, #81, #87) : le 10/11, `staging` avait environ 160 commits de plus que la prod, et **le code de l'app sur la branche de prod était encore la 1.1.14** (les exe sont construits depuis `staging`).
 
@@ -113,6 +114,67 @@ Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08
 | 92 | Staging : les 6 features à tester ensemble (hitreg, presets par jeu, Outils, saturation, conseils, priorité) | `claude/project-thread-0z6ufn` → `staging` | 11/11 08:18 | 11/11 | fusionnée | Branche d'intégration de la version test : réunit #86, #89, #90, #91, #93 et #94, conflits résolus, sur « Push toutes les modification vers stagging pour que je puisse test la version test » de Sofiene |
 | 93 | Couleurs et résolution par jeu, réglages des pros | `claude/project-thread-7n0ikn` → `staging` | 11/11 08:20 | 11/11 | fusionnée (par la #92) | [[Couleurs et résolution]] (points 1 et 2 de la demande du 11/11) |
 | 94 | Graphismes des jeux (Performance, Équilibré, Qualité) | `claude/project-thread-5ln7f8` → `staging` | 11/11 08:21 | 11/11 | fusionnée (par la #92) | [[Graphismes des jeux]] (point 3 de la demande du 11/11) |
+| 95 | Vault : PR #89 fusionnée, inventaires des PR et des branches | `claude/project-thread-…` → `staging` | 11/11 08:51 | 11/11 | fermée sans fusion | Vault seulement ; remplacée par les PR de vault suivantes. | — |
+| 96 | Page Souris : vraie fréquence, double clic, logiciels, sensibilité | → `staging` | 11/11 09:27 | 11/11 | fusionnée | [[Page Souris]] (« + mouse » de Sofiene) | Passer les 6 features sur staging |
+| 97 | Vault : l'admin marche en prod, jeton du Cerveau à vérifier | → `staging` | 11/11 09:52 | 11/11 | fusionnée | Vault seulement ([[Tableau de bord admin]], q98) | — |
+| 98 | Vault : exe staging refait avec la page Souris (run 264) | `claude/project-thread-xj2eim` → `staging` | 11/11 09:54 | 11/11 | fusionnée | Vault seulement | Passer les 6 features sur staging |
+| 99 | Retirer Rago OS : pont, Mode jeu total et vault | `claude/project-thread-r4qi8b` → `staging` | 12/11 21:31 | 12/11 | fusionnée | Rago OS retiré de l'app et du vault ([[Décisions]]) | Supprimer Rago OS et ses traces |
+| 100 | Cerveau : choisir entre Rago Optimizer et RAGO-OS | `claude/project-thread-ofup9b` → `staging` | 12/11 22:20 | 12/11 | fusionnée | [[Cerveau du vault]] : menu des cerveaux | Ajouter le choix du cerveau dans l'admin |
+| 101 | Cerveau en prod : menu déroulant Rago Optimizer / RAGO-OS | `claude/project-thread-ofup9b-prod` → prod | 12/11 22:30 | 12/11 | fusionnée | Même chose, en prod | Ajouter le choix du cerveau dans l'admin |
+| 102 | Vault : choix du cerveau en staging et en prod | `claude/project-thread-ofup9b` → `staging` | 12/11 22:36 | 12/11 | fusionnée | Vault seulement | Ajouter le choix du cerveau dans l'admin |
+| 103 | Prod : redéployer le Cerveau (note MISE-EN-LIGNE) | `claude/project-thread-ofup9b-prod` → prod | 12/11 22:56 | 12/11 | fusionnée | Paragraphe « Redeploy » de `MISE-EN-LIGNE.md` ([[Railway]]) | Ajouter le choix du cerveau dans l'admin |
+| 104 | Vault : menu des cerveaux en prod | `claude/project-thread-ofup9b` → `staging` | 12/11 23:04 | 12/11 | fusionnée | Vault seulement | Ajouter le choix du cerveau dans l'admin |
+| 105 | Sortie 1.3.0 : staging en prod (serveur et site) | `claude/project-thread-63o6u9` → prod | 22/11 00:38 | 22/11 01:07 | fusionnée | **Sortie de la [[Version 1.3.0]]** : `staging` fusionnée dans la branche de prod, 5 conflits réglés en gardant `staging` | Retrouver la version pas encore publiée |
+| 106 | Vault : sortie de la 1.3.0 | `claude/project-thread-63o6u9` → `staging` | 22/11 01:18 | — | **ouverte** | Vault de la sortie 1.3.0 ; son contenu est repris le 25/11 par la PR du fil « Compléter le vault Rago optimizer », elle peut être fermée | Retrouver la version pas encore publiée |
+| 107 | Compte, e-mails et admin en v5 | `claude/project-thread-y7dmrv` → `staging` | 22/11 20:00 | 22/11 | fusionnée | [[Charte graphique]] v5 sur le serveur de comptes | projet New Brand Rago |
+| 108 | App 1.4.0 : nouvelle charte v5 « Match day » dans toute l'app | `claude/project-thread-2btl2s` → `staging` | 22/11 20:06 | 22/11 | fusionnée | [[Version 1.4.1]] (1.4.0 à ce moment) | projet New Brand Rago |
+| 109 | Site public en design v5 « Match day » | `claude/project-thread-7emsbt` → `staging` | 22/11 20:16 | 22/11 | fusionnée | [[Site]] v5, kit `brand/` | projet New Brand Rago |
+| 110 | Site v5 : pleine largeur, animations au défilement | `claude/project-thread-7emsbt` → `staging` | 22/11 21:09 | 22/11 | fusionnée | Retouches du site v5 | projet New Brand Rago |
+| 111 | Page compte : icônes imprimées et coches rouges | `claude/project-thread-y7dmrv` → `staging` | 22/11 21:09 | 22/11 | fusionnée | Page compte v5 | projet New Brand Rago |
+| 112 | Site v5 : chaque section à la hauteur de l'écran | `claude/project-thread-7emsbt` → `staging` | 22/11 22:07 | 22/11 | fusionnée | 2e retour de Sofiene sur le site v5 | projet New Brand Rago |
+| 113 | Site v5 : sections collées, barre en jeu entière | `claude/project-thread-7emsbt` → `staging` | 22/11 22:25 | 22/11 | fusionnée | 3e retour de Sofiene | projet New Brand Rago |
+| 114 | Prod : admin et e-mails en v5 | `claude/project-thread-y7dmrv` → prod | 22/11 22:30 | 22/11 22:40 | fusionnée | Admin, cadre du Cerveau et e-mails v5 en prod (« tu peux push sur la prod pour l'interface admin et les mails ») | projet New Brand Rago |
+| 115 | Vault : admin et e-mails v5 en prod | `claude/project-thread-y7dmrv` → `staging` | 22/11 22:41 | 22/11 | fusionnée | Vault seulement | projet New Brand Rago |
+| 116 | Site v5 : plus de trou dans les cartes du carrousel | `claude/project-thread-7emsbt` → `staging` | 22/11 22:53 | 22/11 | fusionnée | Carrousel « Now Rago plays with you » | projet New Brand Rago |
+| 117 | Prod : icônes Rago dans l'admin | `claude/project-thread-y7dmrv` → prod | 22/11 22:57 | 22/11 23:07 | fusionnée | Icônes imprimées dans l'admin de prod (dernier commit de la branche de prod au 25/11) | projet New Brand Rago |
+| 118 | Staging : icônes Rago dans l'admin | `claude/project-thread-y7dmrv` → `staging` | 22/11 23:08 | 22/11 | fusionnée | Même chose sur `staging` | projet New Brand Rago |
+| 119 | App : cadre et tableau de bord à l'identique des maquettes v5 | `claude/app-v5-strict` → `staging` | 23/11 18:50 | 23/11 | fusionnée | Début de [[Maquettes v5 dans l'app (s5)]] ; version 1.4.1 | projet New Brand Rago |
+| 120 | Page Jeux et choix du preset à l'identique des maquettes v5 | `claude/app-v5-games` → `staging` | 23/11 19:13 | 23/11 | fusionnée | [[Bibliothèque de jeux]], [[Presets]] | projet New Brand Rago |
+| 121 | Page Display à l'identique de la maquette v5 | `claude/app-v5-display` → `staging` | 23/11 19:34 | 23/11 | fusionnée | [[Couleurs et résolution]] | projet New Brand Rago |
+| 122 | Pages des modules à l'identique des maquettes v5 | `claude/app-v5-modules` → `staging` | 23/11 20:06 | 23/11 | fusionnée | Les 9 modules et la barre « apply » | projet New Brand Rago |
+| 123 | Page Réseau à l'identique des maquettes v5 | `claude/app-v5-network` → `staging` | 23/11 20:59 | 23/11 | fusionnée | [[Packet Optimizer]], [[Test réseau]], Rago Route | projet New Brand Rago |
+| 124 | Page Outils à l'identique de la maquette | `claude/app-v5-tools` → `staging` | 23/11 21:28 | 23/11 | fusionnée | [[Page Outils]] | projet New Brand Rago |
+| 125 | Page Souris refaite sur la maquette | `claude/app-v5-mouse` → `staging` | 23/11 21:42 | 23/11 | fusionnée | [[Page Souris]] | projet New Brand Rago |
+| 126 | Page Paramètres refaite sur les maquettes | `claude/app-v5-settings` → `staging` | 23/11 21:57 | 23/11 | fusionnée | [[Paramètres de l'app]] | projet New Brand Rago |
+| 127 | Page Partage et support refaite sur les maquettes | `claude/app-v5-share` → `staging` | 23/11 22:11 | 23/11 | fusionnée | [[Partage et support]] | projet New Brand Rago |
+| 128 | Page Analyze my PC conforme aux maquettes | `claude/app-v5-analysis` → `staging` | 23/11 22:28 | 23/11 | fusionnée | [[Analyse du PC]] | projet New Brand Rago |
+| 129 | Site v6 : accueil refait sur la structure du site de référence | `claude/project-thread-7emsbt` → `staging` | 23/11 22:28 | 23/11 | fusionnée | Accueil v6 ([[Site]]) | projet New Brand Rago |
+| 130 | Fenêtres de confirmation, d'exécution, de résiliation, de déconnexion | `claude/app-v5-windows` → `staging` | 23/11 22:56 | 23/11 | fusionnée | Fenêtres v5 de l'app | projet New Brand Rago |
+| 131 | Fenêtres Premium, connexion, avis, recherche, petits messages | `claude/app-v5-windows-b` → `staging` | 23/11 23:34 | 23/11 | fusionnée | [[Abonnement dans l'app]], [[Licence dans l'app]] | projet New Brand Rago |
+| 132 | Barre en jeu refaite sur les maquettes app-ingame | `claude/app-v5-ingame` → `staging` | 23/11 23:50 | 23/11 | fusionnée | [[Barre en jeu]] | projet New Brand Rago |
+| 133 | Écran de démarrage refait sur la maquette v5 (2,3 s fixes) | `claude/app-v5-splash` → `staging` | 24/11 00:00 | 24/11 | fusionnée | [[Splash.tsx]] | projet New Brand Rago |
+| 134 | Vault : exe de test avec l'écran de démarrage | `claude/vault-build-splash` → `staging` | 24/11 00:09 | 24/11 | fusionnée | Vault seulement | projet New Brand Rago |
+| 135 | Site v6 : jaquettes de jeux connus dans le chargement | `claude/project-thread-7emsbt` → `staging` | 24/11 13:02 | 24/11 | fusionnée | Chargement de l'accueil v6 | projet New Brand Rago |
+| 136 | Site v6 : accueil du 24/11, globe dessiné, Rago Route en une section | `claude/project-thread-7emsbt` → `staging` | 24/11 13:09 | — | **ouverte** | Globe en SVG, cartes Rago Route au-dessus du globe, images larges du titre (aperçu Netlify `deploy-preview-136`) | projet New Brand Rago |
+| 137 | App : détail des réglages au clic sur une icône info, cartes sans vide | `claude/project-thread-2btl2s` → `staging` | 25/11 13:52 | 25/11 | fusionnée | Demande de Sofiene du 25/11 | projet New Brand Rago |
+| 138 | Vault : la PR #137 est fusionnée | `claude/project-thread-2btl2s` → `staging` | 25/11 14:04 | 25/11 | fusionnée | Vault seulement | projet New Brand Rago |
+| 139 | App : retours du test Windows du 25/11 | `claude/project-thread-2btl2s` → `staging` | 25/11 14:51 | 25/11 | fusionnée | Bouton du compte, connexion séparée de la 1.2.1, barre en jeu opaque, plans d'alimentation, cartes | projet New Brand Rago |
+| 140 | Vault : la PR #139 est fusionnée | `claude/project-thread-2btl2s` → `staging` | 25/11 15:09 | 25/11 | fusionnée | Vault seulement | projet New Brand Rago |
+| 141 | Vault : nouvel exe de test de staging (après la PR #139) | `claude/project-thread-2btl2s` → `staging` | 25/11 15:21 | 25/11 | fusionnée | Vault seulement (run `app-windows` 45641885291) | projet New Brand Rago |
+| 142 | Cerveau : cerveaux Rago Client et Serveur Minecraft Rago dans le menu | `claude/project-thread-bmc1pg` → `staging` | 25/11 15:54 | 25/11 16:33 | fusionnée | [[Cerveau du vault]] | projet Rago optimizer (suite) |
+| 143 | Claude/project thread tyht7t | `claude/project-thread-tyht7t` → prod | 25/11 16:05 | 27/11 | fermée sans fusion | Ouverte par erreur vers la prod (540 fichiers : tout `staging`, app 1.4.1, site v5/v6). Seul contenu propre (note `refonte-design/`) déjà dans `staging` par la #149. Fermée sur « ferme là alors si elle ne sert à rien » (Sofiene, 27/11) ; branche gardée | projet Rago optimizer (suite) |
+| 144 | Vault : complété pour le passage sur Claude Team (sortie 1.3.0, New Brand Rago, app 1.4.1) | `claude/project-thread-tyht7t` → `staging` | 25/11 16:30 | 25/11 16:32 | fusionnée | Vault seulement ([[Reprendre sur un nouveau compte Claude]]) | projet Rago optimizer (suite) |
+| 145 | Prod : cerveaux Rago Client et Serveur Minecraft Rago (portage de la PR #142) | `claude/project-thread-bmc1pg-prod` → prod | 25/11 16:33 | 25/11 16:33 | fusionnée | `licensing/` de la #142 en prod, sur « envoie en prod » | projet Rago optimizer (suite) |
+| 146 | Vault : jeton du Cerveau créé pour rago, à étendre à Rago-Client (q98) | `claude/project-thread-bmc1pg` → `staging` | 25/11 17:06 | 25/11 17:06 | fusionnée | Vault seulement | projet Rago optimizer (suite) |
+| 147 | Vault : jeton du Cerveau pas encore créé (q98, correction) | `claude/project-thread-bmc1pg` → `staging` | 25/11 17:09 | 25/11 17:09 | fusionnée | Vault seulement | projet Rago optimizer (suite) |
+| 148 | Vault : CERVEAU_GITHUB_TOKEN déjà dans Railway (q98) | `claude/project-thread-bmc1pg` → `staging` | 25/11 17:10 | 25/11 17:10 | fusionnée | Vault seulement | projet Rago optimizer (suite) |
+| 149 | Vault : refonte-design/ n'est pas emporté sur le nouveau compte | `claude/project-thread-tyht7t` → `staging` | 25/11 18:25 | 25/11 18:25 | fusionnée | Vault seulement | projet Rago optimizer (suite) |
+| 150 | Rago Hub : hook de retour des fils | `rago-hub-hook` → prod | 26/11 09:14 | 26/11 09:22 | fusionnée | Hook `Stop` qui renvoie les réponses des fils au [[Rago Hub]] ; recopiée dans `staging` le 27/11 | Rago Hub (À VÉRIFIER) |
+| 151 | Rago Hub : hook v2 (activité en direct, images, tokens) | `rago-hub-hook` → prod | 26/11 10:30 | 26/11 10:30 | fusionnée | [[Rago Hub]] ; recopiée dans `staging` le 27/11 | Rago Hub (À VÉRIFIER) |
+| 152 | Rago Hub : hook v3 (tâches en direct, texte en cours, outils hub.py) | `rago-hub-hook` → prod | 26/11 11:22 | 26/11 11:24 | fusionnée | [[Rago Hub]] ; recopiée dans `staging` le 27/11 ; dernier commit de la prod au 27/11 (`ac4107a`) | Rago Hub (À VÉRIFIER) |
+| 153 | Vault : version finale regroupée sur staging | `vault-final` → `staging` | 26/11 18:56 | 26/11 19:00 | fusionnée | Vault regroupé avant le passage au nouveau compte ; reprend les #71 et #106 | Rago Hub (chef) |
+| 154 | Vault : PR #143 fermée, PR #71/#106 fermées, Rago Hub en prod | `claude/pr143-vault-update-8po627` → `staging` | 27/11 | 27/11 | fusionnée | Vault seulement (et point 4 de `CLAUDE.md`) | Rago Hub (fil HUB-767f02) |
+| 158 | Hook Rago Hub dans staging (q130) + vault : q130 et q99 traitées | `claude/pr143-vault-update-8po627` → `staging` | 27/11 | 27/11 | fusionnée | `.claude/` recopié de la prod (`ac4107a`) ; vault | Rago Hub (fil HUB-767f02) |
 
 ## Ce qui est arrivé sur `staging` sans PR
 Certains fils ont poussé leurs commits directement sur `staging`, après un accord de Sofiene dans le fil (CONFIRMÉ par `git branch -r --contains`) :

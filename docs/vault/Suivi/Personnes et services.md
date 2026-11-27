@@ -1,7 +1,7 @@
 ---
 type: référence
 tags: [personnes, services]
-maj: 2026-11-10
+maj: 2026-11-25
 ---
 # Personnes et services
 
@@ -17,16 +17,22 @@ Retour à [[Projet]]. Aucun identifiant ni secret ici ([[Clés et secrets]]).
 | Service | Usage |
 |---|---|
 | GitHub `kaliso-dev/rago` | code, CI (3 workflows), artefacts exe ([[Branches et environnements]]) |
-| Netlify | [[Site]] (prod, staging, aperçus) |
-| Railway | [[Serveur de licences]] prod et staging |
+| Netlify | [[Site]] (prod, staging, aperçus) ([[Netlify]]) |
+| Railway | [[Serveur de licences]] prod et staging ([[Railway]]) |
 | Supabase | Postgres + buckets privés `downloads` (exe) et `avatars` ; projet séparé `rago-staging` |
 | Stripe | abonnements, Lifetime, codes promo, portail client (live depuis le 10/10) ; accessible à Claude en lecture depuis le 04/11 ([[Ventes Stripe]]) |
-| Resend | emails `noreply@rago-optimizer.com` |
-| OVH | domaine `rago-optimizer.com`, DNS, boîte Zimbra `support@rago-optimizer.com` |
+| Resend | emails `noreply@rago-optimizer.com` ([[Domaine et e-mails]]) |
+| OVH | domaine `rago-optimizer.com`, DNS, boîte Zimbra `support@rago-optimizer.com` ([[Domaine et e-mails]]) |
+| Google Cloud | connexion « Continue with Google » (clés OAuth) ([[Connexion Google et Discord]]) |
+| Discord Developer Portal | application du bot et connexion Discord ([[Connexion Google et Discord]], [[Discord]]) |
+| UptimeRobot | moniteur de `/healthz`, alertes par e-mail à Sofiene, depuis le 11/11 ([[Surveillance]]) |
+| Gestionnaire de mots de passe | toutes les clés et identifiants (11/11, [[Clés et secrets]]) |
 | DB-IP | ville et fournisseur des tests réseau ([[Proxy]]) |
 | Discord | communauté, rôle Pro, connexion ([[Discord]]) |
 | Linear | tickets et documents ([[Linear]]) |
 | Claude (projet « Rago optimizer (suite) ») | fils de travail, dossier partagé ([[Sources]]) ; liste et résumé des fils : [[Fils du projet]] |
+| Claude (projet « New Brand Rago ») | refonte v5 et v6 de l'app, du site et du compte (depuis le 22/11), même dépôt ; dossier partagé `rago-redesign/` ([[New Brand Rago]]) |
+| Claude Team | nouvel abonnement de Sofiene (25/11), sur un nouveau compte où les projets ne se transfèrent pas : [[Reprendre sur un nouveau compte Claude]] |
 | Vultr | serveurs de [[Proxy\|Rago Route]] : sortie à Paris et relais à Frankfurt (environ 5 $ par mois chacun, depuis le 06/11) ; serveurs de test du 05/11 (Frankfurt, Mumbai, New York, Chicago) qui ne servent plus. OVHcloud a été écarté le 05/11 ([[Infrastructure Rago Route]]) |
 | Cloudflare | pas un service de Rago : Hypixel passe par Cloudflare, dont l'entrée la plus proche de la France est à Paris ; c'est pour cela que Rago Route sort à Paris ([[Fil - Développer les proxys Minecraft]]) |
 | GitHub `network-server-rago` | dépôt séparé du serveur Minecraft (combat, lobby, practice, Bed Wars) ; privé, sa CI a vidé les minutes de novembre ; Sofiene doit le rendre public (décision du 10/11, [[CI GitHub Actions]]) ; lien avec le [[Client Minecraft Rago]] : À VÉRIFIER |
