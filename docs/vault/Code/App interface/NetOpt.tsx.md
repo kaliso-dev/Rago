@@ -116,7 +116,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging` après la PR #123, fusionnée 
   - sans licence : « part of premium » et « restore stays free ».
 - Bouton principal : « apply » ; « restart » (`api.restartPc()`) juste après une application réussie ; « Get Premium » sans licence.
 - « restore » ouvre un menu : « mes réglages d'origine » (`restore`, grisé sans sauvegarde) ou « valeurs de Windows » (`defaults`). Grisé s'il n'y a ni application ni sauvegarde.
-- Erreurs : `busy` → `no.busy` ; `premium_scripts_unavailable` → `err.premium_scripts_unavailable` ; `premium_required` (le serveur refuse d'appliquer, licence perdue entre-temps) → la fenêtre Premium d'un réglage (`setUpsell("tweak")`, comme avant la v5 ; la garder est la question q112) ; autre → message brut.
+- Erreurs : `busy` → `no.busy` ; `premium_scripts_unavailable` → `err.premium_scripts_unavailable` ; `premium_required` (le serveur refuse d'appliquer, licence perdue entre-temps) → la fenêtre Premium d'un réglage (`setUpsell("tweak")`, comme avant la v5 ; gardée, décision de Sofiene du 27/11, q112 : « non on garde cette fenêtre ») ; autre → message brut.
 - Après une réussite, le brouillon est effacé.
 
 ### Sans licence (nouveau le 23/11)
