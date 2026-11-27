@@ -45,6 +45,7 @@ Les joueurs ont la **[[Version 1.3.0]]** depuis le 22/11 vers 02:20 (heure de Pa
 Ne rien fusionner ni fermer sans le mot de Sofiene. Toutes les PR, une par ligne : [[Pull requests]].
 
 ## Dernières PR fusionnées
+- 28/11 dans `staging` : #166 (`design/rago-redesign/` sorti vers le dépôt privé `kaliso-dev/rago-design`, réparation du [[Cerveau du vault]]).
 - 27/11 dans `staging` (Sofiene, 27/11 : « ok fusionne tout y compris la 160 qui part en prod ») : #157 (Rago Route, abonnement à part aussi pour le Lifetime, `ade181b`), #159 (résiliation sur la page compte, un Premium par e-mail, essai à la carte et un par réseau, `d2391b1`), #160 (paiements refusés, `f5d0782`). Dans la prod : **#161** (la #160 seule, `c4e0d31`).
 - 26/11 dans `staging` : #153 (vault regroupé en une version finale). Dans la prod, sans passer par `staging` : #150, #151, #152 (hook [[Rago Hub]]).
 - 25/11 dans la prod : #145 (cerveaux Rago Client et Serveur Minecraft, portage de la #142). Dans `staging` : #142, #144, #146 à #149 (Cerveau et vault).
