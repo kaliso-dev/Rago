@@ -131,6 +131,30 @@ ${discord ? `<p style="${SMALL}">${esc(discord)} <a href="${esc(cfg.supportUrl)}
         layout(cfg, sub.trial ? 'Free trial canceled' : 'Subscription canceled', `<p style="${P}">${esc(body)}</p>${button(`${cfg.publicUrl}/account`, 'Open your account')}`),
         `${body}\nYour account: ${cfg.publicUrl}/account`);
     },
+    // Failed payments (2026-11-27, q110). Texts to be validated by Sofiene.
+    /** A subscriber's payment failed: 3 days to update the card (`reminder`: the same, 2 days later). */
+    paymentFailed(to, { deadline, reminder = false }) {
+      const by = day(deadline);
+      const body = `We couldn't charge your card for Rago Optimizer Premium. Update your card before ${by}, or your Premium ends that day: Rago Optimizer then goes back to the free plan and puts back the settings its Premium tweaks changed.`;
+      const subject = reminder ? `Reminder: update your card before ${by} to keep Premium` : 'Payment failed: update your card to keep Premium';
+      return send(to, subject,
+        layout(cfg, reminder ? 'Your Premium ends soon' : 'Payment failed', `<p style="${P}">${esc(body)}</p>${button(`${cfg.publicUrl}/account`, 'Update your card')}<p style="${SMALL}">On your account page, open Invoices and billing to change the card. Already done? You can ignore this email.</p>`),
+        `${body}\nUpdate your card from your account (Invoices and billing): ${cfg.publicUrl}/account`);
+    },
+    /** The first payment after a free trial failed: the subscription is canceled now, back to the free plan. */
+    trialPaymentFailed(to) {
+      const body = "Your free trial of Rago Optimizer Premium ended and we couldn't charge your card, so your subscription is canceled and you're back on the free plan. Nothing was charged. At its next check, Rago Optimizer puts back the settings its Premium tweaks changed. Want Premium again? Get it from your account anytime.";
+      return send(to, "Your free trial ended and the payment failed: you're back on the free plan",
+        layout(cfg, 'Back on the free plan', `<p style="${P}">${esc(body)}</p>${button(`${cfg.publicUrl}/account`, 'Open your account')}`),
+        `${body}\nYour account: ${cfg.publicUrl}/account`);
+    },
+    /** A subscriber's payment stayed refused for 3 days: Premium ended. */
+    premiumEndedUnpaid(to) {
+      const body = "We couldn't charge your card for 3 days, so your Rago Optimizer Premium subscription is canceled and your account is back on the free plan. At its next check, Rago Optimizer puts back the settings its Premium tweaks changed. Get Premium again anytime from your account.";
+      return send(to, 'Your Rago Optimizer Premium ended: payment failed',
+        layout(cfg, 'Premium ended', `<p style="${P}">${esc(body)}</p>${button(`${cfg.publicUrl}/account`, 'Open your account')}`),
+        `${body}\nYour account: ${cfg.publicUrl}/account`);
+    },
     passwordReset(to, url) {
       return send(to, 'Reset your Rago Optimizer password',
         layout(cfg, 'Reset your password', `<p style="${P}">Someone asked to reset the password of your Rago Optimizer account. The link works for 1 hour. If it wasn't you, ignore this email: your password stays the same.</p>${button(url, 'Choose a new password')}`),

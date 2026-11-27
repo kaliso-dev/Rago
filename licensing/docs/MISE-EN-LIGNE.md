@@ -153,7 +153,7 @@ C'est ce qui prévient le serveur qu'un paiement est passé.
 
 1. Stripe (mode test) → **Développeurs → Webhooks → Ajouter une destination**.
 2. Événements à cocher :
-   `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `customer.subscription.paused`, `customer.subscription.resumed`, `invoice.paid`, `charge.refunded`, `charge.dispute.created`.
+   `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `customer.subscription.paused`, `customer.subscription.resumed`, `invoice.paid`, `invoice.payment_failed` (27/11/2026, paiements refusés), `charge.refunded`, `charge.dispute.created`.
    Si ton webhook existe déjà, ouvre-le → **Modifier la destination** → ajoute les six nouveaux événements. Le secret `whsec_...` ne change pas.
 3. URL : `https://account.ragohub.com/webhooks/stripe`.
 4. Copie le **secret de signature** `whsec_...` → Railway → Variables → remplace `STRIPE_WEBHOOK_SECRET`. Railway redéploie tout seul.
@@ -244,7 +244,7 @@ Ce qui dépend du mode Stripe : la clé, les deux prix, le webhook et son secret
 1. **Compte** : Stripe → **Activer les paiements** (identité, IBAN). Tant que Stripe ne l'a pas validé, `/admin` affiche « Compte : à corriger ».
 2. **Produit et prix** : Catalogue de produits → **Rago Optimizer Premium** avec deux prix **récurrents en USD** : 5,99 mensuel et 29,99 annuel, et un prix en **paiement unique** de 59,99 USD pour Lifetime (les montants du site). Copie les trois `price_...`. Puis le produit **Rago Route** avec son prix récurrent de 3 USD par mois (étape 3, « Option Rago Route ») : son `price_...` live.
 3. **Clé secrète** : Développeurs → Clés API → clé secrète `sk_live_...`. Stripe ne montre une clé live qu'une fois : colle-la directement dans Railway (étape 6 ci-dessous) et garde-la dans ton gestionnaire de mots de passe.
-4. **Webhook** : Développeurs → Webhooks → **Ajouter une destination**, URL `https://account.rago-optimizer.com/webhooks/stripe`, les 10 événements de l'étape 6. Copie son secret `whsec_...`.
+4. **Webhook** : Développeurs → Webhooks → **Ajouter une destination**, URL `https://account.rago-optimizer.com/webhooks/stripe`, les 11 événements de l'étape 6. Copie son secret `whsec_...`.
 5. **Portail client** : Paramètres → Facturation → Portail client, comme à l'étape 3.5 (résiliation, changement de formule avec les deux prix **live**, moyen de paiement, liens Conditions et Confidentialité), puis **Enregistrer**. Copie le lien de connexion au portail (il ne contient pas `test_`).
    Vérifie aussi en live : Moyens de paiement (PayPal), Abonnements et e-mails (relances, rappel avant renouvellement annuel), E-mails clients (reçus). Les Informations publiques (URL des conditions, libellé `RAGO OPTIMIZER`) sont communes aux deux modes.
 6. **Railway → Variables** : remplace `STRIPE_SECRET_KEY`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_PRICE_LIFETIME`, `STRIPE_PRICE_ROUTE`, `STRIPE_PRICE_ROUTE_YEARLY`, `STRIPE_WEBHOOK_SECRET` et `STRIPE_PORTAL_LOGIN_URL` par les valeurs live, retire `STRIPE_PRICE_ID` s'il est encore là, puis **Deploy** une seule fois. Garde les valeurs test dans ton gestionnaire de mots de passe (« Revenir en mode test »).

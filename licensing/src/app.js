@@ -1316,7 +1316,7 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
       log.error(`[stripe] ${event.type} ${event.id} ignored: it comes from Stripe ${event.livemode ? 'live' : 'test'} mode and STRIPE_SECRET_KEY is the ${mode} key. Put the whsec_ of the ${mode} destination in STRIPE_WEBHOOK_SECRET.`);
       return c.json({ received: true, ignored: 'other_mode' });
     }
-    const label = await handleStripeEvent(db, event, { stripe, cfg, onLicense: sendClaimEmail, log });
+    const label = await handleStripeEvent(db, event, { stripe, cfg, onLicense: sendClaimEmail, log, mailer });
     log.info?.(`[stripe] ${event.type} ${event.id} -> ${label}`);
     // Premium may have started, stopped or come back: the Discord role follows, after this reply to Stripe.
     discord?.syncAll();

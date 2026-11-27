@@ -352,6 +352,23 @@ ALTER TABLE network_results ENABLE ROW LEVEL SECURITY;
 ALTER TABLE trials ENABLE ROW LEVEL SECURITY;
 ALTER TABLE trial_ips ENABLE ROW LEVEL SECURITY;
 
+-- Failed payments of subscriptions (2026-11-27, q110): a subscriber who paid before has 3 days to fix the card, with
+-- a reminder at day 2; then Premium ends (dunning.js). One row per failure episode of a subscription.
+CREATE TABLE IF NOT EXISTS payment_failures (
+  id BIGSERIAL PRIMARY KEY,
+  subscription_id TEXT NOT NULL,
+  license_id TEXT NOT NULL,
+  user_id TEXT,
+  invoice_id TEXT,
+  first_failed_at BIGINT NOT NULL,
+  deadline_at BIGINT NOT NULL,                    -- first_failed_at + 3 days
+  reminded_at BIGINT,
+  resolved_at BIGINT,                             -- paid in time
+  ended_at BIGINT                                 -- Premium ended (or the license wasn't active anymore)
+);
+CREATE INDEX IF NOT EXISTS payment_failures_open ON payment_failures (subscription_id) WHERE resolved_at IS NULL AND ended_at IS NULL;
+ALTER TABLE payment_failures ENABLE ROW LEVEL SECURITY;
+
 -- Rago Route option (2026-11-13, Sofiene : « il faut payer 3$ en plus de l'abonnement premium, il faut que ça soit une
 -- option ») : its own monthly Stripe subscription, on top of an active Premium. One row per Stripe subscription.
 CREATE TABLE IF NOT EXISTS route_subscriptions (
