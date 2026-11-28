@@ -75,6 +75,7 @@ Demande de Sofiene (28/11) : l'ancien site ressemblait à n'importe quel SaaS, e
   - Le titre « The right tweaks for every game. » devient la bannière qui défile de la #136, reprise de son historique (même code, même vitesse, accélère avec le défilement).
   - Prix : sur ordinateur, toute la section est réduite d'un seul facteur (0,74), mêmes proportions entre les plans ; titre et cartes : 988 px de haut à 1728×1117 (1 485 avant).
   - Vidéo Valorant 4K toujours attendue (Sofiene cherche la source).
+- **4e tour (28/11), dans la #176** : réticule retiré du bloc final (le reste de l'animation inchangé) ; Community : carte Discord plus complète (support, annonces et notes de mise à jour, récompenses Discord, giveaways et rôle Premium, joueurs qui partagent presets et astuces ; aucun chiffre), icônes Discord et affiliation en haut à droite, logos des partenaires en grand à la place de la pilule noire (rayons imbriqués). Vidéo Valorant 4K : préparée par un fil sur le Mac, à récupérer par `git pull` au signal du chef.
 
 ## Ce qui reste
 1. Sofiene teste l'exe de test sur Windows et répond à q121 (barre en jeu) ([[Questions ouvertes]]).
