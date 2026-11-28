@@ -24,7 +24,7 @@ Source : `git ls-remote`, `git rev-list` / `git cherry` contre `staging` (`d4c53
 | `staging` | **pré-production**, référence du vault |
 | `claude/project-thread-7emsbt` | PR #136 ouverte (accueil v6, ne pas fusionner) |
 | `fix/stream-discord-priorite` | PR #155 ouverte (stream Discord, à tester sur Windows) |
-| `claude/rago-account-page-rewards-nrvczv` | PR #165 ouverte (page compte) |
+| `claude/rago-account-page-rewards-nrvczv` | PR #165 fusionnée dans `staging` le 28/11 (page compte) ; branche supprimable |
 
 ### Déjà fusionnées, gardées parce qu'elles avaient un commit de moins de 24 h (12)
 Leur contenu est dans `staging` ou la prod ; à supprimer au prochain ménage : `claude/cerveau-rago-design-explorer-7m3b9m` (#167), `claude/cerveau-rago-design-explorer-prod-7m3b9m` (#168), `claude/move-rago-redesign` (#166), `claude/pr143-vault-update-8po627` (#154, #158), `claude/rago-account-cancel-wpg03a` (#159), `claude/rago-failed-payments-wpg03a` (#160), `claude/rago-failed-payments-prod-wpg03a` (#161), `claude/rago-overlay-error-color-vzz2s6` (#164), `claude/rago-route-lifetime-subscription-wpg03a` (#157), `claude/vault-merges-q110-prod-wpg03a` (#162), `claude/vault-rago-design-prod-7m3b9m` (#169), `claude/vault-rago-route-release-40utcl` (#163).

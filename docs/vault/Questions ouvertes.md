@@ -16,12 +16,6 @@ Mode d'emploi :
 
 ## En attente de réponse
 
-Posées le 23/11, pendant la refonte de l'app sur les maquettes v5 (fil « refonte stricte ») :
-- q112 : garder la fenêtre Premium « This tweak is part of Premium » quand le serveur refuse d'appliquer le Packet Optimizer ([[NetOpt.tsx]]).
-- q113 : « Affiliate reward » ou « Discord reward » pour une licence gagnée sur Discord (page compte).
-- q114 : badge « Ended » dans la carte Formule d'un abonnement terminé (page compte).
-- q115 : texte propre à l'achat de test au lieu de « This license was revoked. » (page compte).
-
 Posée le 25/11, après le test Windows de Sofiene (PR #139) :
 - q121 : la barre en jeu sort-elle encore du jeu (autre page, jeu réduit) une fois la 1.2.1 quittée ? ([[Barre en jeu]])
 

@@ -900,6 +900,11 @@ test('subscription: monthly or yearly checkout, renewal date, cancel, lapse and 
   dash = await (await t.browse('/account')).text();
   assert.match(dash, /Renew Premium/);
   assert.match(dash, /Ended/);
+  // The plan card shows Free, no "Ended" badge and no "Yearly" chip (2026-11-27, q114).
+  const planCard = (html) => html.slice(html.indexOf('sect-plan'), html.indexOf('</section>', html.indexOf('sect-plan')));
+  assert.match(planCard(dash), /Rago Optimizer · Free/);
+  assert.match(planCard(dash), /badge-off"><i><\/i>Free</);
+  assert.doesNotMatch(planCard(dash), /Ended|Yearly/);
 
   t.subscription('sub_cs_sub', 'year');
   // An old event replayed late can't override: the handler reads the current subscription from Stripe.
@@ -1268,7 +1273,7 @@ test('affiliate without a license gets 6 months of Premium, which end on their d
   assert.equal(err.reason, 'subscription_ended');
   assert.ok(err.buy_url);
   dash = await (await t.browse('/account')).text();
-  assert.match(dash, /Your affiliate reward ended/);
+  assert.match(dash, /Rago Optimizer · Free/);
   assert.equal(await L.expireRewards(t.db), 0);
 });
 
@@ -1309,7 +1314,7 @@ test('months given by the team (admin grant-months): Premium until its date, sho
   await t.db.run('UPDATE licenses SET current_period_end = ? WHERE id = ?', [Date.now() - 1000, license.id]);
   assert.equal(await L.expireRewards(t.db), 1);
   dash = await (await t.browse('/account')).text();
-  assert.match(dash, /Your free Premium ended on/);
+  assert.match(dash, /Rago Optimizer · Free/);
   assert.match(dash, />Get Premium</);
 
   // Without months, grant stays for life.
@@ -1540,7 +1545,11 @@ test('going live: /admin checks prices, webhook and portal in the live mode, tes
   // The tester buys for real: their test customer doesn't exist in live, the checkout opens with their email.
   await t.browse('/admin/logout', { form: {} });
   await t.browse('/login', { form: { email: 'tester@example.com', password: 'hunter2hunter2' } });
-  assert.match(await (await t.browse('/account')).text(), /Test purchase/);
+  const testDash = await (await t.browse('/account')).text();
+  assert.match(testDash, /Test purchase/);
+  // Its own sentence, never "revoked" (2026-11-28, q115).
+  assert.match(testDash, /Test purchase made before launch\. Not an active license\./);
+  assert.doesNotMatch(testDash, /was revoked/);
   const create = t.stripe.checkout.sessions.create;
   t.stripe.checkout.sessions.create = async (p) => {
     if (p.customer) throw Object.assign(new Error(`No such customer: '${p.customer}'; a similar object exists in test mode, but a live mode key was used to make this request.`), { statusCode: 400, code: 'resource_missing', param: 'customer' });
@@ -2480,6 +2489,8 @@ test('Discord rewards: VIP, MVP and boosts give Premium time and a one-use code,
   assert.equal(t.coupons['rago-promo-10-once'].percent_off, 10);
   dash = await (await t.browse('/account')).text();
   assert.match(dash, /Premium · Discord reward/);
+  // Everywhere on the page, the license key card too (2026-11-27, q113).
+  assert.doesNotMatch(dash, /Affiliate reward/);
   assert.match(dash, new RegExp(`<code class="mono">${vip.code}</code>`));
   assert.match(dash, new RegExp(`href="/buy\\?promo=${vip.code}"`));
   // Looked at again: given once.
@@ -3856,6 +3867,13 @@ test('failed payment after the free trial: canceled now, back to free, its Rago 
   await t.webhook('customer.subscription.deleted', t.subs.sub_tf);
   assert.equal(t.mails.filter((m) => m.kind).length, 1);
   assert.equal((await L.getLicense(t.db, lic.id)).status_reason, 'payment_failed');
+  // Unpaid: the account page shows the free plan and the way back, not "revoked" (2026-11-27, q114).
+  await t.browse('/login', { form: { email: 'tf@rago.gg', password: 'password123' } });
+  const dash = await (await t.browse('/account')).text();
+  assert.match(dash, /Your Premium ended/);
+  assert.match(dash, /Rago Optimizer · Free/);
+  assert.match(dash, /Payment failed/);
+  assert.doesNotMatch(dash, /was revoked/);
 });
 
 test('failed payment of a subscriber: 3 days, a reminder at day 2, paid in time keeps Premium, unpaid ends it', async () => {

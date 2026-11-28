@@ -14,7 +14,7 @@ Règle : **staging d'abord, prod après validation** ([[Règles de travail]]).
 | `claude/app-redesign-glass-z5m1c8` | Branche de travail de la 1.2 (PR #58, #62, #63, #66) | fusionnée |
 | `claude/auto-reset-tweaks-3ti5yy`, `claude/project-thread-8oenwk`, `claude/reset-on-signout-uninstall`, `claude/project-thread-uy8yf3` | 1.1.10 et 1.1.11-1.1.13 | PR #16, #50, #51 fermées le 01/11 (fonctions présentes dans la 1.2.1) ; branches à garder ([[Versions 1.1.11 à 1.1.13]]) |
 
-- **Inventaire des branches** : [[Branches du dépôt]]. Ménage du 28/11 (q81) : 71 branches fusionnées supprimées, 32 restantes (103 avant). PR ouvertes le 28/11 : #136 (accueil v6), #155 (stream Discord), #165 (page compte). 15 branches jamais fusionnées attendent la décision de Sofiene (q138).
+- **Inventaire des branches** : [[Branches du dépôt]]. Ménage du 28/11 (q81) : 71 branches fusionnées supprimées, 32 restantes (103 avant). PR ouvertes le 28/11 : #136 (accueil v6), #155 (stream Discord) ; #165 (page compte) fusionnée dans `staging` le 28/11. 15 branches jamais fusionnées attendent la décision de Sofiene (q138).
 - Ce que chaque push ou PR déclenche en CI (depuis le 10/11, une branche de travail n'est testée que par sa PR) : [[Code de la CI et du dépôt]].
 - Ne pas renommer la branche de prod : ça casserait Netlify et Railway (ordre à suivre : GitHub → Netlify → Railway).
 - L'exe de l'app ne part **pas** d'une branche : il est construit par la CI ([[app-windows.yml]] : exe de test sur un push de `staging`, exe visant la prod sur une PR ou à la main) puis **déposé à la main** par Sofiene. Voir [[Publier une version]].
