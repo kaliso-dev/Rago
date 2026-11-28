@@ -61,10 +61,16 @@ Demande de Sofiene (28/11) : l'ancien site ressemblait à n'importe quel SaaS, e
 - **Retours de Sofiene du 28/11, appliqués dans la #176** (un commit chacun) :
   - **Extrait Valorant** derrière la barre en jeu (`media/in-game-bar.*`, poussé par le fil du Mac) ; la barre dit « Valorant ».
   - **Héros pleine hauteur** : sur ordinateur, le héros et la bande des partenaires font exactement la hauteur de la fenêtre.
-  - **Proportions du MacBook Pro 16 pouces** : toutes les tailles en px du site s'écrivent `calc(N * var(--u))`. `--u` est définie dans [[v5.css]] : 1px sous 768 px (vraie version mobile) ; sur ordinateur, la taille d'un pixel de l'écran de référence 1728×1117 rapportée à la fenêtre (plus petit rapport entre largeur et hauteur, jamais sous 0,78). À 1728×1117 rien ne change. Pas de `zoom` CSS (il fausse `vh` et les sections animées). **Tout nouveau CSS du site doit utiliser `calc(N * var(--u))`** au lieu de px (sauf les traits de 1 ou 2 px).
+  - **Proportions du MacBook Pro 16 pouces** : toutes les tailles en px du site s'écrivent `calc(N * var(--u))`. `--u` est définie dans [[v5.css]] : 1px sous 768 px (vraie version mobile) ; sur ordinateur, la taille d'un pixel de l'écran de référence 1728×1117 rapportée à la fenêtre (plus petit rapport entre largeur et hauteur, jamais sous 0,78). À 1728×1117 rien ne change. Pas de `zoom` CSS (il fausse `vh` et les sections animées). **Tout nouveau CSS du site doit utiliser `calc(N * var(--u))`** au lieu de px, sauf les traits de 1 ou 2 px et les valeurs en unités d'un dessin SVG (par exemple le `transform-origin:200px 200px` des cercles de l'anneau du bloc final : converti par erreur, il décentrait le disque hors 1728×1117, corrigé le 28/11).
   - **Tarifs** : carte Premium plus large et surélevée, pastille « 3 days free » (nombre de jours tiré de `CONFIG.trialDays`), coches et cadenas dessinés, rassurance à côté du titre.
   - **FAQ** : « + » du bouton « More answers » dessiné en deux traits et centré au pixel.
   - **Rago Route** : le R se dessine, se remplit, puis va directement à sa place au début du titre ; plus de carrés ni de « RAGO ROUTE » entre les deux.
+- **2e tour de retours de Sofiene (28/11), dans la #176** :
+  - « The right tweaks for every game. » sans le paragraphe de droite (« ce texte ne sert plus à rien »).
+  - Benchmark sur toute la largeur du site.
+  - Bloc final « Four steps / Your next match / starts here » réparé (même animation que la #136, vérifiée image par image à 1440×820, 1728×990, 1728×1117 et 1920×960).
+  - Tarifs : plus de petits points ; Premium seule carte en couleur (Gratuit en sombre), 40 % plus large et plus haute, halo ; pastille « 3 days free » en étiquette papier inclinée sur une ligne ; mot « ONCE » retiré de Lifetime.
+  - Vidéo : Sofiene cherche un extrait Valorant en 4K ; on n'y touche pas en attendant.
 
 ## Ce qui reste
 1. Sofiene teste l'exe de test sur Windows et répond à q121 (barre en jeu) ([[Questions ouvertes]]).
