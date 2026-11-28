@@ -1,7 +1,7 @@
 ---
 type: marketing
 tags: [marketing, partenaires]
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # Partenaires et créateurs
 
@@ -21,4 +21,3 @@ Voir [[Marketing]], [[Promotions et affiliation]], [[Discord]]. Page Partners su
 | Serveur annoncé « 40k » (2k réels) | partenariat mutuel au lieu de payer | DÉCIDÉ 13/10 |
 
 - 17/10 : « on a payé des partners discords mais le problème reste le même ». Approche actuelle : [[Marketing]].
-- Messages de démarchage (`launch/outreach/`) : contiennent la phrase fausse « the app measures ping before and after » ; à corriger avant tout envoi ([[Voix et ton]]).

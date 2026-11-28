@@ -100,7 +100,7 @@ Fils cités ailleurs mais absents de la liste : un fil « Créer le profil Linke
 - **Demande** : « discord est notre seul tunnel de vente et il n'y a pas assez de traffic sur notre site ou discord il faut absolument apparaitre beaucoup plus et développer une image de marque sans investir d'argent de plus pour ce mois ».
 - **Fait** : un plan de 4 semaines à 0 € et une série de vidéos courtes en motion design avec une mascotte (« Milli ») et une phrase culte, voix générée, 5 épisodes (#001 à #005), règles tirées des statistiques envoyées par Sofiene (abandon dans les 3 premières secondes, écran de fin retiré, durée 12 à 15 s). Essai en 3D puis retour à la 2D le 21/10 (« faut arreté la 3D la vidéo 001 en 2D c'est celle qui a fait le plus de vues »). Bio Instagram et textes de publication.
 - **Résultat** : le plan et la série sont **abandonnés le 01/11 (voir [[Décisions]])**. Décision restante : « le but est de faire des vidéos et de poster sur TikTok, YouTube et Insta » ([[Marketing]]).
-- Restés sans suite : Cloudflare Web Analytics proposé (À VÉRIFIER : jamais installé ?).
+- Restés sans suite : Cloudflare Web Analytics proposé ce jour-là, jamais installé (Sofiene, 28/11, q91 : toujours aucune statistique de visite ; voir [[Site]]).
 
 ## 7. Vidéo YouTube style CleanMyMac
 `cmsg_01Mb4hMYwRFctv5wE2NGiASiSfLC9grmJaYPVUX77Dr18R` · 18/10 22:26 → 19/10 16:45 · terminé.
@@ -159,7 +159,7 @@ Fils cités ailleurs mais absents de la liste : un fil « Créer le profil Linke
 ## 18. Refaire la vidéo TikTok avec le logo Rago
 `cmsg_01Mb4hMYwRFctv5wE2NGiASi9pevrAfuActa2oJc87BWXN` · 02/11 18:50 → 19:06 · terminé.
 - **Demande** : « je veux la même vidéo mais avec le logo de rago optimizer et en 4k et le même son » (une vidéo « La Création d'Adam » avec un logo 3D qui tourne).
-- **Résultat** : vidéo 4K de 10 s avec le R rouge en 3D et le son d'origine, livrée à 19:06, avec deux réserves (son de TikTok peut-être protégé ailleurs ; la charte interdit un logo pivoté ou en néon). Voir [[Logo création d'Adam]].
+- **Résultat** : vidéo 4K de 10 s avec le R rouge en 3D et le son d'origine, livrée à 19:06, avec deux réserves (son de TikTok peut-être protégé ailleurs ; la charte interdit un logo pivoté ou en néon). Voir vidéo « Création d'Adam » (abandonnée le 28/11).
 
 ## 19. Analyser les données Stripe de Rago
 `cmsg_01Mb4hMYwRFctv5wE2NGiASiK9rUmFaYfeHLpwgQiX3dVS` · 04/11 10:03 → 14:49 · terminé.

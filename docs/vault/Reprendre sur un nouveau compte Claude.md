@@ -31,7 +31,7 @@ Le 25/11/2026, Sofiene passe sur un **abonnement Claude Team**, sur un nouveau c
 ## Remettre en place sur le nouveau compte
 1. Créer le projet et y relier le dépôt `kaliso-dev/rago` (et les autres dépôts si besoin) ; reconnecter GitHub au compte `kaliso-dev` et installer l'app GitHub de Claude sur les dépôts.
 2. Coller les **instructions du projet** (texte de Sofiene, recopié ci-dessous).
-3. Reconnecter les connecteurs qui servent au projet : GitHub, Railway, Netlify, Stripe (lecture des ventes), Supabase, Linear, Resend, Firecrawl (lecture de sites), Kling (vidéos). Aucun secret n'est dans ce vault : les clés restent dans Railway, Netlify et GitHub ([[Clés et secrets]], [[Variables d'environnement]]).
+3. Reconnecter les connecteurs qui servent au projet : GitHub, Railway, Netlify, Stripe (lecture des ventes), Supabase, Resend, Firecrawl (lecture de sites), Kling (vidéos). Aucun secret n'est dans ce vault : les clés restent dans Railway, Netlify et GitHub ([[Clés et secrets]], [[Variables d'environnement]]).
 4. Si besoin, déposer dans le dossier du nouveau projet ce qui a été emporté (copie dans `/Users/kaliso/Desktop/Rago data `), sous les mêmes noms de dossiers, pour que les chemins cités par les notes restent justes.
 5. Premier fil : demander au nouveau Claude de lire le vault (ci-dessous) et de dire ce qui ne correspond plus.
 

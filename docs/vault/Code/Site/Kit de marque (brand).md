@@ -49,7 +49,7 @@ CONFIRMÉ (branche du site v5, PR #109 vers `staging`, 22/11). Le kit a été co
 | `web/` | `favicon.svg`, `favicon.ico` (16/32/48), `favicon-32.png`, `apple-touch-icon.png` (180), `og-image.png`, `og-launch.png`, `og-route.png` (1200 × 630) |
 | `installer/` | fichiers de Tauri et NSIS : `icon.ico`, `icon.png`, `32x32.png`, `128x128.png`, `128x128@2x.png`, `sidebar.bmp` et `@2x`, `header.bmp` et `@2x` |
 
-Les SVG contiennent un manifeste C2PA dans `<metadata>` (provenance du fichier). Le logo d'Adam (création proposée) est un autre sujet : [[Logo création d'Adam]].
+Les SVG contiennent un manifeste C2PA dans `<metadata>` (provenance du fichier).
 
 ## Écarts connus (22/11)
 - `voice-en.md` dit encore « App sections (12) … 199 tweaks in total » (218 tweaks distincts aujourd'hui, 10 sections de tweaks).

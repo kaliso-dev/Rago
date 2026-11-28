@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, outil, claude]
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # Rago Hub
 
@@ -15,6 +15,9 @@ Outil de Sofiene, utilisé depuis le 26/11, qui lance et coordonne des fils Clau
 | `.claude/hooks/hub.py` | commandes des fils : `fils`, `lire`, `envoyer`, `chef`, `memoire`, `retenir`, `fichiers`, `telecharger`, `donner`, `resolu` |
 
 Arrivés par les PR #150 (hook de retour, 26/11), #151 (v2 : activité en direct, images, tokens) et #152 (v3 : tâches en direct, texte en cours, `hub.py`), fusionnées dans la branche de prod le 26/11 sans passer par `staging`, puis **recopiées telles quelles dans `staging` le 27/11** (q130, Sofiene : « tu peux également mettre le petit réglage claude dans staging », [[Décisions]]). `.claude/` est identique sur les deux branches : un fil parti de l'une ou de l'autre a le hook ([[Pull requests]], [[Branches et environnements]]). Une modification du hook suit la règle habituelle : `staging` d'abord, prod ensuite. Aucun secret dans ces fichiers : l'adresse et le jeton du Hub sont des variables d'environnement de la session ([[Clés et secrets]]).
+
+## Planifier les tâches
+Depuis le 28/11, les tâches du projet se planifient dans le Rago Hub ; [[Linear]] est abandonné (« on ne prévoit plus de l'utiliser maintenant qu'on peut planifier des tâches ici dans Rago Hub », [[Décisions]]).
 
 ## Questions à Sofiene
 Depuis le 27/11, les questions du vault se posent à Sofiene dans le chat du Rago Hub, par le chef, et sont écrites dans [[Questions ouvertes]] ([[Décisions]]).

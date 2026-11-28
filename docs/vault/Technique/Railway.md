@@ -1,9 +1,11 @@
 ---
 type: technique
 tags: [technique, railway, déploiement, serveur]
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # Railway
+
+**On reste sur Railway** (28/11) : la migration vers Cloudflare Workers est écartée (plan gratuit 10 ms de CPU et 128 Mo, bot Discord à connexion permanente ; [[Décisions]] > « Abandonné »).
 
 Hébergement du [[Serveur de licences]] (`licensing/`). Code : [[Architecture du serveur]]. Base et fichiers : [[Supabase]]. Variables : [[Variables d'environnement]].
 

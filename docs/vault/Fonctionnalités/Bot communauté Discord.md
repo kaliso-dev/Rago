@@ -11,7 +11,7 @@ PR #40, fusionnée dans `staging` le 15/10 ; **le code est en prod depuis la sor
 - Message d'accueil en salon ; commandes `/invites`, `/top-invites`, `/partner-link`, `/growth`, `/invites-adjust`.
 - Variables : `DISCORD_COMMUNITY`, `DISCORD_WELCOME_CHANNEL_ID`, `DISCORD_WELCOME_TEXT`, `DISCORD_INVITE_ROLES`, `DISCORD_VIP_INVITES`, `DISCORD_MVP_INVITES`.
 - Tests demandés à Sofiene le 12/10 (Server Members Intent, droits du rôle, variables sur Railway staging, essai avec un 2e compte) : aucun retour.
-- **Statut (Sofiene, 01/11)** : « Il faut le tester et le passer en prod ». Travail en cours dans le fil « Passer le bot Discord en prod » (Linear RAG-91). C'est Abel qui gère les bots, rôles et webhooks du Discord ([[Personnes et services]]).
+- **Statut (Sofiene, 01/11)** : « Il faut le tester et le passer en prod ». Travail en cours dans le fil « Passer le bot Discord en prod » (ancien ticket Linear RAG-91). C'est Abel qui gère les bots, rôles et webhooks du Discord ([[Personnes et services]]).
 
 ## Fonctionnement (code de `staging`, 10/11)
 - **Attribution** : le bot garde en mémoire le nombre d'utilisations de chaque invitation ; à chaque arrivée, celle dont le compteur a monté est la bonne (URL personnalisée → `vanity` ; deux à la fois ou aucune → `unknown`). Après un redémarrage, la première arrivée peut être `unknown`. Le bot doit avoir « Gérer le serveur » pour voir les invitations, et « Server Members Intent » doit être activé.

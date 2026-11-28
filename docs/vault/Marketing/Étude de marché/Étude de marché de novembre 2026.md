@@ -2,7 +2,7 @@
 type: carte
 tags: [marketing, étude, concurrence, carte]
 source: /mnt/project-files/etude-marche-2026-11/
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # Étude de marché de novembre 2026
 
@@ -52,7 +52,9 @@ Comprendre comment les apps que les joueurs connaissent présentent leurs régla
 | Même prix au renouvellement, total facturé visible, résiliation simple | Même prix décidé (q40, 10/11) ; fenêtre Premium avec les prix et résiliation dans l'app (1.3.0) |
 | Gratuit qui produit un effet visible (compenser « too paid to win ») | Plan gratuit élargi à 73 réglages dont 30 actifs (04/11, confirmé le 10/11) |
 | Consentement clair dans l'app avant d'envoyer les résultats du [[Test réseau]] | Sofiene (10/11) : envoyé sans demander, mais « garder ce point avant de soumettre l'app à la signature » |
-| Presets par jeu avec curseur, feu tricolore par tweak, page « Mes changements », bascule auto du preset, récap partageable, statut visible, codes cadeaux, pass 1 an, prix régionaux | Aucune décision connue (À VÉRIFIER si l'une est prévue) |
+| Codes cadeaux, pass 1 an, page pour les parents, page « Mes changements » | **PRÉVUS** (Sofiene, 28/11, q92) : voir [[Prochaines étapes]] > « Ensuite » ; rien de codé |
+| Presets par jeu | déjà faits ([[Presets]]) |
+| Curseur des presets, feu tricolore par tweak, bascule auto du preset, récap partageable, statut visible, prix régionaux | pas retenus dans la réponse du 28/11 |
 
 ## Les rapports et artefacts liés
 - Rapport « Rago : le marché et la nouvelle app » : `https://claude.ai/artifact/KZxPCg5FGccdNi3emDhFQv`.
