@@ -37,7 +37,7 @@ Posées le 25/11 par les fils des autres projets (serveur Minecraft, voir leur v
 
 Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, q46 le 10/11 à 15 h, voir [[Décisions]]) :
 
-Posées le 10/11 au soir (q70 à q93), après la relecture complète du code pour le vault détaillé (dossier `Code/`) :
+Posées le 10/11 au soir (q70 à q93 ; q87 à q93 traitées le 28/11, voir [[Décisions]]), après la relecture complète du code pour le vault détaillé (dossier `Code/`) :
 - q73 : 4 réglages de carte graphique jamais grisés ([[meta.py]]).
 - q74 : provenance et licence de NVIDIA Profile Inspector ([[Configuration Tauri]]).
 - q75 : 73 ou 68 réglages gratuits affichés ; `FREE_TWEAKS` sur Railway ([[sync_tweaks.py]], [[config.js]]).
@@ -48,13 +48,6 @@ Posées le 10/11 au soir (q70 à q93), après la relecture complète du code pou
 - q83 : textes en retard dans le code (README, `FREE_TWEAKS`, commentaires).
 - q84 : l'e-mail d'achat renvoie vers un ticket Discord même avec le bot ([[mailer.js]]).
 - q85 : un jeu retiré de la bibliothèque ne peut plus être réaffiché ([[Games.tsx]]).
-- q87 : code de la pop-up promo recréé en live ? ([[Promotions et affiliation]]).
-- q88 : à quoi sert la vidéo [[Logo création d'Adam]].
-- q89 : copie des exe 1.1.10 avant le 08/01/2027 ([[Synthèse de reprise du 15-10]]).
-- q90 : phrase fausse dans les messages de démarchage ([[Partenaires et créateurs]]).
-- q91 : Cloudflare Web Analytics installé ? ([[Fils du projet]]).
-- q92 : une idée de l'[[Étude de marché de novembre 2026]] est-elle prévue ?
-- q93 : passer en « Canceled » les 5 tâches d'Abel dans [[Linear]] ?
 
 Posées le 11/11 (q78 traitée le même jour : Sofiene a demandé la page de vente, voir [[Page de vente Rago Route]]) :
 - q100 : le bouton « Get notified on Discord » de l'encart Rago Route de l'accueil devient « Try 3 days free », disparaît ou reste ? (dans le code de prod de la 1.3.0, il est caché par l'attribut `hidden` ; CONFIRMÉ, 27/11) ([[page.html]])

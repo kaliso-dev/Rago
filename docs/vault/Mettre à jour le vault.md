@@ -1,7 +1,7 @@
 ---
 type: règle
 tags: [règle, vault]
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # Mettre à jour le vault
 
@@ -32,7 +32,7 @@ Ce vault est la **mémoire du projet** : la mémoire intégrée de Claude est d�
 4. [[Journal]] : une ligne datée par événement marquant.
 5. [[Décisions]] : chaque décision de Sofiene, datée, avec ses mots entre « ».
 6. [[Bugs et incidents]] / [[Problèmes joueurs]] ; [[Questions ouvertes]] (retirer les questions répondues).
-7. [[Linear]] : mettre à jour le ticket du sujet (statut, commentaire court) et créer un ticket pour chaque nouvelle tâche décidée (Sofiene veut continuer à utiliser Linear, 01/11).
+7. Tâches : plus de ticket Linear (abandonné le 28/11, [[Linear]]). Une nouvelle tâche décidée va dans [[Prochaines étapes]] ; elle se planifie dans le [[Rago Hub]].
 8. **Fiches techniques** : si le code change (route, commande Tauri, module, table, variable, workflow, procédure), mettre à jour la fiche de la brique ([[Reprendre le développement]] dit laquelle) : [[Architecture de l'app]], [[Architecture du serveur]], [[API du serveur]], [[Paiements Stripe]], [[Supabase]], [[Railway]], [[Netlify]], [[CI GitHub Actions]], [[Variables d'environnement]], [[Infrastructure Rago Route]], [[Développer et tester]]. Elles décrivent `staging` et précisent ce qui n'est pas encore en prod.
 8 bis. **Notes de code** (dossier `Code/`, une note par fichier source depuis le 10/11, demande de Sofiene : le vault doit « absolument tout expliquer du projet dans les moindres détails ») : pour chaque fichier ajouté, modifié, renommé ou supprimé, mettre à jour **sa** note (ce qu'il expose, fonctionnement, valeurs exactes, `lignes:` de l'en-tête, `maj:`), créer la note d'un nouveau fichier (même modèle, nom = nom du fichier, ajoutée à la carte du dossier) et supprimer celle d'un fichier retiré. Cartes : [[Code de l'app (Rust)]], [[Code de l'app (interface)]], [[Code du générateur de catalogue]], [[Code du serveur]], [[Code du site]], [[Code de Rago Route]], [[Code de la CI et du dépôt]]. Une table de la base qui change : sa note `Table <nom>` (dossier `Code/Serveur/Base de données/`).
 9. Si le catalogue de l'app a changé : régénérer les notes « Tweaks … » avec `python3 docs/tools/catalogue_vault.py` sur la branche qui porte la dernière version de l'app.

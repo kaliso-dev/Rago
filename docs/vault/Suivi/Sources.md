@@ -21,7 +21,6 @@ Liste complète au **10/11/2026**, dossier par dossier, plus `rago-route-page/` 
 | `admin-refonte/` | captures de la refonte du tableau de bord admin (10/11) : vue d'ensemble, ventes, fiche joueur, téléphone ; `v2/` (fiche joueur, services, site et promos, ventes) | [[Tableau de bord admin]] |
 | `etude-marche-2026-11/` | `LISEZMOI.txt` et les 7 études de marché du 03/11 (423 Ko) | [[Étude de marché de novembre 2026]] |
 | `linkedin/` | posts LinkedIn automatiques de Sofiene (règles, `posts/` du 06 au 08/11) : **arrêté le 10/11** (voir [[Décisions]]) | aucune |
-| `marketing/logo-creation-adam/` | vidéo 4K de 10 s du logo dans « La Création d'Adam » (02/11), aperçu, sources | [[Logo création d'Adam]] |
 | `marketing/plan-visibilite-gratuite.md` | plan de visibilité du 17/10 : **abandonné le 01/11** (voir [[Décisions]]) | aucune |
 | `marketing/videos-milli/` | série de vidéos courtes « Milli » (183 Mo) : **abandonnée le 01/11** (voir [[Décisions]]). Les chiffres utiles sont dans [[Vidéos YouTube]] | aucune |
 | `marketing/videos-youtube/` | étude de style (18/10), épisode 001 « Rago tour » en 3 versions, film de lancement 4K (preuve en 720p), sources | [[Vidéos YouTube]] |

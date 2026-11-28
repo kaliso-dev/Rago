@@ -1,11 +1,11 @@
 ---
 type: règle
 tags: [technique, sécurité, règle]
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # Clés et secrets
 
-**Jamais de valeur de secret ici ni ailleurs** (chat, Linear, commit, capture) : seulement les noms. Voir [[Règles de travail]].
+**Jamais de valeur de secret ici ni ailleurs** (chat, Rago Hub, commit, capture) : seulement les noms. Voir [[Règles de travail]].
 
 ## Interdits absolus
 - Ne jamais changer la clé de signature des licences (table `server_secrets`, variable `LICENSE_SIGNING_KEY`), ne jamais vider `server_secrets`, **ne jamais lancer `npm run keys`**. Un jeton devenu invalide déclencherait la [[Remise à zéro]] chez tous les joueurs.

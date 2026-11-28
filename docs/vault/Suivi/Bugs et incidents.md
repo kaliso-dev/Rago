@@ -20,7 +20,7 @@ Registre des bugs de l'app et des incidents. Les retours de joueurs au cas par c
 | **Smart App Control** (Windows 11) bloque l'app au lancement : « could not verify its publisher » (exe non signé). Pas de contournement par app : le joueur doit désactiver Smart App Control | toutes | un joueur le 19/10, plus de nouvelles, suivi arrêté le 01/11 (RAG-84 annulé) ; vraie solution : signer l'exe (RAG-83, quand il y aura le budget) |
 | Priorité par jeu (`pri_game`) : mauvais noms d'exe et 105 valeurs sans effet (1.1.14) | 1.1.14 | **corrigé dans la 1.2** (vérifié le 01/11, RAG-85) ; reste à tester sur un vrai PC |
 | Erreur WebView2 chez une cliente (16/10) | 1.1.14 | solution donnée sans modifier l'app (compte Windows non administrateur) |
-| Code de la pop-up promo créé seulement dans le mode test de Stripe (243 erreurs vues le 17/10) : la pop-up ne marchait pas en prod | site, serveur | commande `npm run admin -- popup <CODE> 50` donnée pour la recréer en live ; fait ou non : À VÉRIFIER |
+| Code de la pop-up promo créé seulement dans le mode test de Stripe (243 erreurs vues le 17/10) : la pop-up ne marchait pas en prod | site, serveur | réglé autrement : la pop-up est éteinte en prod, RAGO50 ne marche plus en live ; Sofiene la relance depuis `/admin` > « Site et promos », qui crée le code dans Stripe live (28/11, q87) |
 | Commande admin `discord` qui ne montre pas une récompense donnée au même compte Discord sur un autre compte Rago | serveur | vu le 03/11 ([[Historique des problèmes]]) ; pas de correctif |
 | Partage de connexion de l'iPhone en USB pas vu par Windows (Rago Route) | exe de test `staging` | 09/11 ; diagnostic en 5 étapes ajouté le 10/11, à tester par Sofiene ([[Proxy]]) |
 

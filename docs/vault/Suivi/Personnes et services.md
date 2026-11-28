@@ -29,7 +29,7 @@ Retour à [[Projet]]. Aucun identifiant ni secret ici ([[Clés et secrets]]).
 | Gestionnaire de mots de passe | toutes les clés et identifiants (11/11, [[Clés et secrets]]) |
 | DB-IP | ville et fournisseur des tests réseau ([[Proxy]]) |
 | Discord | communauté, rôle Pro, connexion ([[Discord]]) |
-| Linear | tickets et documents ([[Linear]]) |
+| Linear | abandonné le 28/11 : les tâches se planifient dans le [[Rago Hub]] ([[Linear]]) |
 | Claude (projet « Rago optimizer (suite) ») | fils de travail, dossier partagé ([[Sources]]) ; liste et résumé des fils : [[Fils du projet]] |
 | Claude (projet « New Brand Rago ») | refonte v5 et v6 de l'app, du site et du compte (depuis le 22/11), même dépôt ; dossier `rago-redesign/`, aujourd'hui dans le dépôt privé `kaliso-dev/rago-design` ([[New Brand Rago]]) |
 | Claude Team | nouvel abonnement de Sofiene (25/11), sur un nouveau compte où les projets ne se transfèrent pas : [[Reprendre sur un nouveau compte Claude]] |
