@@ -626,6 +626,90 @@ details.s-q p{padding:0 0 24px;font-size:15.5px;line-height:1.6}
 .x-deck-tr:not(.x-pinned) .x-deck-f{height:auto;width:min(620px,100%);display:grid;gap:16px;transform:none}
 .x-deck-tr:not(.x-pinned) .x-tile{position:relative;inset:auto;min-height:440px}
 .x-faq .faq.x-wait .s-q{opacity:0}
+/* ===== Site v7 « fonctionnel » (premier jet, 28/11/2026) : moins d'animations, l'information d'abord, d'autres formats que
+   les cartes (listes à icônes, lignes, blocs texte + écran de l'app). Même charte v5 : couleurs, polices, grain, boutons, icônes. ===== */
+.v7-hd{display:flex;flex-direction:column;align-items:flex-start;gap:18px}
+.v7-hd .x-sh{font-size:clamp(40px,4.6vw,84px);line-height:.92;max-width:16ch}
+.v7-hd .x-lead{max-width:56ch}
+.v7-hd-c{align-items:center;text-align:center;margin:0 auto}
+.v7-hd-c .x-sh{max-width:20ch}
+.v7-what{padding-top:clamp(90px,9vw,160px)}
+.v7-split{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:clamp(40px,6vw,110px);align-items:start}
+.v7-split .v7-hd{position:sticky;top:calc(var(--x-hd,70px) + 30px)}
+/* list with icons: the printed icon in a dark square, a title, one sentence */
+.v7-il{display:flex;flex-direction:column}
+.v7-il > li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;padding:22px 0;border-top:1px solid var(--line-2)}
+.v7-il > li:last-child{border-bottom:1px solid var(--line-2)}
+.v7-ic{display:grid;place-items:center;width:52px;height:52px;border-radius:12px;background:var(--bg-2,#141416);box-shadow:inset 0 0 0 1px var(--line-2);color:var(--red)}
+.v7-ic svg{width:26px;height:26px}
+.v7-il h3{font-family:var(--cond);font-weight:900;font-style:italic;text-transform:uppercase;font-size:clamp(22px,1.9vw,30px);line-height:1;letter-spacing:.005em}
+.v7-il h3 small{margin-left:8px;font-style:normal;font-size:12px;vertical-align:.25em}
+.v7-il p{margin-top:8px;color:var(--ink-2);font-size:clamp(15px,1.05vw,17px);line-height:1.55;max-width:60ch}
+.v7-il-2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:clamp(30px,4vw,70px);margin-top:clamp(50px,6vw,90px)}
+.v7-il-2 > li:nth-last-child(2){border-bottom:1px solid var(--line-2)}
+/* the app, section by section: one row each (written by tools/sync_app.py as .x-cap, shown as rows since v7) */
+.x-caps{padding-top:clamp(90px,9vw,160px)}
+.x-caps #feat-h{font-size:clamp(40px,4.6vw,84px)}
+.x-caps-st{margin-top:clamp(30px,4vw,60px);border-top:1px solid var(--line-2)}
+.x-cap,.x-cap:nth-child(3n+1),.x-cap:nth-child(3n+2){position:relative;top:auto;display:grid;grid-template-columns:44px 56px minmax(0,1.2fr) minmax(0,1fr) 110px;grid-template-areas:"n i t x c" "n i p x c";align-items:center;gap:2px 18px;min-height:0;margin:0;padding:18px 6px;border-radius:0;background:none;color:var(--ink);box-shadow:none;border-bottom:1px solid var(--line-2);transform:none;filter:none}
+.x-cap > ul,.x-cap .x-cap-x ul{display:none}
+.x-cap-n{font-size:15px;line-height:1;font-style:normal;font-weight:800;opacity:.45;letter-spacing:.08em}
+.x-cap h3{align-self:end;font-size:clamp(24px,2vw,34px);line-height:.95}
+.x-cap p{align-self:start;font-size:15px;line-height:1.45;opacity:1;color:var(--ink-2);max-width:none}
+.x-cap .x-cap-x{margin:0;align-self:center}
+.x-cap .x-cap-x p{margin:0;font-size:15px;opacity:1;color:var(--ink-2)}
+.x-cap .x-cap-x b{color:var(--red)}
+.x-cap-i{width:52px;height:52px;border-radius:12px;background:var(--bg-2,#141416);box-shadow:inset 0 0 0 1px var(--line-2);align-self:center}
+.x-cap-i svg{width:26px;height:26px}
+.x-cap-c{align-self:center;font-size:12px}
+.x-cap-c b{font-size:clamp(30px,2.4vw,42px)}
+@media (hover:hover){.x-cap:hover{background:rgba(255,255,255,.025)}}
+/* around the tweaks: text and a screen of the app, alternating sides */
+.v7-tour{padding-top:clamp(90px,9vw,160px)}
+.v7-tour .v7-hd-c{margin-bottom:clamp(40px,5vw,80px)}
+.v7-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:clamp(30px,6vw,110px);align-items:center;padding:clamp(30px,4vw,60px) 0}
+.v7-row.flip .v7-tx{order:2}
+.v7-tx{display:flex;flex-direction:column;gap:12px;max-width:46ch}
+.v7-tx h3{font-family:var(--cond);font-weight:900;font-style:italic;text-transform:uppercase;font-size:clamp(34px,3.4vw,60px);line-height:.92}
+.v7-tx p{color:var(--ink-2);font-size:clamp(16px,1.2vw,19px);line-height:1.55}
+.v7-tx .x-fc-k.red,.v7-il .x-fc-k.red{color:var(--red)}
+.v7-vis{margin:0;padding:clamp(16px,2vw,28px);border-radius:var(--x-r,22px);background:var(--bg-2,#141416);box-shadow:inset 0 0 0 1px var(--line-2)}
+.v7-vis{justify-self:center;width:min(100%,600px)}
+.v7-vis > .vis{height:340px;padding:16px;display:flex;flex-direction:column;gap:10px;background:var(--bg);border:1px solid var(--line);position:relative;overflow:hidden;pointer-events:none;user-select:none;border-radius:12px}
+@media (max-width:520px){.v7-vis{padding:10px}.v7-vis > .vis{height:310px;padding:12px}}
+.v7-note{margin-top:28px;font-size:13px;color:var(--ink-3)}
+/* in-game bar: not pinned any more; the scene with rounded corners, its story beside it */
+.x-case{margin-top:clamp(70px,7vw,120px)}
+.x-case .x-case-st{flex-direction:column;padding:0 var(--x-gut);gap:28px;height:auto;min-height:0}
+.x-case .x-case-st::after{display:none}
+.x-case .x-case-m{position:relative;inset:auto;transform:none;width:100%;max-width:1240px;margin:0 auto}
+.x-case .x-case-v{width:100%;border-radius:var(--x-r,22px)}
+.x-case .x-case-tx{width:min(1240px,100%);margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px 60px;align-items:start}
+.x-case .x-case-tx h2{grid-row:span 2;font-size:clamp(40px,4.6vw,84px);opacity:1;transform:none}
+.x-case .x-case-i,.x-case .x-case-q{opacity:1;transform:none}
+.x-case-veil{display:none}
+/* pricing: the comparison table open under the plans */
+.x-cmp-d[open] .x-cmp-w{height:auto}
+/* every game: plain list of names */
+.v7-games{margin-top:clamp(40px,5vw,70px)}
+.v7-chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+.v7-chips li{padding:9px 14px;border-radius:10px;box-shadow:inset 0 0 0 1px var(--line-2);font-family:var(--cond);font-weight:800;font-size:15px;letter-spacing:.06em;text-transform:uppercase}
+.v7-chips li:first-child,.v7-chips li:nth-child(2){background:var(--red);color:var(--bg);box-shadow:none}
+.x-team-c .x-tc{--tx:0;--to:1}
+@media (max-width:1000px){
+  .v7-split,.v7-row,.x-case .x-case-tx{grid-template-columns:minmax(0,1fr)}
+  .v7-split .v7-hd{position:static}
+  .v7-row.flip .v7-tx{order:0}
+  .v7-il-2{grid-template-columns:minmax(0,1fr)}
+  .v7-il-2 > li:nth-last-child(2){border-bottom:0}
+  .x-case .x-case-tx h2{grid-row:auto}
+}
+@media (max-width:760px){
+  .x-cap,.x-cap:nth-child(3n+1),.x-cap:nth-child(3n+2){grid-template-columns:48px minmax(0,1fr) auto;grid-template-areas:"i t c" "i p c" "i x c";gap:4px 14px}
+  .x-cap-n{display:none}
+  .v7-il > li{gap:14px}
+  .v7-ic,.x-cap-i{width:44px;height:44px}
+}
 </style>
 <!-- icons -->
 <svg class="sprite" width="0" height="0" aria-hidden="true" focusable="false"><defs><filter id="rgh-face" x="-20%" y="-20%" width="140%" height="140%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="1.7" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="0.75" xChannelSelector="R" yChannelSelector="G" result="d"/><feTurbulence type="fractalNoise" baseFrequency="1.3" numOctaves="2" seed="9" result="s"/><feColorMatrix in="s" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -16 0 0 0 12.4" result="sm"/><feComposite in="d" in2="sm" operator="in"/></filter><filter id="rgh-back" x="-20%" y="-20%" width="140%" height="140%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="1.3" numOctaves="2" seed="14" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="1.0" xChannelSelector="G" yChannelSelector="R" result="d"/><feTurbulence type="fractalNoise" baseFrequency="1.1" numOctaves="2" seed="20" result="s"/><feColorMatrix in="s" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -14 0 0 0 10.9" result="sm"/><feComposite in="d" in2="sm" operator="in"/></filter><filter id="rgh-face-s" x="-20%" y="-20%" width="140%" height="140%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="1.2" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="0.45" xChannelSelector="R" yChannelSelector="G" result="d"/></filter><filter id="rgh-back-s" x="-20%" y="-20%" width="140%" height="140%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="1.0" numOctaves="2" seed="14" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="0.6" xChannelSelector="G" yChannelSelector="R" result="d"/></filter><filter id="rgh-face-l" x="-20%" y="-20%" width="140%" height="140%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="2.4" numOctaves="2" seed="3" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="0.42" xChannelSelector="R" yChannelSelector="G" result="d"/><feTurbulence type="fractalNoise" baseFrequency="3.2" numOctaves="2" seed="9" result="s"/><feColorMatrix in="s" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -16 0 0 0 13.9" result="sm"/><feComposite in="d" in2="sm" operator="in"/></filter><filter id="rgh-back-l" x="-20%" y="-20%" width="140%" height="140%" primitiveUnits="userSpaceOnUse" color-interpolation-filters="sRGB"><feTurbulence type="fractalNoise" baseFrequency="2.0" numOctaves="2" seed="14" result="n"/><feDisplacementMap in="SourceGraphic" in2="n" scale="0.55" xChannelSelector="G" yChannelSelector="R" result="d"/><feTurbulence type="fractalNoise" baseFrequency="2.8" numOctaves="2" seed="20" result="s"/><feColorMatrix in="s" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  -14 0 0 0 12.6" result="sm"/><feComposite in="d" in2="sm" operator="in"/></filter></defs>
@@ -634,7 +718,6 @@ details.s-q p{padding:0 0 24px;font-size:15.5px;line-height:1.6}
 <symbol id="i-brush" viewBox="0 0 24 24" overflow="visible"><defs><mask id="im-brush" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><path fill="none" stroke="#000" stroke-width="1.2" stroke-linejoin="miter" d="M8.4 17.8V22.2M12 17.2V22.2M15.6 17.8V22.2"/></mask><g id="ig-brush" mask="url(#im-brush)"><path fill="currentColor" d="M10 1.8H14V10.4H10Z"/><path fill="currentColor" d="M4.4 10.4H18.200000000000003L19.6 11.8V14.4H4.4Z"/><path fill="currentColor" d="M4.4 14.4H19.6L21.2 22.2H2.8Z"/></g></defs><g transform="translate(2.55 0) skewX(-12)"><use href="#ig-brush" style="color:var(--pb);filter:url(#rgh-back-s)" transform="translate(1.3 1.5)"/><use href="#ig-brush" style="color:var(--pf);filter:url(#rgh-face-s)"/></g></symbol>
 <symbol id="i-chat" viewBox="0 0 24 24" overflow="visible"><defs><mask id="im-chat" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><path fill="#000" d="M7.2 9H9.2V11H7.2ZM11 9H13V11H11ZM14.8 9H16.8V11H14.8Z"/></mask><g id="ig-chat" mask="url(#im-chat)"><path fill="currentColor" d="M3 4.2H18.4L21 6.8V15.6H10.4L5.4 19.8V15.6H3Z"/></g></defs><g transform="translate(2.55 0) skewX(-12)"><use href="#ig-chat" style="color:var(--pb);filter:url(#rgh-back-s)" transform="translate(1.3 1.5)"/><use href="#ig-chat" style="color:var(--pf);filter:url(#rgh-face-s)"/></g></symbol>
 <symbol id="i-check" viewBox="0 0 24 24" overflow="visible"><defs><mask id="im-check" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/></mask><g id="ig-check" mask="url(#im-check)"><path fill="none" stroke="currentColor" stroke-width="3.4" stroke-linejoin="miter" stroke-miterlimit="10" d="M3.6 12.8L9.2 18.2L20.6 6"/></g></defs><g transform="translate(2.55 0) skewX(-12)"><use href="#ig-check" style="color:var(--pb);filter:url(#rgh-back-s)" transform="translate(1.3 1.5)"/><use href="#ig-check" style="color:var(--pf);filter:url(#rgh-face-s)"/></g></symbol>
-<symbol id="i-chev" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></g></symbol>
 <symbol id="i-copy" viewBox="0 0 24 24" overflow="visible"><defs><mask id="im-copy" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><path fill="none" stroke="#000" stroke-width="1.5" stroke-linejoin="miter" d="M9 9H19.0L21.4 11.4V21.4H9Z"/></mask><g id="ig-copy" mask="url(#im-copy)"><path fill="currentColor" d="M2.6 2.6H12.6L15.0 5.0V15.0H2.6Z"/><path fill="currentColor" d="M9 9H19.0L21.4 11.4V21.4H9Z"/></g></defs><g transform="translate(2.55 0) skewX(-12)"><use href="#ig-copy" style="color:var(--pb);filter:url(#rgh-back-s)" transform="translate(1.3 1.5)"/><use href="#ig-copy" style="color:var(--pf);filter:url(#rgh-face-s)"/></g></symbol>
 <symbol id="i-crosshair" viewBox="0 0 24 24" overflow="visible"><defs><mask id="im-crosshair" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><circle fill="none" stroke="#000" stroke-width="1.4" cx="12" cy="12" r="5"/><path fill="none" stroke="#000" stroke-width="1.5" stroke-linejoin="miter" d="M12 2.5V8.2M12 15.8V21.5M2.5 12H8.2M15.8 12H21.5"/></mask><g id="ig-crosshair" mask="url(#im-crosshair)"><circle fill="currentColor" cx="12" cy="12" r="8.6"/></g></defs><g transform="translate(2.55 0) skewX(-12)"><use href="#ig-crosshair" style="color:var(--pb);filter:url(#rgh-back-s)" transform="translate(1.3 1.5)"/><use href="#ig-crosshair" style="color:var(--pf);filter:url(#rgh-face-s)"/></g></symbol>
 <symbol id="i-discord" viewBox="0 0 24 24"><path fill="currentColor" d="M20.317 4.37a19.79 19.79 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.211.375-.445.865-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.74 19.74 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.058a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.873-1.295 1.226-1.994a.076.076 0 0 0-.042-.106 13.1 13.1 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .078-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.009c.12.099.246.198.373.292a.077.077 0 0 1-.007.128 12.3 12.3 0 0 1-1.873.891.077.077 0 0 0-.041.107c.36.698.772 1.363 1.225 1.993a.076.076 0 0 0 .084.029 19.84 19.84 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.331c-1.183 0-2.157-1.086-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.332-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.086-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.095 2.157 2.42 0 1.332-.946 2.418-2.157 2.418z"/></symbol>
@@ -649,7 +732,6 @@ details.s-q p{padding:0 0 24px;font-size:15.5px;line-height:1.6}
 <symbol id="i-lock" viewBox="0 0 24 24" overflow="visible"><defs><mask id="im-lock" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><path fill="#000" d="M10.9 13.8H13.1V18.4H10.9Z"/></mask><g id="ig-lock" mask="url(#im-lock)"><path fill="currentColor" d="M3.6 10.4H17.8L20.400000000000002 13.0V21.8H3.6Z"/><path fill="none" stroke="currentColor" stroke-width="2.8" stroke-linejoin="miter" stroke-miterlimit="10" d="M7.6 10.8V7.6A4.4 4.4 0 0 1 16.4 7.6V10.8"/></g></defs><g transform="translate(2.55 0) skewX(-12)"><use href="#ig-lock" style="color:var(--pb);filter:url(#rgh-back-s)" transform="translate(1.3 1.5)"/><use href="#ig-lock" style="color:var(--pf);filter:url(#rgh-face-s)"/></g></symbol>
 <symbol id="i-minecraft" viewBox="0 0 24 24" overflow="visible"><defs><mask id="im-minecraft" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><path fill="none" stroke="#000" stroke-width="1.5" stroke-linejoin="miter" d="M3.2 7L12 11.9L20.8 7M12 11.9V21.8"/><path fill="#000" d="M10.6 5.2H12.4V6.6H10.6ZM13.6 7H15.4V8.4H13.6ZM8 7.3H9.6V8.6H8Z"/></mask><g id="ig-minecraft" mask="url(#im-minecraft)"><path fill="currentColor" d="M12 2.2L20.8 7V17L12 21.8L3.2 17V7Z"/></g></defs><g transform="translate(2.55 0) skewX(-12)"><use href="#ig-minecraft" style="color:var(--pb);filter:url(#rgh-back-s)" transform="translate(1.3 1.5)"/><use href="#ig-minecraft" style="color:var(--pf);filter:url(#rgh-face-s)"/></g></symbol>
 <symbol id="i-network" viewBox="0 0 24 24" overflow="visible"><defs><mask id="im-network" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><path fill="none" stroke="#000" stroke-width="1.3" stroke-linejoin="miter" d="M10 5.5H14"/></mask><g id="ig-network" mask="url(#im-network)"><path fill="currentColor" d="M7.5 2H13.9L16.5 4.6V9H7.5Z"/><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="miter" stroke-miterlimit="10" d="M12 9V12.5M6.5 15.5V12.5H17.5V15.5"/><path fill="currentColor" d="M3 15.5H8L10 17.5V21.5H3Z"/><path fill="currentColor" d="M14 15.5H19L21 17.5V21.5H14Z"/></g></defs><g transform="translate(2.55 0) skewX(-12)"><use href="#ig-network" style="color:var(--pb);filter:url(#rgh-back-s)" transform="translate(1.3 1.5)"/><use href="#ig-network" style="color:var(--pf);filter:url(#rgh-face-s)"/></g></symbol>
-<symbol id="i-pad" viewBox="0 0 24 24" overflow="visible"><defs><mask id="im-pad" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><path fill="none" stroke="#000" stroke-width="1.6" stroke-linejoin="miter" d="M7.4 8.7V12.7M5.4 10.7H9.4"/><path fill="#000" d="M14.3 8.4H16.4V10.5H14.3ZM16.7 10.8H18.8V12.9H16.7Z"/></mask><g id="ig-pad" mask="url(#im-pad)"><path fill="currentColor" d="M6.8 6.6H17.2L21.4 13.8V17.8H16.6L14.6 14.8H9.4L7.4 17.8H2.6V13.8Z"/></g></defs><g transform="translate(2.55 0) skewX(-12)"><use href="#ig-pad" style="color:var(--pb);filter:url(#rgh-back-s)" transform="translate(1.3 1.5)"/><use href="#ig-pad" style="color:var(--pf);filter:url(#rgh-face-s)"/></g></symbol>
 <symbol id="i-pinoff" viewBox="0 0 24 24" overflow="visible"><defs><mask id="im-pinoff" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><path fill="none" stroke="#000" stroke-width="1.3" stroke-linejoin="miter" d="M4.6 1.6L22.4 19.4"/><path fill="none" stroke="#000" stroke-width="1.3" stroke-linejoin="miter" d="M1.6 4.6L19.4 22.4"/></mask><g id="ig-pinoff" mask="url(#im-pinoff)"><path fill="currentColor" d="M7.8 2.4H16.2V4.8H14.6V9.4L18.4 12.8V15.6H5.6V12.8L9.4 9.4V4.8H7.8Z"/><path fill="currentColor" d="M11 15.6H13V22H11Z"/><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="miter" stroke-miterlimit="10" d="M3 3L21 21"/></g></defs><g transform="translate(2.55 0) skewX(-12)"><use href="#ig-pinoff" style="color:var(--pb);filter:url(#rgh-back-s)" transform="translate(1.3 1.5)"/><use href="#ig-pinoff" style="color:var(--pf);filter:url(#rgh-face-s)"/></g></symbol>
 <symbol id="i-play" viewBox="0 0 24 24" overflow="visible"><defs><mask id="im-play" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/></mask><g id="ig-play" mask="url(#im-play)"><path fill="currentColor" d="M5.4 2.8L21 12L5.4 21.2Z"/></g></defs><g transform="translate(2.55 0) skewX(-12)"><use href="#ig-play" style="color:var(--pb);filter:url(#rgh-back-s)" transform="translate(1.3 1.5)"/><use href="#ig-play" style="color:var(--pf);filter:url(#rgh-face-s)"/></g></symbol>
 <symbol id="i-ram" viewBox="0 0 24 24" overflow="visible"><defs><mask id="im-ram" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><path fill="#000" d="M4.8 8.8H8.4V13.2H4.8ZM10.2 8.8H13.8V13.2H10.2ZM15.6 8.8H19.2V13.2H15.6Z"/></mask><g id="ig-ram" mask="url(#im-ram)"><path fill="currentColor" d="M2 6H19.8L22 8.2V16.2H2Z"/><path fill="none" stroke="currentColor" stroke-width="2.1" stroke-linejoin="miter" stroke-miterlimit="10" d="M5.6 16.2V19.8M9.8 16.2V19.8M14.2 16.2V19.8M18.4 16.2V19.8"/></g></defs><g transform="translate(2.55 0) skewX(-12)"><use href="#ig-ram" style="color:var(--pb);filter:url(#rgh-back-s)" transform="translate(1.3 1.5)"/><use href="#ig-ram" style="color:var(--pf);filter:url(#rgh-face-s)"/></g></symbol>
@@ -660,7 +742,6 @@ details.s-q p{padding:0 0 24px;font-size:15.5px;line-height:1.6}
 <symbol id="i-sliders" viewBox="0 0 24 24" overflow="visible"><defs><mask id="im-sliders" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><path fill="none" stroke="#000" stroke-width="1" stroke-linejoin="miter" d="M3.6 15.2H8.4M9.6 7.2H14.4M15.6 12.8H20.4"/></mask><g id="ig-sliders" mask="url(#im-sliders)"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="miter" stroke-miterlimit="10" d="M6 3V21M12 3V21M18 3V21"/><path fill="currentColor" d="M3.6 13H8.4V17.4H3.6Z"/><path fill="currentColor" d="M9.6 5H14.4V9.4H9.6Z"/><path fill="currentColor" d="M15.6 10.6H20.4V15H15.6Z"/></g></defs><g transform="translate(2.55 0) skewX(-12)"><use href="#ig-sliders" style="color:var(--pb);filter:url(#rgh-back-s)" transform="translate(1.3 1.5)"/><use href="#ig-sliders" style="color:var(--pf);filter:url(#rgh-face-s)"/></g></symbol>
 <symbol id="i-trash" viewBox="0 0 24 24" overflow="visible"><defs><mask id="im-trash" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><path fill="none" stroke="#000" stroke-width="1.3" stroke-linejoin="miter" d="M10 10.4V18.4M14 10.4V18.4"/></mask><g id="ig-trash" mask="url(#im-trash)"><path fill="currentColor" d="M5.2 7.6H18.8L17.6 21.4H6.4Z"/><path fill="currentColor" d="M2.8 4.2H21.2V6.4H2.8Z"/><path fill="currentColor" d="M9 2.2H15V4.6H9Z"/></g></defs><g transform="translate(2.55 0) skewX(-12)"><use href="#ig-trash" style="color:var(--pb);filter:url(#rgh-back-s)" transform="translate(1.3 1.5)"/><use href="#ig-trash" style="color:var(--pf);filter:url(#rgh-face-s)"/></g></symbol>
 <symbol id="i-undo" viewBox="0 0 24 24" overflow="visible"><defs><mask id="im-undo" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/></mask><g id="ig-undo" mask="url(#im-undo)"><path fill="none" stroke="currentColor" stroke-width="2.8" stroke-linejoin="miter" stroke-miterlimit="10" d="M7 9.5H14.5A5 5 0 0 1 14.5 19.5H8.6"/><path fill="currentColor" d="M2.6 9.5L8.6 4V15Z"/></g></defs><g transform="translate(2.55 0) skewX(-12)"><use href="#ig-undo" style="color:var(--pb);filter:url(#rgh-back-s)" transform="translate(1.3 1.5)"/><use href="#ig-undo" style="color:var(--pf);filter:url(#rgh-face-s)"/></g></symbol>
-<symbol id="i-volume" viewBox="0 0 24 24" overflow="visible"><defs><mask id="im-volume" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/></mask><g id="ig-volume" mask="url(#im-volume)"><path fill="currentColor" d="M2.4 8.4H6.8L12.2 3.2V20.8L6.8 15.6H2.4Z"/><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="miter" stroke-miterlimit="10" d="M15.4 8.4A4.8 4.8 0 0 1 15.4 15.6"/><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="miter" stroke-miterlimit="10" d="M18.4 5.2A9.2 9.2 0 0 1 18.4 18.8"/></g></defs><g transform="translate(2.55 0) skewX(-12)"><use href="#ig-volume" style="color:var(--pb);filter:url(#rgh-back-s)" transform="translate(1.3 1.5)"/><use href="#ig-volume" style="color:var(--pf);filter:url(#rgh-face-s)"/></g></symbol>
 <symbol id="i-wifi" viewBox="0 0 24 24" overflow="visible"><defs><mask id="im-wifi" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><path fill="none" stroke="#000" stroke-width="1.3" stroke-linejoin="miter" d="M10 5.5H14"/></mask><g id="ig-wifi" mask="url(#im-wifi)"><path fill="currentColor" d="M7.5 2H13.9L16.5 4.6V9H7.5Z"/><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linejoin="miter" stroke-miterlimit="10" d="M12 9V12.5M6.5 15.5V12.5H17.5V15.5"/><path fill="currentColor" d="M3 15.5H8L10 17.5V21.5H3Z"/><path fill="currentColor" d="M14 15.5H19L21 17.5V21.5H14Z"/></g></defs><g transform="translate(2.55 0) skewX(-12)"><use href="#ig-wifi" style="color:var(--pb);filter:url(#rgh-back-s)" transform="translate(1.3 1.5)"/><use href="#ig-wifi" style="color:var(--pf);filter:url(#rgh-face-s)"/></g></symbol>
 <symbol id="i-windows" viewBox="0 0 24 24" overflow="visible"><defs><mask id="im-windows" maskUnits="userSpaceOnUse" x="-4" y="-4" width="32" height="32"><rect x="-4" y="-4" width="32" height="32" fill="#fff"/><path fill="none" stroke="#000" stroke-width="1.3" stroke-linejoin="miter" d="M5.4 6H16.400000000000002L18.200000000000003 7.8V13.6H5.4Z"/><path fill="#000" d="M7.4 8.2H11.4V11.4H7.4Z"/></mask><g id="ig-windows" mask="url(#im-windows)"><path fill="currentColor" d="M2.8 3.5H18L21.2 6.7V16.2H2.8Z"/><path fill="currentColor" d="M10.7 16H13.3V19.6H10.7Z"/><path fill="currentColor" d="M7.2 19.4H16.8V21.4H7.2Z"/></g></defs><g transform="translate(2.55 0) skewX(-12)"><use href="#ig-windows" style="color:var(--pb);filter:url(#rgh-back-s)" transform="translate(1.3 1.5)"/><use href="#ig-windows" style="color:var(--pf);filter:url(#rgh-face-s)"/></g></symbol>
 <symbol id="i-x" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></g></symbol>
@@ -668,12 +749,6 @@ details.s-q p{padding:0 0 24px;font-size:15.5px;line-height:1.6}
 </svg>
 <!-- /icons -->
 
-<script>/* site v6: the loader shows from the first frame (removed by the shared script; never left on screen more than 9 s) */
-if (!matchMedia("(prefers-reduced-motion: reduce)").matches) { document.documentElement.classList.add("has-ld", "x-pre-intro"); window.__xLdSafe = setTimeout(() => document.documentElement.classList.remove("has-ld", "x-pre-intro"), 9000); }</script>
-<div class="x-ld" aria-hidden="true">
-  <div class="x-ld-st"><img class="x-ld-sh" src="img/covers/fortnite.webp" alt="" width="400" height="600"><img class="x-ld-sh" src="img/covers/valorant.webp" alt="" width="400" height="600"><img class="x-ld-sh" src="img/covers/gta.webp" alt="" width="400" height="600"><img class="x-ld-sh" src="img/covers/cs2.webp" alt="" width="400" height="600"><img class="x-ld-sh" src="img/covers/lol.webp" alt="" width="400" height="600"><img class="x-ld-sh" src="img/covers/roblox.webp" alt="" width="400" height="600"><img class="x-ld-sh" src="img/covers/apex.webp" alt="" width="400" height="600"><img class="x-ld-sh" src="img/covers/rl.webp" alt="" width="400" height="600"><img class="x-ld-sh" src="img/covers/overwatch.webp" alt="" width="400" height="600"><img class="x-ld-sh" src="img/covers/minecraft.webp" alt="" width="400" height="600"></div>
-  <div class="x-ld-w"><span class="x-ld-p">rago</span><span class="x-ld-g"><span class="x-ld-n"><b>0</b>%</span></span><span class="x-ld-p r">optimizer.</span></div>
-</div>
 <a class="sr-only" href="#home">Skip to content</a>
 
 <header class="x-hd x-top" id="top">
@@ -690,11 +765,11 @@ if (!matchMedia("(prefers-reduced-motion: reduce)").matches) { document.document
   <div class="x-nav-p" id="menu" aria-hidden="true">
     <ul class="x-nav-l">
       <li><a href="#home"><small>01</small>Home</a></li>
-      <li><a href="#why"><small>02</small>Why Rago</a></li>
-      <li><a href="#features"><small>03</small>Features</a></li>
-      <li><a href="#route"><small>04</small>Rago Route</a></li>
-      <li><a href="#new"><small>05</small>What's new</a></li>
-      <li><a href="#pricing"><small>06</small>Pricing</a></li>
+      <li><a href="#why"><small>02</small>What it does</a></li>
+      <li><a href="#features"><small>03</small>Tweaks</a></li>
+      <li><a href="#new"><small>04</small>In the app</a></li>
+      <li><a href="#pricing"><small>05</small>Pricing</a></li>
+      <li><a href="#route"><small>06</small>Rago Route</a></li>
       <li><a href="#faq"><small>07</small>FAQ</a></li>
       <li><a href="#community"><small>08</small>Community</a></li>
     </ul>
@@ -702,9 +777,9 @@ if (!matchMedia("(prefers-reduced-motion: reduce)").matches) { document.document
   </div>
 </nav>
 
-<main id="home" class="x">
+<main id="home" class="x" data-calm>
 
-<!-- 1. Hero: the title appears letter by letter after the loader, pictures open between its words, the letters near the mouse turn red -->
+<!-- 1. Hero: title, what Rago does, the two buttons, the app's dashboard (v7: no loader, the page shows at once) -->
 <section class="x-hero">
   <div class="x-wrap x-hero-in">
     <p class="x-hero-k x-intro"><span class="x-tape">Minecraft PvP optimizer <b>//</b> for Windows</span></p>
@@ -736,46 +811,22 @@ if (!matchMedia("(prefers-reduced-motion: reduce)").matches) { document.document
   </div>
 </section>
 
-<!-- 2. Why: a statement on a wheel, each line turns toward you as it reaches the middle of the screen -->
-<section class="x-about" id="why" data-x-own>
-  <h2 class="x-about-s x-h" id="why-h">
-    <span class="x-al">Every hit</span>
-    <span class="x-al">takes a <span class="x-chip x-keep" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-route"/></svg></span> trip.</span>
-    <span class="x-al">Mouse, PC,</span>
-    <span class="x-al"><span class="x-chip x-keep red" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-wifi"/></svg></span> network,</span>
-    <span class="x-al">then the server.</span>
-    <span class="x-al">Rago makes</span>
-    <span class="x-al">the trip <span class="x-chip x-keep paper" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-zap"/></svg></span> shorter.</span>
-  </h2>
-</section>
-
-<!-- 3. The four delays, as a deck of cards: the band slides in, then the cards fly off one by one while you scroll -->
-<section class="x-deck" id="reasons" aria-labelledby="reasons-h">
-  <div class="x-deck-tr">
-    <div class="x-stage x-deck-st">
-      <h2 class="sr-only" id="reasons-h">Why your hits don't register</h2>
-      <div class="x-deck-band" aria-hidden="true"><div class="x-mq" data-speed="16"><div class="x-mq-in"><span>Why your hits don't register<em>//</em></span><span>Why your hits don't register<em>//</em></span><span>Why your hits don't register<em>//</em></span><span>Why your hits don't register<em>//</em></span></div></div></div>
-      <ul class="x-deck-f">
-        <li class="x-tile red"><p class="x-tile-k"><i></i>01 <b>//</b> the journey</p>
-          <div class="x-tile-v v-rail" aria-hidden="true"><span class="note">server checks 20× a second</span><div class="rail"><i class="ln"></i><i class="fl"></i></div><ol><li class="dn"><span></span><i>mouse</i></li><li class="dn"><span></span><i>pc</i></li><li class="now"><span></span><i>network</i></li><li><span></span><i>server</i></li></ol></div>
-          <div class="x-tile-b"><h3>Every hit takes a trip.</h3><p>Your click goes through your mouse, your PC, your network, then the server. The server checks hits on a fixed beat, 20 times a second.</p></div></li>
-        <li class="x-tile paper"><p class="x-tile-k"><i></i>02 <b>//</b> input lag</p>
-          <div class="x-tile-v v-fan" aria-hidden="true"><i></i><i></i><i></i><i></i><span class="lead"><em>mouse acceleration</em><b>off</b></span></div>
-          <div class="x-tile-b"><h3>Your click leaves faster.</h3><p>Mouse acceleration makes your aim inconsistent. USB power saving and input queues add delay before your PC even sees the click. Rago turns them off.</p></div></li>
-        <li class="x-tile dark"><p class="x-tile-k"><i></i>03 <b>//</b> frame time</p>
-          <div class="x-tile-v v-bars" aria-hidden="true"><div class="b"><i style="--h:.42"></i><i style="--h:.9"></i><i style="--h:.36"></i><i style="--h:.7"></i><i style="--h:.3"></i><i style="--h:.95"></i><i style="--h:.4"></i></div><div class="b on"><i style="--h:.4"></i><i style="--h:.42"></i><i style="--h:.4"></i><i style="--h:.41"></i><i style="--h:.4"></i><i style="--h:.42"></i><i style="--h:.4"></i></div><span>before</span><span class="r">with rago</span></div>
-          <div class="x-tile-b"><h3>Your frames stop stuttering.</h3><p>CPU power states and core parking cause uneven frames. Rago keeps the CPU awake so each frame takes the same time.</p></div></li>
-        <li class="x-tile red"><p class="x-tile-k"><i></i>04 <b>//</b> ping jitter</p>
-          <div class="x-tile-v v-tags" aria-hidden="true"><span class="t gh">24 ms</span><span class="t gh">31 ms</span><span class="t gh">19 ms</span><span class="t on">24 ms <b>steady</b></span></div>
-          <div class="x-tile-b"><h3>Your timing gets consistent.</h3><p>The distance to the server doesn't change. What changes is how much your timing jumps around, so more hits land in the beat they were meant for.</p></div></li>
-        <li class="x-tile dark"><p class="x-tile-k"><i></i>05 <b>//</b> always a way back</p>
-          <div class="x-tile-v v-sw" aria-hidden="true"><span class="row"><b>Disable core parking</b><i class="sw on"></i></span><span class="row off"><b>Configure C-states</b><i class="sw"></i></span><span class="ok"><svg class="i" aria-hidden="true"><use href="#i-undo"/></svg>settings put back</span></div>
-          <div class="x-tile-b"><h3>Turn it off, it's undone.</h3><p>Turn a tweak off and your Windows settings go back the way they were. A restore point is offered before advanced tweaks.</p></div></li>
-        <li class="x-tile paper"><p class="x-tile-k"><i></i>06 <b>//</b> nothing injected</p>
-          <div class="x-tile-v v-tags" aria-hidden="true"><span class="t">windows <b>tuned</b></span><span class="t">network <b>tuned</b></span><span class="t on">your game <b>untouched</b></span></div>
-          <div class="x-tile-b"><h3>Your game stays yours.</h3><p>Rago changes Windows and network settings. It doesn't modify Minecraft or any other game and injects nothing into them.</p></div></li>
-      </ul>
+<!-- 2. What Rago does (site v7, 28/11: plain text and a list with icons instead of the wheel and the deck of cards) -->
+<section class="x-sec v7-what" id="why" aria-labelledby="why-h">
+  <div class="x-wrap v7-split">
+    <div class="v7-hd">
+      <p data-x="up"><span class="x-tape">what rago does <b>//</b> in plain words</span></p>
+      <h2 class="x-h x-sh" id="why-h">Every hit takes a trip. <span class="r">Rago makes it shorter.</span></h2>
+      <p class="x-lead">Your click goes through your mouse, your PC and your network before the server checks it, 20 times a second. Rago tunes the part of that trip that's on your side: Windows, your network settings and Minecraft. It can't move you closer to the server, and it never promises a ping.</p>
+      <a class="x-btn" href="tweaks.html" data-x="up"><span class="x-fl"></span><svg class="i" aria-hidden="true"><use href="#i-sliders"/></svg><span class="x-bl">All <span class="n-all">218</span> tweaks explained</span></a>
     </div>
+    <ul class="v7-il" data-x="list">
+      <li><span class="v7-ic" aria-hidden="true"><svg class="i"><use href="#i-crosshair"/></svg></span><div><h3>Your click leaves faster.</h3><p>Mouse acceleration, USB power saving and input queues add delay before your PC even sees the click. Rago turns them off.</p></div></li>
+      <li><span class="v7-ic" aria-hidden="true"><svg class="i"><use href="#i-graphics"/></svg></span><div><h3>Your frames stop stuttering.</h3><p>CPU power states and core parking cause uneven frames. Rago keeps the CPU awake so each frame takes the same time.</p></div></li>
+      <li><span class="v7-ic" aria-hidden="true"><svg class="i"><use href="#i-wifi"/></svg></span><div><h3>Your timing gets steadier.</h3><p>The distance to the server doesn't change. What changes is how much your timing jumps around, so more hits land in the beat they were meant for.</p></div></li>
+      <li><span class="v7-ic" aria-hidden="true"><svg class="i"><use href="#i-undo"/></svg></span><div><h3>Turn it off, it's undone.</h3><p>Turn a tweak off and your Windows settings go back the way they were. A restore point is offered before advanced tweaks.</p></div></li>
+      <li><span class="v7-ic" aria-hidden="true"><svg class="i"><use href="#i-lock"/></svg></span><div><h3>Your game stays yours.</h3><p>Rago changes Windows and network settings. It doesn't modify Minecraft or any other game and injects nothing into them.</p></div></li>
+    </ul>
   </div>
 </section>
 
@@ -806,81 +857,7 @@ if (!matchMedia("(prefers-reduced-motion: reduce)").matches) { document.document
   </div>
 </section>
 
-<!-- 5. How it works: the title letter by letter, then the four steps slide past a turning ring that closes into the final button -->
-<section class="x-work" id="how" aria-labelledby="how-h">
-  <div class="x-wrap x-work-hd"><h2 class="x-h x-sh x-work-h" id="how-h" data-x="chars">Four steps to <span class="r">your next match.</span></h2></div>
-  <div class="x-work-pin">
-    <div class="x-stage x-work-st">
-      <div class="x-work-bg" aria-hidden="true"><svg viewBox="0 0 400 400"><circle class="tr" cx="200" cy="200" r="190"/><circle class="pg" cx="200" cy="200" r="190"/><circle class="fl" cx="200" cy="200" r="190"/><g class="tk"><path d="M200 4v18M200 378v18M4 200h18M378 200h18"/></g></svg></div>
-      <ol class="x-work-cards">
-        <li class="x-wc"><span class="n">(01)</span><svg class="i big" aria-hidden="true"><use href="#i-download"/></svg><h3>Download free</h3><p>Windows 10 and 11. No account needed.</p></li>
-        <li class="x-wc"><span class="n">(02)</span><svg class="i big" aria-hidden="true"><use href="#i-sliders"/></svg><h3>Try the free tweaks</h3><p><span class="n-free">73</span> tweaks open, up to 30 on at once. The rest show a lock.</p></li>
-        <li class="x-wc"><span class="n">(03)</span><svg class="i big" aria-hidden="true"><use href="#i-zap"/></svg><h3>Try Premium free</h3><p>3 days free with Stripe. Cancel anytime before day 3 and pay nothing.</p></li>
-        <li class="x-wc"><span class="n">(04)</span><svg class="i big" aria-hidden="true"><use href="#i-lock"/></svg><h3>Sign in and unlock</h3><p>With Google, Discord or email. All <span class="n-all">218</span> tweaks, no limit.</p></li>
-      </ol>
-      <div class="x-work-fin">
-        <p class="x-h ln" data-line="-1">Your next match</p>
-        <a class="x-work-disc js-free-app" href="#pricing"><span class="lb">Download<br>free</span><svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
-        <p class="x-h ln r" data-line="1">starts here.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- 6. Pricing: a banner that speeds up with the scroll, three cards that build themselves, a bubble follows the mouse -->
-<section class="x-plans" id="plans">
-  <div class="x-tick" aria-hidden="true"><div class="x-mq" data-speed="32" data-boost="1.55"><div class="x-mq-in"><span>Start free</span><i class="m"><svg class="i" aria-hidden="true"><use href="#i-zap"/></svg></i><span>Unlock everything</span><i class="m"><svg class="i" aria-hidden="true"><use href="#i-zap"/></svg></i><span>Start free</span><i class="m"><svg class="i" aria-hidden="true"><use href="#i-zap"/></svg></i><span>Unlock everything</span><i class="m"><svg class="i" aria-hidden="true"><use href="#i-zap"/></svg></i></div></div></div>
-  <div class="x-wrap">
-    <div class="x-plans-hd" id="pricing">
-      <h2 class="x-h x-sh" data-x="chars">Start free. <span class="r">Unlock everything</span> with Premium.</h2>
-      <div class="s-bill" id="billing" role="group" aria-label="Billing" data-x="up"><button type="button" data-v="month">Monthly</button><button type="button" data-v="year" class="on">Yearly</button></div>
-    </div>
-    <div class="x-plans-c" data-x-own>
-      <article class="x-pc paper" data-cur="Download free" data-face="ink">
-        <span class="x-pc-bg"></span>
-        <p class="x-pc-k"><i></i>Free forever</p>
-        <div class="x-pc-dots" aria-hidden="true"></div>
-        <h3 class="x-pc-t">Free</h3>
-        <div class="x-pc-pr"><b>$0</b><span>forever</span></div><p class="bil">No license needed. Watch, test and clean your PC.</p>
-        <ul class="x-pc-f"><li><span>In-game bar: live FPS, ping, CPU, GPU and RAM</span></li><li><span>Network test to Hypixel, Minemen Club and game regions</span></li><li><span>Clean RAM in one click, cleanup and driver check</span></li><li><span>Game library and preset sharing</span></li><li><span><b><span class="n-free">73</span> tweaks open</b>, up to 30 on at once</span></li><li><span>Remove preinstalled apps in Tools</span></li><li class="lk"><span>Network and hitreg tweaks, presets and Packet Optimizer locked</span></li></ul>
-        <div class="x-pc-cta"><a class="x-btn dark js-free-app" href="/download" data-cur-go><span class="x-fl"></span><svg class="i" aria-hidden="true"><use href="#i-download"/></svg><span class="x-bl">Download free</span></a><p class="fine">Windows 10 and 11</p></div>
-      </article>
-      <article class="x-pc red" data-cur="Start free trial" data-face="ink">
-        <span class="x-pc-bg"></span>
-        <p class="x-pc-k"><i></i>Recommended</p>
-        <div class="x-pc-dots" aria-hidden="true"></div>
-        <h3 class="x-pc-t">Premium</h3>
-        <div class="x-pc-pr"><b id="p-amt">$2.50</b><span id="p-per">/ month</span></div><p class="bil" id="p-note">Billed $29.99 yearly. 6 months free.</p>
-        <ul class="x-pc-f"><li><span><b>All <span class="n-all">218</span> tweaks</b>, with RBW Mod, Game mode and Expert mode</span></li><li><span>Packet Optimizer for hitreg and knockback, tuned to your line</span></li><li><span><b><span class="n-presets">20</span> presets</b>, 15 made for a game: Valorant, Fortnite, CS2…</span></li><li><span>Optimize and play: your preset applied, then your game starts</span></li><li><span>21 tweaks to switch mid-match from the in-game bar</span></li><li><span>No limit on the tweaks you keep on</span></li><li><span>Every new tweak and preset from future versions</span></li><li><span>The Premium role on Discord</span></li><li class="dim"><span>One license, one PC.</span></li></ul>
-        <label class="s-addon x-addon" for="with-route"><input type="checkbox" id="with-route" class="sr-only"><i class="cb" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></i><span><b>Add Rago Route<em id="addon-pr">+$17.99/year</em></b><small>The anti-lag tunnel for Minecraft, in beta: two roads for every packet. Included in the free trial. <a href="route.html">What it does</a></small></span></label>
-        <div class="x-pc-cta"><a class="x-btn ink js-trial" href="/buy?interval=month&amp;trial=1" data-cur-go><span class="x-fl"></span><svg class="i" aria-hidden="true"><use href="#i-zap"/></svg><span class="x-bl">Start 3-day free trial</span></a>
-        <p class="fine" id="trial-note">Card required. Free for 3 days, then the monthly plan at $5.99 a month, charged automatically on day 3 unless you cancel before. Cancel in two clicks from your account. One trial per person.</p>
-        <p class="fine"><a class="js-checkout" href="/buy?interval=year">Skip the trial and buy now</a> &nbsp; Secure checkout with Stripe. Cancel anytime. <a href="terms.html#cancel">No refunds: try it free first.</a></p></div>
-      </article>
-      <article class="x-pc dark" id="lifetime" data-cur="Paid once" data-face="red">
-        <span class="x-pc-bg"></span>
-        <p class="x-pc-k"><i></i>Paid once <span class="s-tag life-off">coming soon</span></p>
-        <div class="x-pc-dots" aria-hidden="true"></div>
-        <span class="x-pc-disp" aria-hidden="true">once</span>
-        <h3 class="x-pc-t">Lifetime</h3>
-        <div class="x-pc-pr"><b id="l-amt">$59.99</b><span>once</span></div><p class="bil">One-time payment. No renewals. Premium for good.</p>
-        <ul class="x-pc-f"><li><span><b>Everything in Premium</b>, with nothing to renew</span></li><li><span>Every future version: new tweaks, presets and features</span></li><li class="life-on"><span>Already subscribed? Switch from your account page</span></li><li><span>The Premium role on Discord</span></li><li class="dim"><span>One license, one PC.</span></li></ul>
-        <div class="x-pc-cta"><a class="x-btn js-lifetime" role="link" aria-disabled="true" data-cur-go><span class="x-fl"></span><span class="x-bl">Coming soon</span></a><p class="fine"><span class="life-on">Secure checkout with Stripe. </span>One-time payment. <a href="terms.html#cancel">No refunds.</a></p></div>
-      </article>
-    </div>
-  </div>
-</section>
-
-<section class="x-sec x-cmp" id="compare">
-  <div class="x-wrap">
-    <div class="s-ronly" id="route-only" data-x="up"><span class="ic"><svg class="i big" aria-hidden="true"><use href="#i-route"/></svg></span><p><b>Already Premium?</b> Add only Rago Route, the anti-lag tunnel for Minecraft (beta): $3 a month or $17.99 a year on top of your Premium, its own subscription, cancel anytime.</p><a class="s-link" href="route.html">See what it does</a><a class="x-btn red sm js-route-only" href="/buy/route"><span class="x-fl"></span><span class="x-bl">Add Rago Route</span></a></div>
-    <details class="x-cmp-d" data-x="up"><summary><span class="x-h">Compare Free and Premium</span><span class="pm" aria-hidden="true"></span></summary>
-      <div class="x-cmp-w"><div class="s-card s-cmp"><table><thead><tr><th scope="col">What you get</th><th scope="col" class="c">Free</th><th scope="col" class="c p">Premium</th></tr></thead><tbody id="cmp"></tbody></table></div></div>
-    </details>
-  </div>
-</section>
-
-<!-- 7. Inside the app: ten cards that stack while you scroll, each one tilts a little as the next covers it -->
+<!-- 7. Inside the app: one row per section of the app (v7: a list, the rows are still written by tools/sync_app.py) -->
 <section class="x-caps" id="features">
   <div class="x-wrap">
     <div class="x-caps-hd">
@@ -903,6 +880,109 @@ if (!matchMedia("(prefers-reduced-motion: reduce)").matches) { document.document
 <!-- /mods -->
     </div>
     <div class="x-split" data-x="up"><div class="bar"><i style="width:33.5%" id="free-bar"></i></div><div class="lg"><span><b class="n-free">73</b>free tweaks, up to 30 on at once</span><span><b class="n-all">218</b>with Premium, no limit</span></div></div>
+  </div>
+</section>
+
+<!-- 9. Around the tweaks (site v7, 28/11: text next to the app's screen, alternating sides, instead of tilted cards that scroll past) -->
+<section class="x-sec v7-tour" id="new" aria-labelledby="new-h">
+  <div class="x-wrap">
+    <div class="v7-hd v7-hd-c">
+      <p data-x="up"><span class="x-tape">around the tweaks <b>//</b> in the app</span></p>
+      <h2 class="x-h x-sh" id="new-h">More than tweaks. <span class="r">Tools you'll use every day.</span></h2>
+      <p class="x-lead">Rago finds your games in Steam, Epic, Riot, Battle.net, the EA app, Ubisoft Connect, Lunar Client, Badlion and the Minecraft Launcher.</p>
+    </div>
+    <div class="v7-row">
+      <div class="v7-tx" data-x="up"><span class="x-fc-k">free</span><h3>network test</h3><p>Ping, jitter and packet loss to Hypixel, Minemen Club, game server regions or any server you type. Nothing on your PC is changed.</p></div>
+      <figure class="v7-vis" data-x="up"><div aria-hidden="true" class="vis bx bx-net">
+          <div class="top bx-p"><div class="q"><b>great</b><span>connection</span></div><div class="m"><b>17<small>ms</small></b><span>ping</span></div><div class="m"><b>1.2<small>ms</small></b><span>jitter</span></div><div class="m"><b>0<small>%</small></b><span>loss</span></div><span class="btn red sm"><svg class="i" aria-hidden="true"><use href="#i-rotate"/></svg>test again</span></div>
+          <div class="bx-srv"><div class="r"><span class="n"><b>Minemen Club</b><small>Europe</small></span><i class="bar"><em style="width:21%"></em></i><b class="v">21<small>ms</small></b></div><div class="r"><span class="n"><b>Hypixel</b><small>North America</small></span><i class="bar hi"><em style="width:96%"></em></i><b class="v hi">96<small>ms</small></b></div><div class="r on"><span class="n"><b>Frankfurt</b><small>Central Europe</small></span><i class="bar"><em style="width:17%"></em></i><b class="v">17<small>ms</small></b></div><div class="r"><span class="n"><b>Cloudflare</b><small>Nearest server</small></span><i class="bar"><em style="width:9%"></em></i><b class="v">9<small>ms</small></b></div></div></div></figure>
+    </div>
+    <div class="v7-row flip">
+      <div class="v7-tx" data-x="up"><span class="x-fc-k">free <b>//</b> premium optimize and play</span><h3>your game library</h3><p>Rago finds your games in Steam, Epic, Riot, Battle.net, the EA app, Ubisoft Connect and Minecraft launchers like Lunar and Badlion.</p></div>
+      <figure class="v7-vis" data-x="up"><div aria-hidden="true" class="vis bx bx-gl">
+          <div class="ft"><img src="img/games/minecraft.webp" alt=""><span class="bx-chip lc">lunar client</span><div class="ib"><div><span class="bx-chip red">ready to play</span><b style="margin-top:7px">minecraft</b><small>Minecraft PvP preset / today</small></div><span class="pl"><svg class="i" aria-hidden="true"><use href="#i-play"/></svg></span></div></div>
+          <div class="row"><div><img src="img/games/valorant.webp" alt=""><b>valorant</b></div><div><img src="img/games/cs2.webp" alt=""><b>cs2</b></div><div><img src="img/games/fortnite.webp" alt=""><b>fortnite</b></div></div></div></figure>
+    </div>
+    <div class="v7-row">
+      <div class="v7-tx" data-x="up"><span class="x-fc-k">free</span><h3>share your presets</h3><p>Turn your setup into a code or a .rago file. A friend sees what changes on their PC before importing it.</p></div>
+      <figure class="v7-vis" data-x="up"><div aria-hidden="true" class="vis bx bx-sh">
+          <div class="fld"><span class="bx-k">preset name</span><div class="in">Bedwars, low ping</div></div>
+          <div class="tk bx-p"><div class="l"><span class="bx-k">preset<b>bedwars, low ping</b></span><p class="code"><em>RAGO2_</em>FbY8NwcUeb4c0wrUGZECjUYrZUPet9Ee9txXOl0gn4Amzb2Jn1qtHUckwu0jowRPkpaSzx8uN628VDGzhRnesJQWr0aMYb0bEvLhwx1sHcgiAitKzYyaa6ifDeraHI74UseU5Mp4Qy01lRp0t22cdm</p></div><div class="r"><b>21</b><span class="bx-k">tweaks</span><span class="btn red sm"><svg class="i" aria-hidden="true"><use href="#i-copy"/></svg>copy</span></div></div>
+          <div class="ftr"><span class="btn sm"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>save as .rago file</span><em><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>copied</em></div></div></figure>
+    </div>
+    <div class="v7-row flip">
+      <div class="v7-tx" data-x="up"><span class="x-fc-k red">premium</span><h3>packet optimizer</h3><p>Changes how Windows sends, receives and re-sends your packets, for fewer stalls in hitreg and knockback.</p></div>
+      <figure class="v7-vis" data-x="up"><div aria-hidden="true" class="vis bx bx-po">
+          <div class="hd"><span class="bx-ttl">presets</span><span class="bx-chip"><svg class="i" aria-hidden="true"><use href="#i-wifi"/></svg>fiber detected</span></div>
+          <div class="gr"><div class="t on"><svg class="i" aria-hidden="true"><use href="#i-crosshair"/></svg><span class="ck"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></span><b>hitreg</b><small>Your hits leave instantly</small></div><div class="t"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg><b>knockback</b><small>Server hits land instantly</small></div><div class="t"><svg class="i" aria-hidden="true"><use href="#i-sliders"/></svg><b>balanced</b><small>Downloads stay fast</small></div><div class="t"><svg class="i" aria-hidden="true"><use href="#i-wifi"/></svg><b>wi-fi</b><small>Full power, no hopping</small></div></div>
+          <div class="ap bx-p"><b>hitreg</b><div><span>not applied yet</span><small>drops for a few seconds</small></div><span class="btn red sm"><svg class="i" aria-hidden="true"><use href="#i-zap"/></svg>apply</span></div></div></figure>
+    </div>
+    <ul class="v7-il v7-il-2" data-x="list"><li><span class="v7-ic" aria-hidden="true"><svg class="i"><use href="#i-ram"/></svg></span><div><h3>clean ram <small class="x-fc-k">free</small></h3><p>One click empties the memory Windows keeps on standby, from the Dashboard or the in-game bar. Your game and anti-cheat are never touched.</p></div></li><li><span class="v7-ic" aria-hidden="true"><svg class="i"><use href="#i-trash"/></svg></span><div><h3>tools <small class="x-fc-k">free</small></h3><p>Free up space, check how old your drivers are, and remove the apps Windows installs on its own.</p></div></li><li><span class="v7-ic" aria-hidden="true"><svg class="i"><use href="#i-rotate"/></svg></span><div><h3>automatic updates <small class="x-fc-k">every plan</small></h3><p>New versions download in the background and install when you close the app, or right away with Restart. Never during a run.</p></div></li><li><span class="v7-ic" aria-hidden="true"><svg class="i"><use href="#i-appwin"/></svg></span><div><h3>ready in the background <small class="x-fc-k">every plan</small></h3><p>Close the window and Rago stays by the clock, ready for the shortcut. Turn on Start with Windows and it's there when you sign in.</p></div></li></ul>
+    <p class="v7-note">Pictures of the app's screens. The numbers are examples, not measurements.</p>
+  </div>
+</section>
+
+<!-- 10. The in-game bar: the scene plays when it reaches the screen, its story under it (v7: no pin) -->
+<section class="x-case" id="ingame" aria-labelledby="ingame-h">
+  <div class="x-stage x-case-st">
+    <div class="x-case-m"><div class="x-case-v"><div class="igst" id="igst"><div class="igscene"><video muted playsinline preload="none" poster="media/in-game-bar.webp" disablepictureinpicture disableremoteplayback><source src="media/in-game-bar.mp4" type="video/mp4; codecs=avc1.64002a"><source src="media/in-game-bar.webm" type="video/webm; codecs=vp9"></video></div><section class="igp igglass"><header class="igh"><img class="igm" src="img/v5/rago-icon.svg" alt="" width="36" height="36"><div class="igt"><span class="igo">in-game bar</span><b>minecraft</b></div><div class="iga"><span class="igi on"><svg class="i" aria-hidden="true"><use href="#i-pinoff"/></svg></span><span class="igi"><svg class="i" aria-hidden="true"><use href="#i-appwin"/></svg></span><span class="igi"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></span></div></header><div class="igtl"><div class="igtile hi"><span class="igo">fps</span><b>240</b></div><div class="igtile "><span class="igo">ping</span><b>24<small>ms</small></b></div><div class="igtile "><span class="igo">cpu</span><b>17<small>%</small></b></div><div class="igtile "><span class="igo">gpu</span><b>6<small>%</small></b></div><div class="igtile "><span class="igo">ram</span><b>61<small>%</small></b></div><span class="igcl"><svg class="i" aria-hidden="true"><use href="#i-brush"/></svg>clean</span></div><div class="igb one"><div class="igcol"><div class="igsh"><span class="igo">tweaks you can switch mid-game</span></div><div class="igsc"><div class="igl cols2"><div class="iggr"><span class="igo">processor</span><div class="igr on"><b>Disable core parking</b><i class="sw on"></i></div><div class="igr"><b>Configure C-states</b><i class="sw"></i></div><div class="igr"><b>Disable sleep and CPU minimum</b><i class="sw"></i></div><div class="igr"><b>Device idle policy: performance</b><i class="sw"></i></div><div class="igr"><b>P-states follow C-states</b><i class="sw"></i></div><div class="igr"><b>Don't restrict boost</b><i class="sw"></i></div><div class="igr"><b>Disable throttle states</b><i class="sw"></i></div><div class="igr"><b>Enable Turbo Boost</b><i class="sw"></i></div><div class="igr"><b>Active cooling</b><i class="sw"></i></div><div class="igr on"><b>CPU 100% on AC</b><i class="sw on"></i></div><div class="igr"><b>Disable away mode</b><i class="sw"></i></div></div><div class="iggr"><span class="igo">power</span><div class="igr"><b>Rago Low Latency power plan</b><i class="sw"></i></div><div class="igr"><b>Hardware P-states</b><i class="sw"></i></div><div class="igr"><b>Device power saving</b><i class="sw"></i></div></div><div class="iggr"><span class="igo">memory</span><div class="igr"><b>Disable memory compression</b><i class="sw"></i></div><div class="igr"><b>Disable page combining</b><i class="sw"></i></div></div><div class="iggr"><span class="igo">network, windows and graphics card</span><div class="igr"><b>Enable Direct Cache Access</b><i class="sw"></i></div><div class="igr on"><b>Optimize visuals</b><i class="sw on"></i></div><div class="igr on"><b>Disable transparency</b><i class="sw on"></i></div><div class="igr"><b>Disable AutoPlay</b><i class="sw"></i></div><div class="igr on"><b>Rago driver profile (Profile Inspector)</b><i class="sw on"></i></div></div></div></div></div></div><footer class="igf"><span><kbd>Alt+X</kbd> or <kbd>Esc</kbd> to get back to the game</span><i class="dt"></i><span>Ping to the server you play on (Minecraft: measured like the game does)</span></footer></section><div class="igk"><kbd>alt</kbd><em>+</em><kbd>x</kbd></div><div class="igpill igglass"><img src="img/v5/rago-cap.svg" alt=""><span class="m"><b>240</b><small>fps</small></span><i class="sp"></i><span class="m"><b>24</b><small>ms</small></span></div><div class="igfd"></div></div></div><span class="x-case-veil"></span></div>
+    <div class="x-case-tx">
+      <h2 class="x-h" id="ingame-h"><span class="x-tape red">alt+x</span><br>The in-game bar.</h2>
+      <p class="x-case-i">Press <kbd>Alt+X</kbd> in game. FPS, ping, CPU, GPU and RAM show over your game, with 21 tweaks you can switch mid-match. Esc takes you straight back.</p>
+      <blockquote class="x-case-q"><p>Ping is measured to the server of your match, in Minecraft, Valorant, CS2, Fortnite and more, and FPS and ping can stay pinned on screen.</p><footer><span class="s-tag">free <b>live fps, ping and usage</b></span><span class="s-tag">premium <b>switch tweaks in game</b></span></footer></blockquote>
+    </div>
+  </div>
+</section>
+
+<!-- 6. Pricing: the three plans side by side (v7: no banner, no bubble) -->
+<section class="x-plans" id="plans">
+  <div class="x-wrap">
+    <div class="x-plans-hd" id="pricing">
+      <h2 class="x-h x-sh" data-x="chars">Start free. <span class="r">Unlock everything</span> with Premium.</h2>
+      <div class="s-bill" id="billing" role="group" aria-label="Billing" data-x="up"><button type="button" data-v="month">Monthly</button><button type="button" data-v="year" class="on">Yearly</button></div>
+    </div>
+    <div class="x-plans-c" data-x-own>
+      <article class="x-pc paper">
+        <span class="x-pc-bg"></span>
+        <p class="x-pc-k"><i></i>Free forever</p>
+        <div class="x-pc-dots" aria-hidden="true"></div>
+        <h3 class="x-pc-t">Free</h3>
+        <div class="x-pc-pr"><b>$0</b><span>forever</span></div><p class="bil">No license needed. Watch, test and clean your PC.</p>
+        <ul class="x-pc-f"><li><span>In-game bar: live FPS, ping, CPU, GPU and RAM</span></li><li><span>Network test to Hypixel, Minemen Club and game regions</span></li><li><span>Clean RAM in one click, cleanup and driver check</span></li><li><span>Game library and preset sharing</span></li><li><span><b><span class="n-free">73</span> tweaks open</b>, up to 30 on at once</span></li><li><span>Remove preinstalled apps in Tools</span></li><li class="lk"><span>Network and hitreg tweaks, presets and Packet Optimizer locked</span></li></ul>
+        <div class="x-pc-cta"><a class="x-btn dark js-free-app" href="/download"><span class="x-fl"></span><svg class="i" aria-hidden="true"><use href="#i-download"/></svg><span class="x-bl">Download free</span></a><p class="fine">Windows 10 and 11</p></div>
+      </article>
+      <article class="x-pc red">
+        <span class="x-pc-bg"></span>
+        <p class="x-pc-k"><i></i>Recommended</p>
+        <div class="x-pc-dots" aria-hidden="true"></div>
+        <h3 class="x-pc-t">Premium</h3>
+        <div class="x-pc-pr"><b id="p-amt">$2.50</b><span id="p-per">/ month</span></div><p class="bil" id="p-note">Billed $29.99 yearly. 6 months free.</p>
+        <ul class="x-pc-f"><li><span><b>All <span class="n-all">218</span> tweaks</b>, with RBW Mod, Game mode and Expert mode</span></li><li><span>Packet Optimizer for hitreg and knockback, tuned to your line</span></li><li><span><b><span class="n-presets">20</span> presets</b>, 15 made for a game: Valorant, Fortnite, CS2…</span></li><li><span>Optimize and play: your preset applied, then your game starts</span></li><li><span>21 tweaks to switch mid-match from the in-game bar</span></li><li><span>No limit on the tweaks you keep on</span></li><li><span>Every new tweak and preset from future versions</span></li><li><span>The Premium role on Discord</span></li><li class="dim"><span>One license, one PC.</span></li></ul>
+        <label class="s-addon x-addon" for="with-route"><input type="checkbox" id="with-route" class="sr-only"><i class="cb" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></i><span><b>Add Rago Route<em id="addon-pr">+$17.99/year</em></b><small>The anti-lag tunnel for Minecraft, in beta: two roads for every packet. Included in the free trial. <a href="route.html">What it does</a></small></span></label>
+        <div class="x-pc-cta"><a class="x-btn ink js-trial" href="/buy?interval=month&amp;trial=1"><span class="x-fl"></span><svg class="i" aria-hidden="true"><use href="#i-zap"/></svg><span class="x-bl">Start 3-day free trial</span></a>
+        <p class="fine" id="trial-note">Card required. Free for 3 days, then the monthly plan at $5.99 a month, charged automatically on day 3 unless you cancel before. Cancel in two clicks from your account. One trial per person.</p>
+        <p class="fine"><a class="js-checkout" href="/buy?interval=year">Skip the trial and buy now</a> &nbsp; Secure checkout with Stripe. Cancel anytime. <a href="terms.html#cancel">No refunds: try it free first.</a></p></div>
+      </article>
+      <article class="x-pc dark" id="lifetime">
+        <span class="x-pc-bg"></span>
+        <p class="x-pc-k"><i></i>Paid once <span class="s-tag life-off">coming soon</span></p>
+        <div class="x-pc-dots" aria-hidden="true"></div>
+        <span class="x-pc-disp" aria-hidden="true">once</span>
+        <h3 class="x-pc-t">Lifetime</h3>
+        <div class="x-pc-pr"><b id="l-amt">$59.99</b><span>once</span></div><p class="bil">One-time payment. No renewals. Premium for good.</p>
+        <ul class="x-pc-f"><li><span><b>Everything in Premium</b>, with nothing to renew</span></li><li><span>Every future version: new tweaks, presets and features</span></li><li class="life-on"><span>Already subscribed? Switch from your account page</span></li><li><span>The Premium role on Discord</span></li><li class="dim"><span>One license, one PC.</span></li></ul>
+        <div class="x-pc-cta"><a class="x-btn js-lifetime" role="link" aria-disabled="true"><span class="x-fl"></span><span class="x-bl">Coming soon</span></a><p class="fine"><span class="life-on">Secure checkout with Stripe. </span>One-time payment. <a href="terms.html#cancel">No refunds.</a></p></div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="x-sec x-cmp" id="compare">
+  <div class="x-wrap">
+    <div class="s-ronly" id="route-only" data-x="up"><span class="ic"><svg class="i big" aria-hidden="true"><use href="#i-route"/></svg></span><p><b>Already Premium?</b> Add only Rago Route, the anti-lag tunnel for Minecraft (beta): $3 a month or $17.99 a year on top of your Premium, its own subscription, cancel anytime.</p><a class="s-link" href="route.html">See what it does</a><a class="x-btn red sm js-route-only" href="/buy/route"><span class="x-fl"></span><span class="x-bl">Add Rago Route</span></a></div>
+    <details class="x-cmp-d" data-x="up" open><summary><span class="x-h">Compare Free and Premium</span><span class="pm" aria-hidden="true"></span></summary>
+      <div class="x-cmp-w"><div class="s-card s-cmp"><table><thead><tr><th scope="col">What you get</th><th scope="col" class="c">Free</th><th scope="col" class="c p">Premium</th></tr></thead><tbody id="cmp"></tbody></table></div></div>
+    </details>
   </div>
 </section>
 
@@ -959,82 +1039,12 @@ if (!matchMedia("(prefers-reduced-motion: reduce)").matches) { document.document
   </div>
 </section>
 
-<!-- 9. What's new: chips open between the words of the title, a tilted strip of launchers and the new features scroll past -->
-<section class="x-feat" id="new">
-  <div class="x-wrap">
-    <h2 class="x-h x-feat-h" id="new-h" data-x="chars"><span class="x-tape">what's new <b>//</b> version 1.2</span><br>Now Rago <span class="x-fchip x-keep" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-games"/></svg></span> plays <span class="x-fchip x-keep" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-crosshair"/></svg></span> with you, in game <span class="x-fchip x-keep" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-network"/></svg></span> and <span class="x-fchip x-keep" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-ram"/></svg></span> around it.</h2>
-  </div>
-  <div class="x-feat-tilt">
-    <div class="x-mq x-feat-lg" data-speed="45" aria-label="Launchers Rago finds your games in"><ul class="x-mq-in"><li>Steam</li><li>Epic Games</li><li>Riot</li><li>Battle.net</li><li>EA app</li><li>Ubisoft Connect</li><li>Lunar Client</li><li>Badlion</li><li>Minecraft Launcher</li></ul></div>
-    <div class="x-mq x-feat-cs" data-speed="70" data-hover>
-      <ul class="x-mq-in">
-        <li><article class="s-card s-b x-fc"><div aria-hidden="true" class="vis bx bx-net">
-          <div class="top bx-p"><div class="q"><b>great</b><span>connection</span></div><div class="m"><b>17<small>ms</small></b><span>ping</span></div><div class="m"><b>1.2<small>ms</small></b><span>jitter</span></div><div class="m"><b>0<small>%</small></b><span>loss</span></div><span class="btn red sm"><svg class="i" aria-hidden="true"><use href="#i-rotate"/></svg>test again</span></div>
-          <div class="bx-srv"><div class="r"><span class="n"><b>Minemen Club</b><small>Europe</small></span><i class="bar"><em style="width:21%"></em></i><b class="v">21<small>ms</small></b></div><div class="r"><span class="n"><b>Hypixel</b><small>North America</small></span><i class="bar hi"><em style="width:96%"></em></i><b class="v hi">96<small>ms</small></b></div><div class="r on"><span class="n"><b>Frankfurt</b><small>Central Europe</small></span><i class="bar"><em style="width:17%"></em></i><b class="v">17<small>ms</small></b></div><div class="r"><span class="n"><b>Cloudflare</b><small>Nearest server</small></span><i class="bar"><em style="width:9%"></em></i><b class="v">9<small>ms</small></b></div></div></div>
-          <span class="x-fc-k">free</span><h3>network test</h3><p>Ping, jitter and packet loss to Hypixel, Minemen Club, game server regions or any server you type. Nothing on your PC is changed.</p></article></li>
-        <li><article class="s-card s-b x-fc"><div aria-hidden="true" class="vis bx bx-ram">
-          <div class="hd"><div class="big">58<small>%</small></div><div class="t"><b>memory in use</b><span>18.6 of 32 GB</span></div><span class="bx-k">this pc</span></div>
-          <div class="seg"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="sb"></i><i class="sb"></i><i class="sb"></i><i class="sb"></i><i class="sb"></i><i class="sb"></i><i class="sb"></i><i class=""></i><i class=""></i><i class=""></i></div>
-          <div class="st"><div class="bx-p"><span class="bx-k"><i></i>in use</span><b>18.6<small>gb</small></b></div><div class="bx-p"><span class="bx-k"><i class="sb"></i>standby</span><b>9.8<small>gb</small></b></div><div class="bx-p"><span class="bx-k"><i class="fr"></i>free</span><b>3.6<small>gb</small></b></div></div>
-          <div class="bx-act bx-p"><span class="ic"><svg class="i" aria-hidden="true"><use href="#i-ram"/></svg></span><div class="t"><b>clear ram cache</b><span>Empties what Windows keeps on standby.</span></div><em><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>2.1 GB freed</em><span class="btn red sm">clear</span></div></div>
-          <span class="x-fc-k">free</span><h3>clean ram</h3><p>One click empties the memory Windows keeps on standby, from the Dashboard or the in-game bar. Your game and anti-cheat are never touched.</p></article></li>
-        <li><article class="s-card s-b x-fc"><div aria-hidden="true" class="vis bx bx-gl">
-          <div class="ft"><img src="img/games/minecraft.webp" alt=""><span class="bx-chip lc">lunar client</span><div class="ib"><div><span class="bx-chip red">ready to play</span><b style="margin-top:7px">minecraft</b><small>Minecraft PvP preset / today</small></div><span class="pl"><svg class="i" aria-hidden="true"><use href="#i-play"/></svg></span></div></div>
-          <div class="row"><div><img src="img/games/valorant.webp" alt=""><b>valorant</b></div><div><img src="img/games/cs2.webp" alt=""><b>cs2</b></div><div><img src="img/games/fortnite.webp" alt=""><b>fortnite</b></div></div></div>
-          <span class="x-fc-k">free <b>//</b> premium optimize and play</span><h3>your game library</h3><p>Rago finds your games in Steam, Epic, Riot, Battle.net, the EA app, Ubisoft Connect and Minecraft launchers like Lunar and Badlion.</p></article></li>
-        <li><article class="s-card s-b x-fc"><div aria-hidden="true" class="vis bx bx-sh">
-          <div class="fld"><span class="bx-k">preset name</span><div class="in">Bedwars, low ping</div></div>
-          <div class="tk bx-p"><div class="l"><span class="bx-k">preset<b>bedwars, low ping</b></span><p class="code"><em>RAGO2_</em>FbY8NwcUeb4c0wrUGZECjUYrZUPet9Ee9txXOl0gn4Amzb2Jn1qtHUckwu0jowRPkpaSzx8uN628VDGzhRnesJQWr0aMYb0bEvLhwx1sHcgiAitKzYyaa6ifDeraHI74UseU5Mp4Qy01lRp0t22cdm</p></div><div class="r"><b>21</b><span class="bx-k">tweaks</span><span class="btn red sm"><svg class="i" aria-hidden="true"><use href="#i-copy"/></svg>copy</span></div></div>
-          <div class="ftr"><span class="btn sm"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>save as .rago file</span><em><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>copied</em></div></div>
-          <span class="x-fc-k">free</span><h3>share your presets</h3><p>Turn your setup into a code or a .rago file. A friend sees what changes on their PC before importing it.</p></article></li>
-        <li><article class="s-card s-b x-fc"><div aria-hidden="true" class="vis bx bx-po">
-          <div class="hd"><span class="bx-ttl">presets</span><span class="bx-chip"><svg class="i" aria-hidden="true"><use href="#i-wifi"/></svg>fiber detected</span></div>
-          <div class="gr"><div class="t on"><svg class="i" aria-hidden="true"><use href="#i-crosshair"/></svg><span class="ck"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></span><b>hitreg</b><small>Your hits leave instantly</small></div><div class="t"><svg class="i" aria-hidden="true"><use href="#i-download"/></svg><b>knockback</b><small>Server hits land instantly</small></div><div class="t"><svg class="i" aria-hidden="true"><use href="#i-sliders"/></svg><b>balanced</b><small>Downloads stay fast</small></div><div class="t"><svg class="i" aria-hidden="true"><use href="#i-wifi"/></svg><b>wi-fi</b><small>Full power, no hopping</small></div></div>
-          <div class="ap bx-p"><b>hitreg</b><div><span>not applied yet</span><small>drops for a few seconds</small></div><span class="btn red sm"><svg class="i" aria-hidden="true"><use href="#i-zap"/></svg>apply</span></div></div>
-          <span class="x-fc-k red">premium</span><h3>packet optimizer</h3><p>Changes how Windows sends, receives and re-sends your packets, for fewer stalls in hitreg and knockback.</p></article></li>
-        <li><article class="s-card s-b x-fc"><div aria-hidden="true" class="vis bx bx-cl">
-          <div class="hd"><span class="bx-ttl">cleanup</span><span class="n"><b>6.0</b> / 6.7 gb</span></div>
-          <div class="ls bx-p"><div class="r"><span class="bx-cb"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></span><span>Temporary files</span><em>1.8<small>gb</small></em></div><div class="r"><span class="bx-cb"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></span><span>Windows Update downloads</span><em>2.6<small>gb</small></em></div><div class="r"><span class="bx-cb"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></span><span>Browser cache</span><em>1.2<small>gb</small></em></div><div class="r"><span class="bx-cb"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></span><span>Discord cache</span><em>388<small>mb</small></em></div><div class="r off"><span class="bx-cb off"></span><span>Shader cache</span><em>742<small>mb</small></em></div></div>
-          <div class="ftr"><span class="sub">Games and Minecraft<br>are never touched.</span><span class="btn red sm"><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg>clean 6.0 gb</span></div></div>
-          <span class="x-fc-k">free</span><h3>tools</h3><p>Free up space, check how old your drivers are, and remove the apps Windows installs on its own.</p></article></li>
-        <li><article class="s-card s-b x-fc"><div aria-hidden="true" class="vis bx bx-sd">
-          <div class="nv"><span><svg class="i" aria-hidden="true"><use href="#i-windows"/></svg>windows<em>12/50</em></span><span><svg class="i" aria-hidden="true"><use href="#i-pad"/></svg>games<em>9</em></span><span><svg class="i" aria-hidden="true"><use href="#i-undo"/></svg>restore</span></div>
-          <div class="up"><div><b>update</b><span><svg class="i" aria-hidden="true"><use href="#i-download"/></svg>1.3.1 ready</span></div><span class="btn red sm">restart</span></div>
-          <div class="pc"><span class="bx-k">this pc</span><b>21 tweaks <span>on</span></b><small>last check 2 days ago</small></div>
-          <span class="set"><svg class="i" aria-hidden="true"><use href="#i-sliders"/></svg>settings</span></div>
-          <span class="x-fc-k">every plan</span><h3>automatic updates</h3><p>New versions download in the background and install when you close the app, or right away with Restart. Never during a run.</p></article></li>
-        <li><article class="s-card s-b x-fc"><div aria-hidden="true" class="vis bx bx-tray">
-          <div class="menu"><span class="on">Open Rago Optimizer</span><hr><span>Quit</span></div>
-          <div class="tb"><svg class="i up" aria-hidden="true"><use href="#i-chev"/></svg><span class="ico"><img src="img/v5/rago-icon.svg" alt=""><svg class="cur" viewBox="0 0 18 22"><path d="M1.5 1.5v16.2l4.2-4 2.9 6.6 2.9-1.3-2.9-6.5h5.9z" fill="#fff" stroke="#111" stroke-width="1.3" stroke-linejoin="round"/></svg></span><svg class="i" aria-hidden="true"><use href="#i-wifi"/></svg><svg class="i" aria-hidden="true"><use href="#i-volume"/></svg><span class="tm">21:42<br>22/11/2026</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9z"/><path d="M10 19.5a2 2 0 0 0 4 0"/></svg></div></div>
-          <span class="x-fc-k">every plan</span><h3>ready in the background</h3><p>Close the window and Rago stays by the clock, ready for the shortcut. Turn on Start with Windows and it's there when you sign in.</p></article></li>
-      </ul>
-    </div>
-  </div>
-  <div class="x-wrap x-feat-more">
-    <p class="x-lead" data-x="chars">Illustrations of Rago Optimizer 1.2. The numbers are examples, not measurements.</p>
-    <a class="x-btn red js-free-app" href="#pricing" data-x="btn"><span class="x-fl"></span><svg class="i" aria-hidden="true"><use href="#i-download"/></svg><span class="x-bl">Download free</span></a>
-  </div>
-</section>
-
-<!-- 10. The in-game bar, as a case study: the scene grows to full width while the page holds, then its story comes in -->
-<section class="x-case" id="ingame" aria-labelledby="ingame-h">
-  <div class="x-stage x-case-st" data-cur="Alt + X" data-face="red">
-    <div class="x-case-m"><div class="x-case-v"><div class="igst" id="igst"><div class="igscene"><video muted playsinline preload="none" poster="media/in-game-bar.webp" disablepictureinpicture disableremoteplayback><source src="media/in-game-bar.mp4" type="video/mp4; codecs=avc1.64002a"><source src="media/in-game-bar.webm" type="video/webm; codecs=vp9"></video></div><section class="igp igglass"><header class="igh"><img class="igm" src="img/v5/rago-icon.svg" alt="" width="36" height="36"><div class="igt"><span class="igo">in-game bar</span><b>minecraft</b></div><div class="iga"><span class="igi on"><svg class="i" aria-hidden="true"><use href="#i-pinoff"/></svg></span><span class="igi"><svg class="i" aria-hidden="true"><use href="#i-appwin"/></svg></span><span class="igi"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></span></div></header><div class="igtl"><div class="igtile hi"><span class="igo">fps</span><b>240</b></div><div class="igtile "><span class="igo">ping</span><b>24<small>ms</small></b></div><div class="igtile "><span class="igo">cpu</span><b>17<small>%</small></b></div><div class="igtile "><span class="igo">gpu</span><b>6<small>%</small></b></div><div class="igtile "><span class="igo">ram</span><b>61<small>%</small></b></div><span class="igcl"><svg class="i" aria-hidden="true"><use href="#i-brush"/></svg>clean</span></div><div class="igb one"><div class="igcol"><div class="igsh"><span class="igo">tweaks you can switch mid-game</span></div><div class="igsc"><div class="igl cols2"><div class="iggr"><span class="igo">processor</span><div class="igr on"><b>Disable core parking</b><i class="sw on"></i></div><div class="igr"><b>Configure C-states</b><i class="sw"></i></div><div class="igr"><b>Disable sleep and CPU minimum</b><i class="sw"></i></div><div class="igr"><b>Device idle policy: performance</b><i class="sw"></i></div><div class="igr"><b>P-states follow C-states</b><i class="sw"></i></div><div class="igr"><b>Don't restrict boost</b><i class="sw"></i></div><div class="igr"><b>Disable throttle states</b><i class="sw"></i></div><div class="igr"><b>Enable Turbo Boost</b><i class="sw"></i></div><div class="igr"><b>Active cooling</b><i class="sw"></i></div><div class="igr on"><b>CPU 100% on AC</b><i class="sw on"></i></div><div class="igr"><b>Disable away mode</b><i class="sw"></i></div></div><div class="iggr"><span class="igo">power</span><div class="igr"><b>Rago Low Latency power plan</b><i class="sw"></i></div><div class="igr"><b>Hardware P-states</b><i class="sw"></i></div><div class="igr"><b>Device power saving</b><i class="sw"></i></div></div><div class="iggr"><span class="igo">memory</span><div class="igr"><b>Disable memory compression</b><i class="sw"></i></div><div class="igr"><b>Disable page combining</b><i class="sw"></i></div></div><div class="iggr"><span class="igo">network, windows and graphics card</span><div class="igr"><b>Enable Direct Cache Access</b><i class="sw"></i></div><div class="igr on"><b>Optimize visuals</b><i class="sw on"></i></div><div class="igr on"><b>Disable transparency</b><i class="sw on"></i></div><div class="igr"><b>Disable AutoPlay</b><i class="sw"></i></div><div class="igr on"><b>Rago driver profile (Profile Inspector)</b><i class="sw on"></i></div></div></div></div></div></div><footer class="igf"><span><kbd>Alt+X</kbd> or <kbd>Esc</kbd> to get back to the game</span><i class="dt"></i><span>Ping to the server you play on (Minecraft: measured like the game does)</span></footer></section><div class="igk"><kbd>alt</kbd><em>+</em><kbd>x</kbd></div><div class="igpill igglass"><img src="img/v5/rago-cap.svg" alt=""><span class="m"><b>240</b><small>fps</small></span><i class="sp"></i><span class="m"><b>24</b><small>ms</small></span></div><div class="igfd"></div></div></div><span class="x-case-veil"></span></div>
-    <div class="x-case-tx">
-      <h2 class="x-h" id="ingame-h"><span class="x-tape red">alt+x</span><br>The in-game bar.</h2>
-      <p class="x-case-i">Press <kbd>Alt+X</kbd> in game. FPS, ping, CPU, GPU and RAM show over your game, with 21 tweaks you can switch mid-match. Esc takes you straight back.</p>
-      <blockquote class="x-case-q"><p>Ping is measured to the server of your match, in Minecraft, Valorant, CS2, Fortnite and more, and FPS and ping can stay pinned on screen.</p><footer><span class="s-tag">free <b>live fps, ping and usage</b></span><span class="s-tag">premium <b>switch tweaks in game</b></span></footer></blockquote>
-    </div>
-  </div>
-</section>
-
-<!-- 11. Every game: the games with a Premium preset scroll past, then the numbers, then the list lights up one game at a time -->
+<!-- 11. Every game: the numbers, then the games with a preset (v7: plain list, no banners) -->
 <section class="x-games" id="games">
   <div class="x-wrap x-games-hd">
     <h2 class="x-h x-sh" data-x="chars">The right tweaks <span class="r">for every game.</span></h2>
     <p class="x-lead" data-x="chars">Rago tunes Windows and your network, so it helps every game on your PC. Premium adds presets made for 15 games, on top of Minecraft PvP.</p>
   </div>
-  <div class="x-mq x-games-mq" data-speed="150" data-hover aria-label="Games with a Premium preset"><ul class="x-mq-in"><li data-tip="Minecraft PvP preset"><svg class="i" aria-hidden="true"><use href="#i-minecraft"/></svg>Minecraft PvP</li><li><svg class="i" aria-hidden="true"><use href="#i-crosshair"/></svg>Fortnite</li><li><svg class="i" aria-hidden="true"><use href="#i-crosshair"/></svg>Valorant</li><li><svg class="i" aria-hidden="true"><use href="#i-crosshair"/></svg>Counter-Strike 2</li><li><svg class="i" aria-hidden="true"><use href="#i-crosshair"/></svg>Apex Legends</li><li><svg class="i" aria-hidden="true"><use href="#i-crosshair"/></svg>PUBG</li><li><svg class="i" aria-hidden="true"><use href="#i-crosshair"/></svg>Rainbow Six Siege</li><li><svg class="i" aria-hidden="true"><use href="#i-crosshair"/></svg>Overwatch 2</li><li><svg class="i" aria-hidden="true"><use href="#i-crosshair"/></svg>Marvel Rivals</li><li><svg class="i" aria-hidden="true"><use href="#i-crosshair"/></svg>The Finals</li><li><svg class="i" aria-hidden="true"><use href="#i-crosshair"/></svg>Escape from Tarkov</li><li><svg class="i" aria-hidden="true"><use href="#i-games"/></svg>Rocket League</li><li><svg class="i" aria-hidden="true"><use href="#i-games"/></svg>League of Legends</li><li><svg class="i" aria-hidden="true"><use href="#i-games"/></svg>Roblox</li><li><svg class="i" aria-hidden="true"><use href="#i-games"/></svg>GTA V</li><li><svg class="i" aria-hidden="true"><use href="#i-minecraft"/></svg>Minecraft Bedrock</li></ul></div>
   <div class="x-wrap">
     <div class="x-stats-hd"><span class="x-logo" aria-hidden="true"><img src="img/v5/rago-icon.svg" alt="" width="38" height="38">rago<i>.</i></span>
       <h2 class="x-h x-sh" data-x="chars">Measured, <span class="r">not promised.</span></h2>
@@ -1048,14 +1058,8 @@ if (!matchMedia("(prefers-reduced-motion: reduce)").matches) { document.document
       <div><dt>in-game switches</dt><dd><b>21</b><span>Tweaks you can turn on mid-match with Alt+X.</span></dd></div>
     </dl>
   </div>
-  <div class="x-tick sm" aria-hidden="true"><div class="x-mq" data-speed="32" data-boost="1.2"><div class="x-mq-in"><span>Different games.</span><span>Different servers.</span><span>One tuned PC.</span><span class="r">Every millisecond counts.</span><span>Different games.</span><span>Different servers.</span><span>One tuned PC.</span><span class="r">Every millisecond counts.</span></div></div></div>
-  <div class="x-list" id="games-list" aria-labelledby="games-list-h">
-    <div class="x-stage x-list-st">
-      <div class="x-wrap"><p class="x-k" id="games-list-h">Works with what you play <b>//</b> a preset for each</p>
-      <ul class="x-list-l"><li>Minecraft PvP</li><li>BedWars</li><li>Fortnite</li><li>Valorant</li><li>Counter-Strike 2</li><li>Apex Legends</li><li>PUBG</li><li>Rainbow Six Siege</li><li>Overwatch 2</li><li>Marvel Rivals</li><li>The Finals</li><li>Escape from Tarkov</li><li>Rocket League</li><li>League of Legends</li><li>Roblox</li><li>GTA V</li><li>Minecraft Bedrock</li></ul>
-      <p class="x-list-n"><b>15</b> game presets <b>//</b> plus Minecraft PvP</p></div>
-    </div>
-  </div>
+  <div class="x-wrap v7-games"><p class="x-k" id="games-list-h">Works with what you play <b>//</b> 15 game presets, plus Minecraft PvP</p>
+    <ul class="v7-chips" aria-labelledby="games-list-h"><li>Minecraft PvP</li><li>BedWars</li><li>Fortnite</li><li>Valorant</li><li>Counter-Strike 2</li><li>Apex Legends</li><li>PUBG</li><li>Rainbow Six Siege</li><li>Overwatch 2</li><li>Marvel Rivals</li><li>The Finals</li><li>Escape from Tarkov</li><li>Rocket League</li><li>League of Legends</li><li>Roblox</li><li>GTA V</li><li>Minecraft Bedrock</li></ul></div>
 </section>
 
 <!-- 12. Reviews, read from the account server: hidden until there's at least one -->
@@ -1072,14 +1076,11 @@ if (!matchMedia("(prefers-reduced-motion: reduce)").matches) { document.document
   <div class="x-wrap"><p class="s-more"><a class="s-link" href="reviews.html">See all reviews <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a><button type="button" class="rev-pause" id="rev-pause" aria-pressed="false" hidden>Pause</button></p></div>
 </section>
 
-<!-- 13. Community: a title that runs along an arc while the page holds, then three cards slide in -->
+<!-- 13. Community: Discord, affiliation, partner servers -->
 <section class="x-team" id="community">
   <div class="x-wrap x-team-hd">
     <p class="x-lead" data-x="chars">Get help, share your presets with other players, bring your friends and play on our partner servers.</p>
     <h2 class="x-h x-sh x-team-h" id="team-h" data-x="chars">Built by players. <span class="r">Played together.</span></h2>
-  </div>
-  <div class="x-arc" aria-hidden="true">
-    <div class="x-stage x-arc-st"><svg class="x-arc-svg" viewBox="0 0 1600 560"><path id="x-arc-p" d="M-200 520 Q800 -80 1800 520" fill="none"/><text><textPath href="#x-arc-p" startOffset="0">Built by players. Played together.</textPath></text></svg></div>
   </div>
   <div class="x-wrap">
     <div class="x-team-c" data-x-own>
@@ -1126,13 +1127,27 @@ if (!matchMedia("(prefers-reduced-motion: reduce)").matches) { document.document
   </div>
 </section>
 
-<section class="x-end" aria-labelledby="end-h">
-  <div class="x-bn">
-    <h2 class="x-h" id="end-h" data-x="chars">Tune your PC once. Feel it on the first combo.</h2>
-    <p data-x="chars">Download free, try the free tweaks, and start Premium free for 3 days when you want everything.</p>
-    <a class="x-disc js-free-app" href="#pricing"><span>Download<br>free</span></a>
+<!-- Last block (kept exactly as on #136, Sofiene 28/11; moved to the end of the page in v7). How it works: the title letter by letter, then the four steps slide past a turning ring that closes into the final button -->
+<section class="x-work" id="how" aria-labelledby="how-h">
+  <div class="x-wrap x-work-hd"><h2 class="x-h x-sh x-work-h" id="how-h" data-x="chars">Four steps to <span class="r">your next match.</span></h2></div>
+  <div class="x-work-pin">
+    <div class="x-stage x-work-st">
+      <div class="x-work-bg" aria-hidden="true"><svg viewBox="0 0 400 400"><circle class="tr" cx="200" cy="200" r="190"/><circle class="pg" cx="200" cy="200" r="190"/><circle class="fl" cx="200" cy="200" r="190"/><g class="tk"><path d="M200 4v18M200 378v18M4 200h18M378 200h18"/></g></svg></div>
+      <ol class="x-work-cards">
+        <li class="x-wc"><span class="n">(01)</span><svg class="i big" aria-hidden="true"><use href="#i-download"/></svg><h3>Download free</h3><p>Windows 10 and 11. No account needed.</p></li>
+        <li class="x-wc"><span class="n">(02)</span><svg class="i big" aria-hidden="true"><use href="#i-sliders"/></svg><h3>Try the free tweaks</h3><p><span class="n-free">73</span> tweaks open, up to 30 on at once. The rest show a lock.</p></li>
+        <li class="x-wc"><span class="n">(03)</span><svg class="i big" aria-hidden="true"><use href="#i-zap"/></svg><h3>Try Premium free</h3><p>3 days free with Stripe. Cancel anytime before day 3 and pay nothing.</p></li>
+        <li class="x-wc"><span class="n">(04)</span><svg class="i big" aria-hidden="true"><use href="#i-lock"/></svg><h3>Sign in and unlock</h3><p>With Google, Discord or email. All <span class="n-all">218</span> tweaks, no limit.</p></li>
+      </ol>
+      <div class="x-work-fin">
+        <p class="x-h ln" data-line="-1">Your next match</p>
+        <a class="x-work-disc js-free-app" href="#pricing"><span class="lb">Download<br>free</span><svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        <p class="x-h ln r" data-line="1">starts here.</p>
+      </div>
+    </div>
   </div>
 </section>
+
 </main>
 
 <footer class="x-ft">
@@ -1718,44 +1733,7 @@ window.__xPage = X => {
     });
   }
 
-  /* ---------- 2. Why: a statement on a wheel; each line turns toward you, sharp, as it reaches the middle of the screen ---------- */
-  const why = $("#why"), wh = $("#why-h"), wl = $$(".x-al", wh);
-  if (why && !reduce) {
-    const vis = onScreen(why);
-    X.tick(() => {
-      if (!vis.on) return;
-      const vh = innerHeight, r = why.getBoundingClientRect(), c = .62 * vh, mid = vh / 2;
-      const p = clamp((vh - r.top) / (vh + r.height)), shift = .22 * (.5 - p) * vh;
-      wh.style.transform = `translate3d(0,${shift.toFixed(1)}px,0)`;
-      why.style.perspectiveOrigin = `50% ${(mid - r.top).toFixed(0)}px`;
-      wl.forEach(l => {
-        const o = r.top + wh.offsetTop + (l.offsetParent === wh ? l.offsetTop : l.offsetTop - wh.offsetTop) + l.offsetHeight / 2 + shift - mid; // the line's place without the wheel
-        const a = clamp(o / c, -1.082, 1.082);
-        css(l, { "--rot": (-a).toFixed(4) + "rad", "--pull": (c * Math.sin(a) - o).toFixed(1) + "px", "--z": (c * (Math.cos(a) - 1)).toFixed(1) + "px",
-          "--focus": ((.16 + .84 * (1 - smooth((Math.abs(o) - .16 * vh) / (.3 * vh)))) * (1 - smooth((Math.abs(o) / c - .78) / .3))).toFixed(3) });
-      });
-    });
-  }
-
-  /* ---------- 3. The reasons, a deck: the red band slides in, the deck rises, then the cards fly off one after the other ---------- */
-  const deck = $(".x-deck-tr"), band = $(".x-deck-band"), field = $(".x-deck-f"), tiles = $$(".x-tile");
-  if (deck) X.pin(deck, { len: () => innerHeight * (innerWidth < 760 ? 3.8 : 11.1), scrub: .6, update: p => {
-    if (!deck.classList.contains("x-pinned")) { clear(band, ["--bx"]); clear(field, ["--g"]); tiles.forEach(t => { t.style.transform = t.style.opacity = t.style.zIndex = t.style.visibility = ""; }); return; }
-    band.style.setProperty("--bx", ((1 - out3(seg(p, 0, .17))) * 100).toFixed(2) + "vw");
-    const j = .22, o = clamp((p - j - .06) / (1 - j - .06)), i = clamp((p - j) / .06);
-    field.style.setProperty("--g", (95 * (1 - out3(i))).toFixed(2) + "vh");
-    tiles.forEach((el, r) => {
-      const t = o * tiles.length - r;
-      if (t > 1) { el.style.visibility = "hidden"; return; }
-      el.style.visibility = "";
-      const n = t > .68 ? Math.pow((t - .68) / .32, 3) : 0;
-      let e = 0; if (t < 0) { const u = -t, f = Math.floor(u); e = f + io3(u - f); }
-      const tilt = (r % 2 ? 1.6 : -1.6) * Math.min(e, 1);
-      el.style.transform = `translate3d(${(72 * n).toFixed(2)}vw,${(-19 * n - 2.4 * e).toFixed(2)}vh,0) rotate(${(-11 * n + tilt).toFixed(2)}deg) scale(${(1.04 - .07 * e).toFixed(4)})`;
-      el.style.opacity = (Math.min(1 - clamp((n - .65) / .35), clamp(4 - e))).toFixed(3);
-      el.style.zIndex = 100 - Math.round(10 * e);
-    });
-  } });
+  /* ---------- 2. and 3. What Rago does: a plain list since v7 (28/11), its items rise in with the shared data-x="list" ---------- */
 
   /* ---------- 4. What delays your hit: unchanged (page script, #hit) ---------- */
 
@@ -1815,14 +1793,7 @@ window.__xPage = X => {
     });
   }
 
-  /* ---------- 7. Inside the app: the ten cards stack; each one tilts a little and steps back while the next covers it ---------- */
-  const caps = $$(".x-cap");
-  if (!reduce) caps.forEach((c, i) => {
-    const nx = caps[i + 1]; if (!nx) return;
-    const sg = i % 2 ? 1 : -1;
-    const top = () => parseFloat(getComputedStyle(nx).top) / innerHeight || .16;
-    X.scrub(nx, 1, top(), q => { c.style.transform = q > 0 ? `rotate(${(sg * .8 * q).toFixed(3)}deg) scale(${(1 - .03 * q).toFixed(4)})` : ""; c.style.filter = q > 0 ? `brightness(${(1 - .25 * q).toFixed(3)})` : ""; }, .2);
-  });
+  /* ---------- 7. Inside the app: since v7 (28/11) one row per section of the app, no stacking ---------- */
 
   /* ---------- 8. Rago Route: the R is drawn, then filled; tiles light up behind it; it shrinks and rises, the text comes
      in, the globe rises until it fills the bottom of the screen, the five reasons come to rest on its curve, and the
@@ -1876,47 +1847,10 @@ window.__xPage = X => {
     } });
   }
 
-  /* ---------- 9. What's new: chips open and close between the words of the title, one after the other ---------- */
-  const nh = $("#new-h");
-  if (nh && !reduce) X.when(nh, () => {
-    const ch = $$(".x-fchip", nh); if (!ch.length) return;
-    let c = 0;
-    const step = () => { ch.forEach((x, k) => x.classList.toggle("x-open", (c + 3 - k % 3) % 3 < 2)); c++; };
-    setTimeout(() => { step(); setInterval(step, 1150); }, 500);
-  }, .8);
+  /* ---------- 9. to 11. Around the tweaks, in-game bar, every game: since v7 (28/11) plain blocks, no pin (the in-game
+     bar still plays its scene when it reaches the screen, page script #igst) ---------- */
 
-  /* ---------- 10. The in-game bar: the scene grows to full width while the page holds, then its story comes in ---------- */
-  const cs = $("#ingame"), cm = $(".x-case-m", cs), cst = $(".x-case-st", cs);
-  if (cs) X.pin(cs, { len: () => 1.7 * innerHeight, when: desk, update: p => {
-    if (!cs.classList.contains("x-pinned")) { clear(cm, ["--cs"]); clear(cst, ["--cv", "--t1", "--t2", "--t3", "--cf"]); return; }
-    const g = io3(seg(p, 0, .45));
-    cm.style.setProperty("--cs", lerp(.5, 1, g).toFixed(4));
-    css(cst, { "--cf": g.toFixed(3), "--cv": seg(p, .45, .6).toFixed(3), "--t1": out3(seg(p, .55, .7)).toFixed(3), "--t2": out3(seg(p, .62, .78)).toFixed(3), "--t3": out3(seg(p, .7, .88)).toFixed(3) });
-  } });
-
-  /* ---------- 11. Every game: the list holds and lights up one game at a time ---------- */
-  const gl = $("#games-list"), gul = $(".x-list-l", gl), gli = $$(".x-list-l li", gl);
-  if (gl) {
-    let ly = 0;
-    X.pin(gl, { len: () => gli.length * .22 * innerHeight, when: desk, update: p => {
-      if (!gl.classList.contains("x-pinned")) { ly = 0; gul.style.removeProperty("--ly"); gli.forEach(l => l.classList.remove("x-act", "x-near")); return; }
-      const n = gli.length, fi = p * (n - 1), a = Math.round(fi), h = gli[0].offsetHeight;
-      const st = gl.firstElementChild.getBoundingClientRect(), base = gul.getBoundingClientRect().top - ly - st.top;
-      ly = innerHeight / 2 - base - (fi + .5) * h;
-      gul.style.setProperty("--ly", ly.toFixed(1) + "px");
-      gli.forEach((l, i) => { l.classList.toggle("x-act", i === a); l.classList.toggle("x-near", Math.abs(i - a) === 1); });
-    } });
-  }
-
-  /* ---------- 13. Community: the title runs along an arc while the page holds, then the three cards slide in ---------- */
-  const arc = $(".x-arc"), tp = arc && $("textPath", arc);
-  if (arc && tp) {
-    const set = q => tp.setAttribute("startOffset", lerp(62, -118, q).toFixed(2) + "%");
-    X.pin(arc, { len: () => 2 * innerHeight, when: desk, update: p => { if (arc.classList.contains("x-pinned")) set(p); } });
-    if (!reduce) X.scrub(arc, 1, -.2, q => { if (!arc.classList.contains("x-pinned")) set(lerp(.25, .9, q)); });
-    else set(.42);
-  }
-  if (!reduce) $$(".x-tc").forEach(c => X.scrub(c, .78, .18, q => css(c, { "--tx": (22 * (1 - out3(q))).toFixed(2), "--to": clamp(q * 1.4).toFixed(3) })));
+  /* ---------- 13. Community: three plain cards since v7 (28/11) ---------- */
 
   /* ---------- 14. FAQ: six answers first, six more at each click; they rise in when they appear ---------- */
   const faqs = $("#faqs"), more = $("#faq-more"), mb = $("#faq-more-b"), ms = $("#faq-more-s");

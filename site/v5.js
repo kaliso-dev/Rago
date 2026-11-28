@@ -154,7 +154,9 @@
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
-  const X = window.X = { reduce, fine, clamp, $, $$ };
+  // site v7 (28/11/2026): <main class="x" data-calm> keeps the browser's own scrolling (no wheel smoothing, no rail on the right edge)
+  const calm = main.hasAttribute("data-calm");
+  const X = window.X = { reduce, fine, clamp, $, $$, calm };
   doc.classList.add("x-on");
   if (reduce) doc.classList.add("x-still");
 
@@ -284,7 +286,7 @@
     }
     return false;
   };
-  if (!reduce && fine) {
+  if (!reduce && fine && !calm) {
     doc.classList.add("x-smooth");
     addEventListener("wheel", e => {
       if (e.ctrlKey || e.defaultPrevented || Math.abs(e.deltaX) > Math.abs(e.deltaY) || doc.classList.contains("x-lock") || scrollable(e.target)) return;
@@ -378,7 +380,7 @@
 
   /* ---------- 9. Scroll rail on the right edge, shown while the page moves, can be dragged ---------- */
   let rail = null, thumb = null, railT = 0, thumbH = 48;
-  if (fine) {
+  if (fine && !calm) {
     rail = document.createElement("div"); rail.className = "x-rail"; rail.setAttribute("aria-hidden", "true");
     rail.innerHTML = '<i class="x-rail-t"></i><i class="x-rail-h"></i>'; document.body.appendChild(rail); thumb = rail.lastChild;
     let drag = false, off = 0;
