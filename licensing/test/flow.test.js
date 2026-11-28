@@ -1545,7 +1545,11 @@ test('going live: /admin checks prices, webhook and portal in the live mode, tes
   // The tester buys for real: their test customer doesn't exist in live, the checkout opens with their email.
   await t.browse('/admin/logout', { form: {} });
   await t.browse('/login', { form: { email: 'tester@example.com', password: 'hunter2hunter2' } });
-  assert.match(await (await t.browse('/account')).text(), /Test purchase/);
+  const testDash = await (await t.browse('/account')).text();
+  assert.match(testDash, /Test purchase/);
+  // Its own sentence, never "revoked" (2026-11-28, q115).
+  assert.match(testDash, /Test purchase made before launch\. Not an active license\./);
+  assert.doesNotMatch(testDash, /was revoked/);
   const create = t.stripe.checkout.sessions.create;
   t.stripe.checkout.sessions.create = async (p) => {
     if (p.customer) throw Object.assign(new Error(`No such customer: '${p.customer}'; a similar object exists in test mode, but a live mode key was used to make this request.`), { statusCode: 400, code: 'resource_missing', param: 'customer' });

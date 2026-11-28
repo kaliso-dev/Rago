@@ -569,6 +569,9 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
 
   const OFF = { subscription_ended: 'Ended', payment_failed: 'Payment failed', refunded: 'Refunded', disputed: 'Disputed', test_mode: 'Test purchase' };
   const offBadge = () => OFF[reason] || 'Revoked';
+  // A test purchase stopped by the admin when Stripe went live (q115, 2026-11-28: « a) »): its own sentence, not "revoked".
+  const TEST_LINE = 'Test purchase made before launch. Not an active license.';
+  const revokedLine = (rest = '') => (reason === 'test_mode' ? TEST_LINE : `This license was revoked.${rest}`);
   const licenseSect = () => sect('sect-license', html`<p class="overline">License key</p>
       ${active ? html`<span class="badge badge-ok"><i></i>Active</span>` : html`<span class="badge badge-off"><i></i>${offBadge()}</span>`}`,
     html`<div class="key">
@@ -622,7 +625,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
         html`<div class="plan-line"><span class="plan-icon">${ICON.clock}</span><div><strong>Rago Optimizer Premium · Gift</strong>
           <p class="muted small">${active
             ? `Offered by the Rago team. Premium until ${fmtDate(end)}, nothing to pay.`
-            : 'This license was revoked.'}</p></div></div>`,
+            : revokedLine()}</p></div></div>`,
         active ? row(html`<a class="btn btn-ghost btn-sm" href="${buyUrl}">Subscribe now, first payment on ${fmtDate(end)}</a>`) : '');
     }
     if (license.plan === 'reward') {
@@ -632,7 +635,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
           <p class="muted small">${active
             ? fromDiscord ? `Earned on the Rago Discord. Premium until ${fmtDate(end)}, nothing to pay.`
               : `Earned with the affiliate program. Premium until ${fmtDate(end)}, nothing to pay.${cfg.affiliateRewardMax === 1 ? '' : ` Bring ${cfg.affiliateGoal} more players to add ${cfg.affiliateRewardMonths} months.`}`
-            : 'This license was revoked.'}</p></div></div>`,
+            : revokedLine()}</p></div></div>`,
         row(active ? html`<a class="btn btn-ghost btn-sm" href="${buyUrl}">Subscribe now, first payment on ${fmtDate(end)}</a>` : '', html`<a class="link-arrow" href="/affiliate">Open affiliate program ${ICON.arrow}</a>`));
     }
     if (license.plan === 'lifetime' || !subscription) {
@@ -640,7 +643,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
         html`<div class="plan-line"><span class="plan-icon">${ICON.infinity}</span><div><strong>Rago Optimizer Premium for life</strong>
           <p class="muted small">${active
             ? `${license.source === 'affiliate' ? 'Earned with the affiliate program. ' : ''}No renewals, nothing to pay.`
-            : reason === 'refunded' ? 'Refunded. This license no longer works.' : reason === 'disputed' ? 'The payment was disputed. This license no longer works.' : 'This license was revoked.'}</p></div></div>`,
+            : reason === 'refunded' ? 'Refunded. This license no longer works.' : reason === 'disputed' ? 'The payment was disputed. This license no longer works.' : revokedLine()}</p></div></div>`,
         row(portalButton('Invoices and billing')));
     }
     let line;
@@ -650,7 +653,7 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
     if (!active) {
       line = reason === 'refunded' ? 'Refunded. This subscription is stopped and won’t renew.'
         : reason === 'disputed' ? 'The payment was disputed. This subscription is stopped and won’t renew.'
-          : 'This license was revoked. The subscription won’t renew.';
+          : revokedLine(' The subscription won’t renew.');
       badge = html`<span class="badge badge-off"><i></i>${offBadge()}</span>`;
       actions = portalButton('Invoices and billing');
     } else if (canceling) {
