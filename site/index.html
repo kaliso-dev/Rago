@@ -782,6 +782,18 @@ details.s-q p{padding:0 0 calc(24 * var(--u));font-size:calc(15.5 * var(--u));li
 .v7-sticker span{display:inline-flex;align-items:baseline;gap:.28em;padding:calc(9 * var(--u)) calc(16 * var(--u)) calc(8 * var(--u));background:var(--paper);color:var(--bg);font-family:var(--cond);font-weight:900;font-style:italic;font-size:calc(22 * var(--u));line-height:1;letter-spacing:.02em;text-transform:uppercase;white-space:nowrap;border-radius:calc(8 * var(--u));box-shadow:0 calc(10 * var(--u)) calc(24 * var(--u)) calc(-8 * var(--u)) rgba(0,0,0,.55)}
 .v7-sticker b{font-size:1.45em;line-height:.8;color:var(--red)}
 @media (max-width:767px){.v7-sticker{right:16px;top:18px}.v7-sticker span{font-size:17px;padding:7px 12px 6px}}
+/* tarifs, 3e tour (Sofiene 28/11 : « prend trop de place sur mon 16 pouces ») : sur ordinateur, toute la section est
+   réduite d'un seul facteur (zoom), donc les écarts entre les cartes ne changent pas ; titre sur deux lignes, lignes
+   des listes moins espacées. Les trois cartes et le titre tiennent dans la hauteur d'un écran 1728×1117. */
+@media (min-width:1081px){
+  .x-plans .x-wrap{--z:.74;zoom:var(--z);width:auto;max-width:calc(1760 * var(--u) / var(--z));padding:0 calc(var(--x-gut) / var(--z))}
+  .x-plans-hd{padding-top:clamp(calc(40 * var(--u)),4vw,calc(80 * var(--u)))}
+  .x-plans-hd .x-sh{max-width:22ch}
+  .x-plans-c{margin-top:calc(56 * var(--u))!important}
+  .x-pc-f{margin:calc(16 * var(--u)) 0!important}
+  .x-pc-f li{padding:calc(7 * var(--u)) 0!important;font-size:calc(18 * var(--u))!important}
+  .x-pc-cta .fine,.x-pc .bil{font-size:calc(15 * var(--u))!important}
+}
 /* benchmark « Measured, not promised. » (chiffres provisoires, voir le commentaire dans la section) */
 .v7-bench{width:100%;margin:clamp(calc(30 * var(--u)),4vw,calc(56 * var(--u))) 0 0;border-radius:var(--x-r,calc(22 * var(--u)));background:var(--bg-2);box-shadow:inset 0 0 0 1px var(--line-2);overflow:hidden}
 .v7-bench table{width:100%;border-collapse:collapse}
