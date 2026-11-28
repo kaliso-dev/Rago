@@ -758,6 +758,13 @@ details.s-q p{padding:0 0 calc(24 * var(--u));font-size:calc(15.5 * var(--u));li
 .x-faq-mb span::before,.x-faq-mb span::after{content:"";position:absolute;left:0;top:50%;width:100%;height:3px;margin-top:-1.5px;border-radius:2px;background:currentColor}
 .x-faq-mb span::after{transform:rotate(90deg)}
 .s-q .pm::before,.s-q .pm::after{top:50%;margin-top:-1px;border-radius:1px}
+/* Rago Route (v7, Sofiene 28/11) : le R se dessine puis va directement dans le titre ; plus de carrés ni de « RAGO ROUTE » */
+.x-spark-f,.x-spark-lg{display:none!important}
+.x-spark-m{transform:translate3d(calc(-50% + var(--mx,0px)),calc(-50% + var(--my,0px)),0) scale(var(--ms,1))}
+.v7-rdock{display:inline-block;height:.86em;aspect-ratio:176/192;margin-right:.2em;vertical-align:-.06em}
+.v7-rdock svg{display:block;width:100%;height:100%;fill:var(--red)}
+.x-spark.x-pinned .v7-rdock svg{visibility:hidden}
+.x-spark:not(.x-pinned) .x-spark-m{display:none}
 /* benchmark « Measured, not promised. » (chiffres provisoires, voir le commentaire dans la section) */
 .v7-bench{max-width:calc(1100 * var(--u));margin:clamp(calc(30 * var(--u)),4vw,calc(56 * var(--u))) 0 0;border-radius:var(--x-r,calc(22 * var(--u)));background:var(--bg-2);box-shadow:inset 0 0 0 1px var(--line-2);overflow:hidden}
 .v7-bench table{width:100%;border-collapse:collapse}
@@ -1106,7 +1113,7 @@ details.s-q p{padding:0 0 calc(24 * var(--u));font-size:calc(15.5 * var(--u));li
     <p class="x-spark-lg" aria-hidden="true">rago <i>route</i></p>
     <div class="x-spark-c">
       <p><span class="x-tape red">rago route <b>//</b> premium option, in beta</span></p>
-      <h2 class="x-h" id="route-h">Your PC is tuned. <span class="r">Now Rago takes the road.</span></h2>
+      <h2 class="x-h" id="route-h"><span class="v7-rdock" aria-hidden="true"><svg viewBox="-6 -6 176 192"><path d="M0 0H160V46L93.83 101.42L164 180H114L65.17 125.42L0 180V132L112.24 38H39V78.34L0 111Z"/></svg></span>Your PC is tuned. <span class="r">Now Rago takes the road.</span></h2>
       <p class="x-lead">A ping spike mid-fight, a freeze right before a clutch, a Wi-Fi drop: often it isn't your PC, it's the road to the server. Rago Route sends every packet on two roads and quickly rebuilds or resends what's lost.</p>
       <a class="x-btn red sm" href="route.html"><span class="x-fl"></span><span class="x-bl">Discover Rago Route</span><svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
     </div>
@@ -1938,6 +1945,7 @@ window.__xPage = X => {
   /* ---------- 8. Rago Route: the R is drawn, then filled; tiles light up behind it; it shrinks and rises, the text comes
      in, the globe rises until it fills the bottom of the screen, the five reasons come to rest on its curve, and the
      Rago Route flows travel from the players to the relay in Frankfurt and to the exit in Paris ---------- */
+  const rdock = $(".v7-rdock");
   const sp = $("#route"), sf = $(".x-spark-f", sp), sm = $(".x-spark-m", sp), slg = $(".x-spark-lg", sp), sc = $(".x-spark-c", sp), sks = $$(".x-sk", sp), spl = $(".x-orb-pl", sp);
   if (sp) {
     const path = $("path", sm); let L = 1200; try { L = path.getTotalLength(); } catch (e) {}
@@ -1948,20 +1956,20 @@ window.__xPage = X => {
       sf.style.setProperty("--fc", cols); sf.innerHTML = "";
       cells = Array.from({ length: cols * rows }, () => { const i = document.createElement("i"); i.style.setProperty("--a", (.18 + Math.random() * .82).toFixed(2)); sf.appendChild(i); return { i, a: .252 + Math.random() * .09, b: .35 + Math.random() * .067, on: false }; });
     };
-    if (!reduce) grid();
+    // v7 (28/11, Sofiene) : plus de carrés derrière le R ; grid() n'est plus appelée
     X.pin(sp, { len: () => 6.4 * innerHeight, when: desk, update: P => {
-      if (!sp.classList.contains("x-pinned")) { clear(sm, ["--md", "--mf", "--ms", "--my", "--mo"]); clear(slg, ["--lo", "--ly", "--ls"]); clear(sc, ["--co", "--cy"]); clear(spl, ["--pw", "--ph", "--pty", "--prz", "--po", "--fl"]); sks.forEach(k => clear(k, ["--kx", "--ky", "--kr", "--ko"])); return; }
-      const p = Math.min(1, P / .875);                     // the R, the tiles and the text keep the pace they had on 5.6 screens
-      const vh = innerHeight, vw = innerWidth, H = sm.getBoundingClientRect().height / (parseFloat(getComputedStyle(sm).getPropertyValue("--ms")) || 1);
-      const e1 = out3(seg(p, .122, .243)), e2 = io3(seg(p, .434, .504)), e3 = io3(seg(p, .504, .625));
-      const ms = lerp(.8, 1, e1) * lerp(1, .36, e2) * lerp(1, .5, e3);
-      const yTop = -vh / 2 + .09 * vh + H * .18 / 2;
-      css(sm, { "--md": seg(p, 0, .139).toFixed(4), "--mf": e1.toFixed(3), "--ms": ms.toFixed(4), "--my": lerp(lerp(0, -.1 * vh, e2), yTop, e3).toFixed(1) + "px" });
-      css(slg, { "--lo": (seg(p, .434, .504) * (1 - seg(p, .504, .56))).toFixed(3), "--ly": (.1 * vh - 40 * e3).toFixed(1) + "px" });
-      cells.forEach(c => { const on = p >= c.a && p < c.b; if (on !== c.on) { c.on = on; c.i.classList.toggle("x-on", on); } });
-      const ce = out3(seg(p, .53, .608));
+      if (!sp.classList.contains("x-pinned")) { clear(sm, ["--md", "--mf", "--ms", "--mx", "--my", "--mo"]); clear(slg, ["--lo", "--ly", "--ls"]); clear(sc, ["--co", "--cy"]); clear(spl, ["--pw", "--ph", "--pty", "--prz", "--po", "--fl"]); sks.forEach(k => clear(k, ["--kx", "--ky", "--kr", "--ko"])); return; }
+      const p = Math.min(1, P / .875);                     // the R and the text keep the pace they had on 5.6 screens
+      // v7 (Sofiene, 28/11) : le R se dessine, se remplit, puis va directement à sa place au début du titre (plus de
+      // carrés, plus de « RAGO ROUTE » entre les deux) ; sa cible est mesurée à chaque image, le titre bouge en arrivant
+      const vh = innerHeight, vw = innerWidth, H = parseFloat(getComputedStyle(sm).height) || 1;   // a <svg> has no offsetHeight
+      const e1 = out3(seg(p, .122, .243)), fly = io3(seg(p, .3, .46));
+      const stR = sm.parentElement.getBoundingClientRect(), dk = rdock.getBoundingClientRect();
+      const tx = dk.left + dk.width / 2 - (stR.left + stR.width / 2), ty = dk.top + dk.height / 2 - (stR.top + stR.height / 2);
+      css(sm, { "--md": seg(p, 0, .139).toFixed(4), "--mf": e1.toFixed(3), "--ms": lerp(lerp(.8, 1, e1), dk.height / H, fly).toFixed(4),
+                "--mx": (tx * fly).toFixed(1) + "px", "--my": (ty * fly).toFixed(1) + "px", "--mo": "1" });
+      const ce = out3(seg(p, .34, .46));
       css(sc, { "--co": ce.toFixed(3), "--cy": (40 * (1 - ce)).toFixed(1) + "px" });
-      sm.style.setProperty("--mo", (1 - ce).toFixed(3));        // the R hands the top of the screen to the title
       // the globe: a cap that reaches the bottom corners of the screen, but never taller than the room the text and
       // the cards leave above it, and never so wide that the deepest pin (.193 R down the drawing) falls off the fold
       const kh = sks.length ? sks[0].offsetHeight : 170, tb = sc.offsetTop + sc.offsetHeight;
