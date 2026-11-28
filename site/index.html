@@ -744,8 +744,6 @@ details.s-q p{padding:0 0 calc(24 * var(--u));font-size:calc(15.5 * var(--u));li
 }
 .x-pc.red .x-pc-bg{box-shadow:0 calc(40 * var(--u)) calc(110 * var(--u)) calc(-20 * var(--u)) rgba(255,59,48,.45),0 0 0 1px rgba(255,255,255,.12) inset}
 .x-pc.red .x-pc-pr b{font-size:clamp(calc(60 * var(--u)),5.4vw,calc(100 * var(--u)))}
-.v7-sticker{position:absolute;right:clamp(calc(20 * var(--u)),2vw,calc(32 * var(--u)));top:clamp(calc(64 * var(--u)),6vw,calc(100 * var(--u)));display:grid;place-items:center;width:clamp(calc(92 * var(--u)),7.4vw,calc(124 * var(--u)));aspect-ratio:1;border-radius:50%;background:var(--paper);color:var(--bg);font-family:var(--cond);font-weight:900;font-style:italic;font-size:clamp(calc(17 * var(--u)),1.35vw,calc(22 * var(--u)));line-height:.95;text-align:center;text-transform:uppercase;transform:rotate(-12deg);box-shadow:0 calc(14 * var(--u)) calc(30 * var(--u)) calc(-10 * var(--u)) rgba(0,0,0,.5)}
-.v7-sticker b{display:block;font-size:2.1em;line-height:.8}
 .x-pc.red .x-addon em{color:var(--bg);opacity:.85}
 .x-pc.red .x-pc-dots{display:none}
 .x-pc-f li::after{width:calc(16 * var(--u));height:calc(16 * var(--u));margin-top:2px;transform:none;-webkit-mask:var(--v7-ck) center/contain no-repeat;mask:var(--v7-ck) center/contain no-repeat}
@@ -765,6 +763,25 @@ details.s-q p{padding:0 0 calc(24 * var(--u));font-size:calc(15.5 * var(--u));li
 .v7-rdock svg{display:block;width:100%;height:100%;fill:var(--red)}
 .x-spark.x-pinned .v7-rdock svg{visibility:hidden}
 .x-spark:not(.x-pinned) .x-spark-m{display:none}
+/* tarifs, 2e tour (Sofiene 28/11) : plus de points en haut à droite, Premium beaucoup plus en avant (seule carte en
+   couleur, plus large et plus haute, halo, gros prix), pastille refaite en étiquette inclinée sur une ligne */
+.x-pc-disp{display:none!important}
+.x-pc-dots{display:none!important}
+.x-pc.dark .x-pc-f li:not(.lk)::after{background:var(--red)}
+@media (min-width:1081px){
+  .x-plans-c{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) minmax(0,1fr)!important;align-items:center!important;padding-top:0!important}
+  .x-pc.red{margin:calc(-40 * var(--u)) 0!important;padding:calc(48 * var(--u)) calc(44 * var(--u))!important}
+  .x-pc:not(.red){opacity:.92}
+}
+.x-pc.red .x-pc-bg{box-shadow:0 calc(50 * var(--u)) calc(140 * var(--u)) calc(-20 * var(--u)) rgba(255,59,48,.6),0 0 0 2px var(--paper) inset}
+.x-pc.red .x-pc-t{font-size:clamp(calc(56 * var(--u)),5.2vw,calc(96 * var(--u)))}
+.x-pc.red .x-pc-pr b{font-size:clamp(calc(72 * var(--u)),6.6vw,calc(124 * var(--u)))}
+.x-pc.red .x-pc-k{font-size:calc(15 * var(--u))}
+.x-pc.red .x-pc-cta .x-btn{min-height:calc(64 * var(--u));font-size:calc(18 * var(--u))}
+.v7-sticker{position:absolute;right:calc(28 * var(--u));top:calc(26 * var(--u));margin:0;transform:rotate(-4deg)}
+.v7-sticker span{display:inline-flex;align-items:baseline;gap:.28em;padding:calc(9 * var(--u)) calc(16 * var(--u)) calc(8 * var(--u));background:var(--paper);color:var(--bg);font-family:var(--cond);font-weight:900;font-style:italic;font-size:calc(22 * var(--u));line-height:1;letter-spacing:.02em;text-transform:uppercase;white-space:nowrap;border-radius:calc(8 * var(--u));box-shadow:0 calc(10 * var(--u)) calc(24 * var(--u)) calc(-8 * var(--u)) rgba(0,0,0,.55)}
+.v7-sticker b{font-size:1.45em;line-height:.8;color:var(--red)}
+@media (max-width:767px){.v7-sticker{right:16px;top:18px}.v7-sticker span{font-size:17px;padding:7px 12px 6px}}
 /* benchmark « Measured, not promised. » (chiffres provisoires, voir le commentaire dans la section) */
 .v7-bench{width:100%;margin:clamp(calc(30 * var(--u)),4vw,calc(56 * var(--u))) 0 0;border-radius:var(--x-r,calc(22 * var(--u)));background:var(--bg-2);box-shadow:inset 0 0 0 1px var(--line-2);overflow:hidden}
 .v7-bench table{width:100%;border-collapse:collapse}
@@ -1058,21 +1075,21 @@ details.s-q p{padding:0 0 calc(24 * var(--u));font-size:calc(15.5 * var(--u));li
       </div>
     </div>
     <div class="x-plans-c" data-x-own>
-      <article class="x-pc paper">
+      <article class="x-pc dark">
         <span class="x-pc-bg"></span>
         <p class="x-pc-k"><i></i>Free forever</p>
         <div class="x-pc-dots" aria-hidden="true"></div>
         <h3 class="x-pc-t">Free</h3>
         <div class="x-pc-pr"><b>$0</b><span>forever</span></div><p class="bil">No license needed. Watch, test and clean your PC.</p>
         <ul class="x-pc-f"><li><span>In-game bar: live FPS, ping, CPU, GPU and RAM</span></li><li><span>Network test to Hypixel, Minemen Club and game regions</span></li><li><span>Clean RAM in one click, cleanup and driver check</span></li><li><span>Game library and preset sharing</span></li><li><span><b><span class="n-free">68</span> tweaks open</b>, up to 30 on at once</span></li><li><span>Remove preinstalled apps in Tools</span></li><li class="lk"><span>Network and hitreg tweaks, presets and Packet Optimizer locked</span></li></ul>
-        <div class="x-pc-cta"><a class="x-btn dark js-free-app" href="https://account.rago-optimizer.com/download"><span class="x-fl"></span><svg class="i" aria-hidden="true"><use href="#i-download"/></svg><span class="x-bl">Download free</span></a><p class="fine">Windows 10 and 11</p></div>
+        <div class="x-pc-cta"><a class="x-btn js-free-app" href="https://account.rago-optimizer.com/download"><span class="x-fl"></span><svg class="i" aria-hidden="true"><use href="#i-download"/></svg><span class="x-bl">Download free</span></a><p class="fine">Windows 10 and 11</p></div>
       </article>
       <article class="x-pc red">
         <span class="x-pc-bg"></span>
         <p class="x-pc-k"><i></i>Recommended</p>
         <div class="x-pc-dots" aria-hidden="true"></div>
         <h3 class="x-pc-t">Premium</h3>
-        <div class="x-pc-pr"><b id="p-amt">$2.50</b><span id="p-per">/ month</span></div><p class="bil" id="p-note">Billed $29.99 yearly. 6 months free.</p><p class="v7-sticker" aria-hidden="true"><b class="js-td">3</b> days free</p>
+        <div class="x-pc-pr"><b id="p-amt">$2.50</b><span id="p-per">/ month</span></div><p class="bil" id="p-note">Billed $29.99 yearly. 6 months free.</p><p class="v7-sticker" aria-hidden="true"><span><b class="js-td">3</b> days free</span></p>
         <ul class="x-pc-f"><li><span><b>All <span class="n-all">218</span> tweaks</b>, with RBW Mod, Game mode and Expert mode</span></li><li><span>Packet Optimizer for hitreg and knockback, tuned to your line</span></li><li><span><b><span class="n-presets">20</span> presets</b>, 15 made for a game: Valorant, Fortnite, CS2…</span></li><li><span>Optimize and play: your preset applied, then your game starts</span></li><li><span>21 tweaks to switch mid-match from the in-game bar</span></li><li><span>No limit on the tweaks you keep on</span></li><li><span>Every new tweak and preset from future versions</span></li><li><span>The Premium role on Discord</span></li><li class="dim"><span>One license, one PC.</span></li></ul>
         <label class="s-addon x-addon" for="with-route"><input type="checkbox" id="with-route" class="sr-only"><i class="cb" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></i><span><b>Add Rago Route<em id="addon-pr">+$17.99/year</em></b><small>The anti-lag tunnel for Minecraft, in beta: two roads for every packet. Included in the free trial. <a href="route.html">What it does</a></small></span></label>
         <div class="x-pc-cta"><a class="x-btn ink js-trial" href="/buy?interval=month&amp;trial=1"><span class="x-fl"></span><svg class="i" aria-hidden="true"><use href="#i-zap"/></svg><span class="x-bl">Start 3-day free trial</span></a>
