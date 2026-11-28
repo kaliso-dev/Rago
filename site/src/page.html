@@ -724,6 +724,11 @@ details.s-q p{padding:0 0 calc(24 * var(--u));font-size:calc(15.5 * var(--u));li
 .x-pc.paper .x-pc-f li:not(.lk)::after{background:var(--red)}
 .x-plans{--v7-ck:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3.6 12.8L9.2 18.2L20.6 6' fill='none' stroke='%23000' stroke-width='3.6'/%3E%3C/svg%3E");--v7-lk:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 10.4H20V22H4Z'/%3E%3Cpath d='M7.6 10.8V7.6A4.4 4.4 0 0 1 16.4 7.6V10.8' fill='none' stroke='%23000' stroke-width='2.8'/%3E%3C/svg%3E")}
 @media (max-width:1080px){.v7-plans-side{align-items:flex-start}.v7-reassure{justify-content:flex-start}}
+/* FAQ : le « + » dessiné (deux traits) et centré au pixel, au lieu du caractère de la police (Sofiene, 28/11) */
+.x-faq-mb span{position:relative;display:block;width:calc(26 * var(--u));height:calc(26 * var(--u))}
+.x-faq-mb span::before,.x-faq-mb span::after{content:"";position:absolute;left:0;top:50%;width:100%;height:3px;margin-top:-1.5px;border-radius:2px;background:currentColor}
+.x-faq-mb span::after{transform:rotate(90deg)}
+.s-q .pm::before,.s-q .pm::after{top:50%;margin-top:-1px;border-radius:1px}
 /* benchmark « Measured, not promised. » (chiffres provisoires, voir le commentaire dans la section) */
 .v7-bench{max-width:calc(1100 * var(--u));margin:clamp(calc(30 * var(--u)),4vw,calc(56 * var(--u))) 0 0;border-radius:var(--x-r,calc(22 * var(--u)));background:var(--bg-2);box-shadow:inset 0 0 0 1px var(--line-2);overflow:hidden}
 .v7-bench table{width:100%;border-collapse:collapse}
@@ -1214,7 +1219,7 @@ details.s-q p{padding:0 0 calc(24 * var(--u));font-size:calc(15.5 * var(--u));li
       <h2 class="x-h x-sh" data-x="chars">Questions? <span class="r">Before you buy.</span></h2>
     </div>
     <div class="faq" id="faqs"></div>
-    <div class="x-faq-more" id="faq-more" hidden><button type="button" class="x-faq-mb" id="faq-more-b"><span aria-hidden="true">+</span></button><p id="faq-more-s" aria-live="polite">More answers</p></div>
+    <div class="x-faq-more" id="faq-more" hidden><button type="button" class="x-faq-mb" id="faq-more-b"><span aria-hidden="true"></span></button><p id="faq-more-s" aria-live="polite">More answers</p></div>
     <div class="x-stuck js-discord" data-x="up" hidden><h3>Still stuck?</h3><p>Open a support ticket on the Discord. The staff answers.</p><a class="x-btn red sm js-discord" href="#discord" hidden><span class="x-fl"></span><svg class="i" aria-hidden="true"><use href="#i-chat"/></svg><span class="x-bl">Open a ticket</span></a></div>
   </div>
 </section>
