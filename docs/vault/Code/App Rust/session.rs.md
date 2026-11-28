@@ -2,12 +2,12 @@
 type: code
 tags: [code, app, rust, jeux, alimentation, carte-graphique]
 fichier: app/src-tauri/src/session.rs
-lignes: 665
-maj: 2026-11-11
+lignes: 671
+maj: 2026-11-27
 ---
 # session.rs
 
-Ce que l'app fait **le temps d'une partie**, puis défait : carte graphique performante pour les jeux, mode Performances élevées, jeu en priorité haute, vérifications (conseils). Repris du `.bat` GAME V1 de Sofiene. Fiche parente : [[Code de l'app (Rust)]]. Fonctionnalité : [[Pendant la partie]].
+Ce que l'app fait **le temps d'une partie**, puis défait : carte graphique performante pour les jeux, mode Performances élevées, jeu en priorité supérieure à la normale, vérifications (conseils). Repris du `.bat` GAME V1 de Sofiene. Fiche parente : [[Code de l'app (Rust)]]. Fonctionnalité : [[Pendant la partie]].
 
 Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11).
 
@@ -22,7 +22,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11).
 ## Ce que le fichier expose
 
 - GUIDs des plans : `BALANCED` (Utilisation normale), `POWER_SAVER` (Économie d'énergie), `HIGH` (Performances élevées).
-- `State { playing, power, priority, gpuGames, checks, multiGpu, x3d, game, tipsLeft }` (`priority` = nombre de processus du jeu mis en priorité haute pour la partie en cours) (`multiGpu` = `None` tant que ce n'est pas vérifié) (`game`, `tipsLeft` : voir « Conseils au lancement du jeu » plus bas) ; `Check { id, apps }` avec `id` = `battery`, `download`, `sync` ou `record`.
+- `State { playing, power, priority, gpuGames, checks, multiGpu, x3d, game, tipsLeft }` (`priority` = nombre de processus du jeu mis en priorité supérieure à la normale pour la partie en cours) (`multiGpu` = `None` tant que ce n'est pas vérifié) (`game`, `tipsLeft` : voir « Conseils au lancement du jeu » plus bas) ; `Check { id, apps }` avec `id` = `battery`, `download`, `sync` ou `record`.
 - `minecraft_exe(chemin)` : `Minecraft.Windows.exe` (Bedrock), ou `javaw.exe`/`java.exe` dont le chemin contient un dossier de launcher Minecraft : `\.minecraft\`, `\minecraft launcher\`, `microsoft.4297127d64ec6` (Store), `\.lunarclient\`, `badlion`, `feather`, `prismlauncher`, `modrinth`, `curseforge`, `multimc`, `tlauncher`, `atlauncher`, `gdlauncher`. Un autre programme Java n'est pas Minecraft.
 - `dual_ccd_x3d(nom du processeur)` : `7900X3D`, `7950X3D`, `9900X3D`, `9950X3D`, `7945HX3D` (un seul des deux CCD a le cache 3D). Un 7800X3D n'en fait pas partie.
 - `wants_gpu(chemin)` : un `.exe` dont le nom ne contient pas `unins`, `crash`, `report`, `setup`, `redist`, `vc_redist`, `dxsetup`.
@@ -49,10 +49,10 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11).
 - Les exes écrits sont notés dans `session.json` (`gpu`) ; ils restent après la partie (l'effet vaut au lancement suivant du jeu).
 - Option coupée : chaque choix écrit par Rago est supprimé **s'il vaut toujours `GpuPreference=2;`**.
 
-### Jeu en priorité haute (`game_priority`, 11/11, PR #89, **jamais testé sur Windows**)
-- Pendant une partie, chaque nouvel exe de jeu (`prio_fresh`) : ses processus (liste ToolHelp, chemin comparé en minuscules) sont ouverts avec `PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_SET_INFORMATION` ; si leur priorité est `NORMAL_PRIORITY_CLASS` ou `ABOVE_NORMAL_PRIORITY_CLASS`, `SetPriorityClass(HIGH_PRIORITY_CLASS)` puis `SetProcessInformation(ProcessPowerThrottling)` avec `ControlMask = EXECUTION_SPEED`, `StateMask = 0` (EcoQoS coupé). Jamais Temps réel.
+### Jeu en priorité supérieure à la normale (`game_priority`, 11/11, PR #89 ; « Haute » remplacée le 13/11, **jamais testé sur Windows**)
+- Pendant une partie, chaque nouvel exe de jeu (`prio_fresh`) : ses processus (liste ToolHelp, chemin comparé en minuscules) sont ouverts avec `PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_SET_INFORMATION` ; si leur priorité est `NORMAL_PRIORITY_CLASS` ou déjà `ABOVE_NORMAL_PRIORITY_CLASS` (priorité par jeu, [[Packet Optimizer]]), `SetPriorityClass(ABOVE_NORMAL_PRIORITY_CLASS)` puis `SetProcessInformation(ProcessPowerThrottling)` avec `ControlMask = EXECUTION_SPEED`, `StateMask = 0` (EcoQoS coupé). Jamais Haute ni Temps réel : dans la prod 1.3.0 c'est encore `HIGH_PRIORITY_CLASS`, et le jeu prenait le processeur à Discord et au stream (choix de Sofiene du 13/11, [[Historique des problèmes]]). Changement écrit le 13/11, dans `staging` par la PR #155 (fusionnée le 28/11), pas encore en prod.
 - Mémoire seulement (`raised` : pid → chemin et priorité d'avant), rien dans `session.json` : la priorité meurt avec le processus.
-- Option coupée pendant la partie : chaque processus encore lancé, au même chemin et toujours en priorité haute, retrouve sa priorité d'avant, et EcoQoS est rendu à Windows (`ControlMask = 0`).
+- Option coupée pendant la partie : chaque processus encore lancé, au même chemin et toujours en priorité supérieure à la normale, retrouve sa priorité d'avant, et EcoQoS est rendu à Windows (`ControlMask = 0`).
 - Processus qu'on ne peut pas ouvrir (anti-triche, autre compte) : laissé tel quel, sans erreur.
 
 ### Vérifications (`game_checks`)

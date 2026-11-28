@@ -3,7 +3,7 @@ type: code
 tags: [code, app, rust, moteur, licence]
 fichier: app/src-tauri/src/reset.rs
 lignes: 522
-maj: 2026-11-11
+maj: 2026-11-27
 ---
 # reset.rs
 
@@ -66,7 +66,7 @@ Un joueur du plan gratuit qui n'a que des réglages gratuits n'est donc jamais r
 1. `data_dir` = `%APPDATA%\<IDENTIFIER>` (repli `%TEMP%\RagoOptimizer`).
 2. `clear_run` : supprime `run\` et `%SystemRoot%\Temp\<IDENTIFIER>` ([[assets.rs]]), avant, en cas de délai, et à la fin.
 3. `session::undo_all` (mode d'alimentation d'avant, choix de carte graphique retirés) ; `display::undo_all` (niveaux de couleur, rampe gamma et résolution d'avant, valeurs d'avant Rago dans les fichiers de Valorant, Fortnite et CS2, profils effacés) ; `netopt::put_back` (valeurs d'avant le Packet Optimizer, délai borné dans [[netopt.rs]]).
-4. `load_for_uninstall` : charge `history.json` et `applied.json` **comme au lancement de l'app** : `import_history` si `applied.json` n'existait pas, puis `repair::at_startup` ([[repair.rs]]). Sans ça, une version jamais lancée avant d'être désinstallée garderait un état d'avant à 0 pour `CoalescingTimerInterval` (PC passé par l'ancien `.bat`) et la remise l'écrirait : écran bleu 0x7E, et plus d'app pour réparer (RAG-67).
+4. `load_for_uninstall` : charge `history.json` et `applied.json` **comme au lancement de l'app** : `import_history` si `applied.json` n'existait pas, puis `repair::at_startup` avec le dossier de données ([[repair.rs]] ; depuis le 13/11 il ramène aussi les priorités « Haute » des jeux). Sans ça, une version jamais lancée avant d'être désinstallée garderait un état d'avant à 0 pour `CoalescingTimerInterval` (PC passé par l'ancien `.bat`) et la remise l'écrirait : écran bleu 0x7E, et plus d'app pour réparer (RAG-67).
 5. `targets(All)` ; si vide, fin.
 6. `resource_dir` = `<dossier de l'exe>\resources`. Paquet Premium ouvert si la licence est encore active (`License::new().scripts_key()`), sinon les copies gardées dans `applied.json` ; `keep_undo`.
 7. Contexte sans fenêtre (`app: None`), carte réseau de la sonde ([[system.rs]]).

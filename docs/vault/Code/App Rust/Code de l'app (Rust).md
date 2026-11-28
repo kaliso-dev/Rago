@@ -3,7 +3,7 @@ type: code
 tags: [code, app, rust, carte]
 fichier: app/src-tauri/
 lignes: 23 431 (43 fichiers .rs de src/), plus build.rs 66, embed_scripts.rs 98, netopt/*.ps1 932
-maj: 2026-11-25
+maj: 2026-11-27
 ---
 # Code de l'app (Rust)
 
@@ -25,10 +25,10 @@ Tout est CONFIRMÉ (code de `staging`, 11/11 : les 6 fonctionnalités de la PR #
 | [[main.rs]] | 6 | lance `rago_hub_lib::run()`, sans console en release |
 | [[lib.rs]] | 1 546 | état partagé, 94 commandes, démarrage (`run()`) |
 | [[instance.rs]] | 283 | une seule instance : mutex Windows, réveil de la fenêtre déjà ouverte, attente de la désinstallation |
-| [[background.rs]] | 294 | préférences d'arrière-plan, icône près de l'horloge, tâche planifiée de lancement avec Windows |
+| [[background.rs]] | 297 | préférences d'arrière-plan, icône près de l'horloge, tâche planifiée de lancement avec Windows |
 | [[icon.rs]] | 189 | extrait l'icône d'un exe en PNG (bibliothèque de jeux) |
 | [[update.rs]] | 202 | mise à jour signée : vérifie toutes les 4 h, télécharge, installe à la fermeture |
-| [[repair.rs]] | 298 | [[Réparations au lancement]] : ce qu'une ancienne version a laissé (RAG-67 écran bleu, RAG-68 annulation faussée) |
+| [[repair.rs]] | 714 | [[Réparations au lancement]] : ce qu'une ancienne version a laissé (RAG-67 écran bleu, RAG-68 annulation faussée, priorité « Haute » des jeux ramenée à « Supérieure à la normale » depuis le 13/11) |
 
 ### Moteur des réglages
 | Module | Lignes | Rôle |
@@ -67,7 +67,7 @@ Tout est CONFIRMÉ (code de `staging`, 11/11 : les 6 fonctionnalités de la PR #
 | [[gamecfg.rs]] | 1 071 | [[Graphismes des jeux]] : Performance, Équilibré, Qualité écrits dans les réglages de 6 jeux, copie d'origine gardée |
 | [[overlay.rs]] | 805 | barre en jeu : jeu au premier plan, raccourci Alt+X, fenêtre de la barre, rappel des conseils |
 | [[display.rs]] | 1 560 | [[Couleurs et résolution]] : saturation (NVIDIA, AMD), luminosité, contraste et gamma quand le jeu est au premier plan, résolution étirée le temps de la partie, résolution dans les fichiers de Valorant, Fortnite et CS2 |
-| [[session.rs]] | 665 | [[Pendant la partie]] : carte graphique performante, plan d'alimentation, jeu en priorité haute, défait après ; vérifications et conseils |
+| [[session.rs]] | 671 | [[Pendant la partie]] : carte graphique performante, plan d'alimentation, jeu en priorité supérieure à la normale, défait après ; vérifications et conseils |
 | [[mouse.rs]] | 107 | [[Page Souris]] : logiciels de remappage, de macro, de clic automatique ou du fabricant lancés (lecture seule) |
 | [[tips.rs]] | 416 | [[Conseils au lancement du jeu]] : jeu à conseils, réglages cochés, applis gourmandes, écran, Game DVR |
 | [[fps.rs]] | 294 | FPS du jeu par PresentMon, résumé de la dernière partie |
@@ -77,7 +77,7 @@ Tout est CONFIRMÉ (code de `staging`, 11/11 : les 6 fonctionnalités de la PR #
 ### Réseau
 | Module | Lignes | Rôle |
 |---|---|---|
-| [[netopt.rs]] | 731 | [[Packet Optimizer]] : valeurs calculées, moteur PowerShell chiffré (`netopt/*.ps1` : [[main.ps1]], [[common.ps1]], [[apply.ps1]]) |
+| [[netopt.rs]] | 789 | [[Packet Optimizer]] : valeurs calculées, moteur PowerShell chiffré (`netopt/*.ps1` : [[main.ps1]], [[common.ps1]], [[apply.ps1]]) |
 | [[nettest.rs]] | 248 | [[Test réseau]] : ping, gigue, pertes vers des serveurs de jeu et des régions |
 | [[icmp.rs]] | 150 | ping ICMP de Windows, dernier routeur qui répond |
 | [[mcping.rs]] | 165 | ping d'un serveur Minecraft (Server List Ping) |

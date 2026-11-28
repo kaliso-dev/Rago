@@ -3,7 +3,7 @@ type: code
 tags: [code, app, typescript, interface]
 fichier: app/src/lib/api.ts
 lignes: 1767
-maj: 2026-11-25
+maj: 2026-11-27
 ---
 # api.ts
 

@@ -299,7 +299,7 @@ fn load_for_uninstall(data_dir: &std::path::Path) -> (Arc<History>, Ledger) {
         // jamais lancée depuis 1.1.6 : les réglages appliqués d'après l'historique, comme au démarrage de l'app
         ledger.import_history(&history.all());
     }
-    crate::repair::at_startup(&crate::backup::Sys::new(data_dir.join("backup")), &mut ledger, &data_dir.join("logs"));
+    crate::repair::at_startup(&crate::backup::Sys::new(data_dir.join("backup")), &mut ledger, data_dir);
     (history, ledger)
 }
 

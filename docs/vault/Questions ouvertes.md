@@ -19,9 +19,6 @@ Mode d'emploi :
 Posée le 25/11, après le test Windows de Sofiene (PR #139) :
 - q121 : la barre en jeu sort-elle encore du jeu (autre page, jeu réduit) une fois la 1.2.1 quittée ? ([[Barre en jeu]])
 
-Posée le 13/11 (fil « Corriger les saccades du stream Discord ») :
-- q109 : les joueurs dont le stream Discord saccade ont-ils la version publique ou l'exe de test ? Le correctif (jeu en « Supérieure à la normale ») attend aussi la décision de Sofiene ([[Bugs et incidents]]).
-
 Posées le 24/11 sur l'accueil v6 (PR #136, [[New Brand Rago]]) :
 - q118 : que devient la section « Three ways in » une fois les cartes Rago Route passées au-dessus du globe ?
 - q119 : les flux d'Asie s'arrêtent à la Sibérie (Tokyo, Pékin et Séoul sont de l'autre côté du globe) : on garde ?

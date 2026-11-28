@@ -236,7 +236,7 @@ export interface BackgroundPrefs {
   gameGpu: boolean;
   gamePower: boolean;
   gameChecks: boolean;
-  /** processus du jeu en priorité haute le temps de jouer */
+  /** processus du jeu en priorité supérieure à la normale le temps de jouer */
   gamePriority: boolean;
 }
 export interface BackgroundState {
@@ -308,7 +308,7 @@ export interface SessionState {
   playing: boolean;
   /** mode Performances élevées mis pour la partie */
   power: boolean;
-  /** processus du jeu passés en priorité haute pour la partie en cours */
+  /** processus du jeu passés en priorité supérieure à la normale pour la partie en cours */
   priority: number;
   /** jeux qui ont reçu la carte graphique performante */
   gpuGames: number;
@@ -1020,7 +1020,7 @@ const MOCK_NET_LINES: Record<string, string[]> = {
   "Restarting the network card": ["Network card back online"],
   MTU: ["MTU 1500 on Ethernet, already right"],
   "Game traffic priority": ["Minecraft packets marked DSCP 48 (javaw, java, Minecraft.Windows)", "Big downloaders marked as background, CS1"],
-  "High CPU priority for Minecraft": ["Minecraft starts with High CPU priority"],
+  "Above normal CPU priority for Minecraft": ["Minecraft starts with Above normal CPU priority"],
   "Windows gaming performance": ["! No High performance plan on this PC (Modern Standby laptop?), current plan kept", "Game Mode on, Game DVR off, foreground boost, game task priority high"],
   "Windows Update sharing": ["Windows Update no longer uploads to other PCs"],
 };
@@ -1544,7 +1544,7 @@ const mockApi: Api = {
       emit<NetLine>("netopt:line", { action, tag, text, step, total });
     if (action === "apply" || action === "restore" || action === "defaults") {
       const titles = action === "apply"
-        ? ["TCP", "ACK timing and Nagle (every network interface)", "Packet buffering in Windows and the network card", "Power saving", "Wi-Fi at full power", "Restarting the network card", "MTU", "Game traffic priority", "High CPU priority for Minecraft", "Windows gaming performance", "Windows Update sharing"]
+        ? ["TCP", "ACK timing and Nagle (every network interface)", "Packet buffering in Windows and the network card", "Power saving", "Wi-Fi at full power", "Restarting the network card", "MTU", "Game traffic priority", "Above normal CPU priority for Minecraft", "Windows gaming performance", "Windows Update sharing"]
         : ["Restoring the settings saved before the first apply", "Registry values", "Network card", "MTU and power plan"];
       let ok = 0;
       for (let i = 0; i < titles.length; i++) {

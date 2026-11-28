@@ -228,20 +228,22 @@ function Do-Apply {
     }
     Step (++$n) $steps
 
-    Title 'High CPU priority for Minecraft'
+    # Above normal (6), not High (3) since 2026-11-13: at High, Minecraft took the CPU from Discord (stream capture and
+    # encoding) and every other program as soon as the CPU was full, and streams stuttered
+    Title 'Above normal CPU priority for Minecraft'
     foreach ($e in $Games) {
         $k = $IFEO + '\' + $e + '\PerfOptions'
-        if (On 'O_PMODE') { RSet $k 'CpuPriorityClass' 3 'DWord' | Out-Null }
+        if (On 'O_PMODE') { RSet $k 'CpuPriorityClass' 6 'DWord' | Out-Null }
         else { Revert-Reg $k 'CpuPriorityClass' 'DWord'; Clean-Ifeo $e }
     }
     if (On 'O_PMODE') {
-        Log 'OK' 'Minecraft starts with High CPU priority'
+        Log 'OK' 'Minecraft starts with Above normal CPU priority'
         foreach ($pn in @('javaw', 'java', 'Minecraft.Windows')) {
             foreach ($pr in @(Get-Process -Name $pn -ErrorAction SilentlyContinue)) {
-                try { $pr.PriorityClass = 'High'; Log 'OK' ('Running ' + $pr.ProcessName + ' (' + $pr.Id + ') set to High now') } catch { }
+                try { $pr.PriorityClass = 'AboveNormal'; Log 'OK' ('Running ' + $pr.ProcessName + ' (' + $pr.Id + ') set to Above normal now') } catch { }
             }
         }
-    } else { Log 'OK' 'High CPU priority for Minecraft off' }
+    } else { Log 'OK' 'Above normal CPU priority for Minecraft off' }
     Step (++$n) $steps
 
     Title 'Windows gaming performance'

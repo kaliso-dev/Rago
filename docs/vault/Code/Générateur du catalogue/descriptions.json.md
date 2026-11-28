@@ -3,7 +3,7 @@ type: code
 tags: [code, app, catalogue, données, json]
 fichier: app/tools/descriptions.json
 lignes: 2773
-maj: 2026-11-10
+maj: 2026-11-27
 ---
 # descriptions.json
 

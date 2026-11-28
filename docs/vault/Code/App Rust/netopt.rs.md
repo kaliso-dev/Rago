@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, rust, réseau, packet-optimizer, premium]
 fichier: app/src-tauri/src/netopt.rs
-lignes: 731
-maj: 2026-11-10
+lignes: 789
+maj: 2026-11-27
 ---
 # netopt.rs
 
@@ -34,7 +34,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11). Portage de `network_o
 | `delay` | 0 = ACK immédiat, 100 = Windows | 30 |
 | `priority` | force du marquage QoS (0 aucun … 100 CS6) | 60 |
 | `congestion` | 0 laisser, 1 CUBIC, 2 NewReno, 3 CTCP, 4 DCTCP, 5 BBR2 | 0 |
-| `priorityMode` | priorité processeur Haute pour Minecraft | `false` |
+| `priorityMode` | priorité processeur Supérieure à la normale pour Minecraft (Haute jusqu'au 13/11) | `false` |
 | `powerSaving` | couper les économies d'énergie de la carte | `true` |
 | `wifi` | Wi-Fi à pleine puissance | `false` |
 | `bgGuard` | Windows Update ne partage plus vers d'autres PC | `false` |
@@ -57,8 +57,9 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11). Portage de `network_o
 `Action` : `apply`, `restore`, `defaults`, `quality`, `loaded`, `mtu`, `detect`, `status`. Seules `apply`, `restore`, `defaults` changent Windows (`changes()`) ; délai maximal **240 s** pour elles (la carte qui redémarre attend jusqu'à 45 s), **90 s** pour les tests.
 
 ### Autres
-- `Line { action, tag, text, step, total }` (tags `ok`, `warn`, `fail`, `info`, `title`, `progress`), `Outcome { code, ok, warn, fail, result }`, `Saved { options, at, ok, warn, fail }`, `State { applied, backup, busy }`.
+- `Line { action, tag, text, step, total }` (tags `ok`, `warn`, `fail`, `info`, `title`, `progress`), `Outcome { code, ok, warn, fail, result }`, `Saved { options, at, ok, warn, fail, aboveNormal }`, `State { applied, backup, busy }`. `aboveNormal` (PR #155 (fusionnée le 28/11), correctif écrit le 13/11) : vrai pour une application faite par le moteur qui met Minecraft en Supérieure à la normale, ou ramenée de Haute au lancement par [[repair.rs]] ; absent (faux) dans les fichiers d'avant.
 - `script(action, premium)`, `dir(data_dir)`, `saved`, `applied`, `state`, `run(...)`, `put_back(data_dir, run_dir)`.
+- 13/11 : `wrote_high(data_dir)` (application avec `priorityMode` et sans `aboveNormal` : le moteur d'avant avait écrit Haute), `set_above_normal(data_dir)` (la marque, le reste d'`applied.json` gardé), `snapshot_path(data_dir)` (`netopt\snapshot.json`, aussi lu et réécrit par [[repair.rs]]).
 
 ## Fonctionnement détaillé
 
@@ -67,7 +68,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11). Portage de `network_o
 3. `script` : `common.ps1` + (`apply.ps1` pour `apply` seulement) + `main.ps1`, séparés par `\r\n`. Écrit dans `run\netopt-<pid>-<ms>.ps1` avec un **BOM UTF-8** (PowerShell 5.1 lirait sinon le fichier dans la page de code du système), lancé puis supprimé.
 4. `launch` : `powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File <script>` caché, avec les variables `RN_DIR` (dossier `netopt\`), `RN_ACTION`, les 20 `C_*` (`C_TUNE`, `C_IRTO`, `C_TS`, `C_NONSACK`, `C_ECN`, `C_CCP`, `C_MINRTO`, `C_ACKTO`, `C_ACKFREQ`, `C_ICW`, `C_DELACK`, `C_NODELAY`, `C_NTI`, `C_SYSRESP`, `C_RSC`, `C_PCF`, `C_FC`, `C_LSO`, `C_IM`, `C_DSCP`), les 9 `O_*` (`O_SMART`, `O_WIFI`, `O_NPS`, `O_MTUMODE`, `O_MTU`, `O_TARGET`, `O_PMODE`, `O_COMP`, `O_BGUARD`) et `RN_X3D`. Un fil de garde tue le moteur (`taskkill /PID … /T /F`) au-delà du délai (pilote bloqué).
 5. Lecture de la sortie ligne par ligne, protocole `@@NO|<tag>|<texte>` : `OK` → ok, `!` → warn, `X` → fail, `..` → info, `#` → titre, `%|i|n` → progression, `=|<json>` → résultat d'un test, `sum|ok|warn|fail` → comptes finaux. Le reste (sortie de `netsh`) est ignoré. Un message peut contenir `|`.
-6. Fin : `apply` réussi (code 0) → `netopt\applied.json` ; `restore` ou `defaults` réussi → `applied.json` supprimé.
+6. Fin : `apply` réussi (code 0) → `netopt\applied.json` (avec `aboveNormal` vrai) ; `restore` ou `defaults` réussi → `applied.json` supprimé.
 7. `put_back` : si `applied.json` existe, `restore` (si `snapshot.json` existe) sinon `defaults`, sans fenêtre et **sans licence** (partie gratuite du moteur). Rend `None` si rien n'était appliqué par Rago.
 
 ## Données touchées
@@ -90,7 +91,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11). Portage de `network_o
 
 ## Tests
 
-`sliders_match_the_bat` (Équilibré 50 → RTO 650/160, réactivité 100 → 20/300 sur fibre, 60/1000 en ADSL, 120/1000 instable…), `latency_turns_buffers_off_one_by_one`, `tuning_follows_the_line_on_auto`, `expert_values_win_and_stay_in_range`, `target_is_a_plain_address` (refuse `x;calc`, `$(calc)`, `é.fr`…), `engine_lines_are_read`, `apply_needs_the_premium_part` (sans partie Premium : `premium_scripts_unavailable` ; `Do-Apply` et `Take-Snapshot` absents de la partie gratuite), `engine_gets_every_variable_it_reads` (chaque variable lue par les scripts est bien passée, plus de 30), `engine_text_is_safe_to_run_hidden` (scripts en ASCII, sans `Write-Host`, `Read-Host`, `pause`, `shutdown`, `Restart-Computer`).
+`sliders_match_the_bat` (Équilibré 50 → RTO 650/160, réactivité 100 → 20/300 sur fibre, 60/1000 en ADSL, 120/1000 instable…), `latency_turns_buffers_off_one_by_one`, `tuning_follows_the_line_on_auto`, `expert_values_win_and_stay_in_range`, `target_is_a_plain_address` (refuse `x;calc`, `$(calc)`, `é.fr`…), `engine_lines_are_read`, `apply_needs_the_premium_part` (sans partie Premium : `premium_scripts_unavailable` ; `Do-Apply` et `Take-Snapshot` absents de la partie gratuite), `engine_gets_every_variable_it_reads` (chaque variable lue par les scripts est bien passée, plus de 30), `engine_text_is_safe_to_run_hidden` (scripts en ASCII, sans `Write-Host`, `Read-Host`, `pause`, `shutdown`, `Restart-Computer`), `old_apply_with_priority_wrote_high` (13/11 : fichier d'avant sans `aboveNormal` → à ramener, puis marqué ; sans l'option ou jamais appliqué → rien).
 
 ## À savoir avant de modifier
 

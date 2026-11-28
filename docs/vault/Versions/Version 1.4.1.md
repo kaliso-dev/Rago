@@ -1,7 +1,7 @@
 ---
 type: version
 tags: [version, app]
-maj: 2026-11-27
+maj: 2026-11-28
 version_app: 1.4.1
 ---
 # Version 1.4.1
@@ -11,6 +11,7 @@ version_app: 1.4.1
 - **1.4.0** (22/11, PR #108) : la charte v5 posée sur l'ancienne interface (polices Barlow embarquées, jetons du kit, icônes imprimées, cadre, carreaux, fenêtres, démarrage, barre en jeu, icône R rouge sur tuile blanche dans l'exe et l'installeur). Sofiene, 23/11 : « ça ne vas pas l'app n'est pas conforme au design ».
 - **1.4.1** (23/11, PR #119) : l'app reprend le HTML et le CSS exacts des maquettes, page par page ([[Maquettes v5 dans l'app (s5)]]) : cadre et [[Tableau de bord]] (#119, fenêtre de 1440 × 900, ping en direct), [[Bibliothèque de jeux]] et choix du preset en covers verticales (#120), Display ([[Couleurs et résolution]], #121), les 9 modules (#122), Réseau ([[Packet Optimizer]], [[Test réseau]], Rago Route, #123), [[Page Outils]] (#124), [[Page Souris]] (#125), [[Paramètres de l'app]] (#126), [[Partage et support]] (#127), [[Analyse du PC]] (#128), fenêtres (#130, #131), [[Barre en jeu]] (#132), écran de démarrage de 2,3 s fixes (#133).
 - **Après le 23/11, même numéro** : détail d'un réglage au clic sur une icône info et grilles sans vide (#137, 25/11) ; retours du premier test Windows de Sofiene du 25/11 (#139) : bouton du compte en haut à droite, connexion de l'exe de test rangée à part de celle de la 1.2.1 installée, barre en jeu plus opaque, ping et FPS séparés de la 1.2.1, noms des plans d'alimentation, cartes sans vide.
+- **28/11, PR #155 (même numéro)** : le jeu passe en « Supérieure à la normale » au lieu de « Haute » partout (priorité par jeu `pri_game` et presets par jeu, priorité Minecraft du [[Packet Optimizer]], « Jeu en priorité » de [[Pendant la partie]]) ; au lancement, l'app ramène à 6 les « Haute » (3) qu'elle avait écrites ([[Réparations au lancement]]). Corrige le stream Discord qui saccade ([[Bugs et incidents]]). Jamais testé sur Windows.
 - **27/11, à inclure dans la prochaine release** : dans la [[Barre en jeu]], l'échec du nettoyage de la RAM passe au rouge du jeton `--red` (q116, Sofiene : « on l'enverra avec la prochaine release ») ; il était déjà rouge depuis la #132 (texte `#FF6B61`), alors qu'il est vert dans la 1.3.0 en prod ([[Overlay.tsx]]).
 - Le fonctionnement (moteur, catalogue, plan gratuit, Premium) est celui de la 1.3.0 ; seuls l'écran gratuit du [[Packet Optimizer]] (écran verrouillé, gardé par Sofiene le 27/11, q117) et l'emplacement des outils du test réseau changent ([[Décisions]], « Abandonné », 23/11).
 

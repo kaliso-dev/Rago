@@ -957,8 +957,8 @@
         "en": "Per-game advanced priority"
        },
        "desc": {
-        "en": "Sixteen games to choose from (Minecraft Java and Bedrock, Fortnite, Valorant, CS2, PUBG, Roblox…): the chosen game runs at high priority and its network traffic is marked as priority.",
-        "fr": "Seize jeux au choix (Minecraft Java et Bedrock, Fortnite, Valorant, CS2, PUBG, Roblox…) : le jeu choisi passe en priorité haute et son trafic réseau est marqué comme prioritaire."
+        "en": "Sixteen games to choose from (Minecraft Java and Bedrock, Fortnite, Valorant, CS2, PUBG, Roblox…): the chosen game runs at above normal priority and its network traffic is marked as priority.",
+        "fr": "Seize jeux au choix (Minecraft Java et Bedrock, Fortnite, Valorant, CS2, PUBG, Roblox…) : le jeu choisi passe en priorité supérieure à la normale et son trafic réseau est marqué comme prioritaire."
        },
        "risk": "safe",
        "reboot": true,
@@ -1101,8 +1101,8 @@
         "fr": "Peut aider si d'autres programmes chargent le processeur ; le marquage réseau n'agit que si ta box le gère."
        },
        "cons": {
-        "en": "Other programs (Discord, streaming) may slow down; for Minecraft, all Java programs are affected.",
-        "fr": "Les autres programmes (Discord, stream) peuvent ralentir ; pour Minecraft, tous les programmes Java sont concernés."
+        "en": "When the CPU is maxed out, other programs wait a little behind the game; for Minecraft, all Java programs are affected.",
+        "fr": "Quand le processeur est à fond, les autres programmes passent un peu après le jeu ; pour Minecraft, tous les programmes Java sont concernés."
        }
       },
       {
@@ -7249,8 +7249,8 @@
     "fr": "Fortnite"
    },
    "desc": {
-    "en": "Fortnite at high priority, plus input, network and power for competitive play.",
-    "fr": "Fortnite en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+    "en": "Fortnite at above normal priority, plus input, network and power for competitive play.",
+    "fr": "Fortnite en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif."
    },
    "tweaks": [
     "pri_game:fortnite",
@@ -7288,8 +7288,8 @@
     "fr": "Valorant"
    },
    "desc": {
-    "en": "Valorant at high priority, plus input, network and power for competitive play.",
-    "fr": "Valorant en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+    "en": "Valorant at above normal priority, plus input, network and power for competitive play.",
+    "fr": "Valorant en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif."
    },
    "tweaks": [
     "pri_game:valorant",
@@ -7327,8 +7327,8 @@
     "fr": "Counter-Strike 2"
    },
    "desc": {
-    "en": "Counter-Strike 2 at high priority, plus input, network and power for competitive play.",
-    "fr": "Counter-Strike 2 en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+    "en": "Counter-Strike 2 at above normal priority, plus input, network and power for competitive play.",
+    "fr": "Counter-Strike 2 en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif."
    },
    "tweaks": [
     "pri_game:cs2",
@@ -7366,8 +7366,8 @@
     "fr": "Apex Legends"
    },
    "desc": {
-    "en": "Apex Legends at high priority, plus input, network and power for competitive play.",
-    "fr": "Apex Legends en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+    "en": "Apex Legends at above normal priority, plus input, network and power for competitive play.",
+    "fr": "Apex Legends en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif."
    },
    "tweaks": [
     "pri_game:apex",
@@ -7405,8 +7405,8 @@
     "fr": "PUBG"
    },
    "desc": {
-    "en": "PUBG at high priority, plus input, network and power for competitive play.",
-    "fr": "PUBG en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+    "en": "PUBG at above normal priority, plus input, network and power for competitive play.",
+    "fr": "PUBG en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif."
    },
    "tweaks": [
     "pri_game:pubg",
@@ -7445,8 +7445,8 @@
     "fr": "Rainbow Six Siege"
    },
    "desc": {
-    "en": "Rainbow Six Siege at high priority, plus input, network and power for competitive play.",
-    "fr": "Rainbow Six Siege en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+    "en": "Rainbow Six Siege at above normal priority, plus input, network and power for competitive play.",
+    "fr": "Rainbow Six Siege en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif."
    },
    "tweaks": [
     "pri_game:r6",
@@ -7484,8 +7484,8 @@
     "fr": "Overwatch 2"
    },
    "desc": {
-    "en": "Overwatch 2 at high priority, plus input, network and power for competitive play.",
-    "fr": "Overwatch 2 en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+    "en": "Overwatch 2 at above normal priority, plus input, network and power for competitive play.",
+    "fr": "Overwatch 2 en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif."
    },
    "tweaks": [
     "pri_game:overwatch",
@@ -7523,8 +7523,8 @@
     "fr": "Marvel Rivals"
    },
    "desc": {
-    "en": "Marvel Rivals at high priority, plus input, network and power for competitive play.",
-    "fr": "Marvel Rivals en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+    "en": "Marvel Rivals at above normal priority, plus input, network and power for competitive play.",
+    "fr": "Marvel Rivals en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif."
    },
    "tweaks": [
     "pri_game:rivals",
@@ -7562,8 +7562,8 @@
     "fr": "The Finals"
    },
    "desc": {
-    "en": "The Finals at high priority, plus input, network and power for competitive play.",
-    "fr": "The Finals en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+    "en": "The Finals at above normal priority, plus input, network and power for competitive play.",
+    "fr": "The Finals en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif."
    },
    "tweaks": [
     "pri_game:finals",
@@ -7601,8 +7601,8 @@
     "fr": "Escape from Tarkov"
    },
    "desc": {
-    "en": "Escape from Tarkov at high priority, plus input, network and power for competitive play.",
-    "fr": "Escape from Tarkov en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+    "en": "Escape from Tarkov at above normal priority, plus input, network and power for competitive play.",
+    "fr": "Escape from Tarkov en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif."
    },
    "tweaks": [
     "pri_game:tarkov",
@@ -7640,8 +7640,8 @@
     "fr": "Rocket League"
    },
    "desc": {
-    "en": "Rocket League at high priority, plus input, network and power for competitive play.",
-    "fr": "Rocket League en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+    "en": "Rocket League at above normal priority, plus input, network and power for competitive play.",
+    "fr": "Rocket League en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif."
    },
    "tweaks": [
     "pri_game:rl",
@@ -7679,8 +7679,8 @@
     "fr": "League of Legends"
    },
    "desc": {
-    "en": "League of Legends at high priority, plus input, network and power for competitive play.",
-    "fr": "League of Legends en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+    "en": "League of Legends at above normal priority, plus input, network and power for competitive play.",
+    "fr": "League of Legends en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif."
    },
    "tweaks": [
     "pri_game:lol",
@@ -7718,8 +7718,8 @@
     "fr": "Roblox"
    },
    "desc": {
-    "en": "Roblox at high priority, with power and network tuned for smooth play.",
-    "fr": "Roblox en priorité haute, avec alimentation et réseau réglés pour un jeu fluide."
+    "en": "Roblox at above normal priority, with power and network tuned for smooth play.",
+    "fr": "Roblox en priorité supérieure à la normale, avec alimentation et réseau réglés pour un jeu fluide."
    },
    "tweaks": [
     "pri_game:roblox",
@@ -7753,8 +7753,8 @@
     "fr": "GTA V"
    },
    "desc": {
-    "en": "GTA V at high priority, with power and network tuned for smooth play.",
-    "fr": "GTA V en priorité haute, avec alimentation et réseau réglés pour un jeu fluide."
+    "en": "GTA V at above normal priority, with power and network tuned for smooth play.",
+    "fr": "GTA V en priorité supérieure à la normale, avec alimentation et réseau réglés pour un jeu fluide."
    },
    "tweaks": [
     "pri_game:gta",
@@ -7790,8 +7790,8 @@
     "fr": "Minecraft Bedrock"
    },
    "desc": {
-    "en": "Minecraft Bedrock at high priority, plus input, network and power for competitive play.",
-    "fr": "Minecraft Bedrock en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif."
+    "en": "Minecraft Bedrock at above normal priority, plus input, network and power for competitive play.",
+    "fr": "Minecraft Bedrock en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif."
    },
    "tweaks": [
     "pri_game:bedrock",
