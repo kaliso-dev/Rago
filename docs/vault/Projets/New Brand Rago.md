@@ -71,6 +71,10 @@ Demande de Sofiene (28/11) : l'ancien site ressemblait à n'importe quel SaaS, e
   - Bloc final « Four steps / Your next match / starts here » réparé (même animation que la #136, vérifiée image par image à 1440×820, 1728×990, 1728×1117 et 1920×960).
   - Tarifs : plus de petits points ; Premium seule carte en couleur (Gratuit en sombre), 40 % plus large et plus haute, halo ; pastille « 3 days free » en étiquette papier inclinée sur une ligne ; mot « ONCE » retiré de Lifetime.
   - Vidéo : Sofiene cherche un extrait Valorant en 4K ; on n'y touche pas en attendant.
+- **3e tour de retours de Sofiene (28/11), dans la #176** :
+  - Le titre « The right tweaks for every game. » devient la bannière qui défile de la #136, reprise de son historique (même code, même vitesse, accélère avec le défilement).
+  - Prix : sur ordinateur, toute la section est réduite d'un seul facteur (0,74), mêmes proportions entre les plans ; titre et cartes : 988 px de haut à 1728×1117 (1 485 avant).
+  - Vidéo Valorant 4K toujours attendue (Sofiene cherche la source).
 
 ## Ce qui reste
 1. Sofiene teste l'exe de test sur Windows et répond à q121 (barre en jeu) ([[Questions ouvertes]]).

@@ -10,6 +10,7 @@ Une ligne par événement marquant, la plus récente en haut. Voir [[Historique 
 ## Novembre 2026
 | Date | Événement | Liens |
 |---|---|---|
+| 28/11 | **PR #176, 3e tour** : bannière qui défile de la #136 à la place du titre « The right tweaks for every game. » ; section des prix réduite pour tenir dans un écran 1728×1117 ; vidéo Valorant 4K attendue | [[Site]], [[New Brand Rago]] |
 | 28/11 | **PR #176, 2e tour de retours de Sofiene** : paragraphe de la section des jeux retiré, benchmark pleine largeur, bloc final « Your next match » réparé (origine des cercles SVG convertie à tort en `--u`), tarifs refaits (Premium très en avant, pastille « 3 days free » en étiquette) ; vidéo Valorant 4K attendue | [[New Brand Rago]] |
 | 28/11 | **PR #176 (site v7), retours de Sofiene appliqués** : extrait Valorant, héros pleine hauteur, proportions du MacBook Pro 16 pouces sur tout ordinateur (unité `--u`), tarifs refaits, « + » de la FAQ centré, R de Rago Route qui va dans le titre, curseur Rago aussi sur les pages compte (q139, `npm test` : 125 réussis). PR toujours en brouillon, non fusionnée | [[New Brand Rago]] |
 | 28/11 | **PR #176 (site v7)** : barre en jeu remise exactement comme dans la #136 (demande de Sofiene ; extrait Valorant à venir du Mac) ; `staging` fusionnée dans la branche (PR #174, 68 réglages gratuits) | [[New Brand Rago]] |
