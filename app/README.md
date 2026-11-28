@@ -1,14 +1,14 @@
 # Rago Optimizer
 
-App Windows (Tauri 2 + React + Rust) : 198 réglages (211 entrées au catalogue, dont 13 jumeaux), l'ancien programme Premium v5.2 et les 3 .bat v6 de Sofiene combinés et corrigés (voir `docs/CORRECTIONS.md`). Plan gratuit : 11 réglages ouverts (7 de Windows et les 4 outils de Restaurer, `src/data/free.json`) et les variantes de retour arrière ; le reste demande une licence Premium.
+App Windows (Tauri 2 + React + Rust) : 218 réglages (231 entrées au catalogue, dont 13 jumeaux), l'ancien programme Premium v5.2 et les 3 .bat v6 de Sofiene combinés et corrigés (voir `docs/CORRECTIONS.md`). Plan gratuit : 68 réglages ouverts (73 ids dans `src/data/free.json`, les jumeaux comptés une fois comme pour le total), dont 30 actifs en même temps au plus (`slots`), et les variantes de retour arrière ; le reste demande une licence Premium.
 
 ## Ce qu'il y a dedans
 
 - `legacy/` : les .bat sources (`Premium v5.2 - Rago Hub.bat` et `v6/`).
-- `tools/` : extraction du .bat (`extract_bat.py`), métadonnées des réglages (`meta.py`), génération (`build_catalog_v6.py`, qui lance `build_catalog.py`, → `src/data/catalog.json` + `src-tauri/scripts/scripts.json`). Après une modif d'un .bat ou de `meta.py` : `npm run catalog`. `fix_free_bat.py` a produit la version gratuite corrigée de l'ancien .bat (`../free/rago-free-v5.2.bat`), gardée pour mémoire : elle n'est plus distribuée depuis le 7 octobre 2026.
+- `tools/` : extraction du .bat (`extract_bat.py`), métadonnées des réglages (`meta.py`), génération (`build_catalog_v6.py`, qui lance `build_catalog.py`, → `src/data/catalog.json` + `src-tauri/scripts/scripts.json`). Après une modif d'un .bat ou de `meta.py` : `npm run catalog`.
 - `src-tauri/` : moteur Rust. Exécute chaque réglage dans un `cmd` caché avec droits admin, journal en direct, historique, point de restauration, ping TCP, préréglages OptiFine, licence.
 - `src/` : interface React (anglais par défaut, français dans Settings).
-- `src-tauri/resources/` : `nvidiaProfileInspector.exe`, installé tel quel avec l'app. À ajouter si tu l'as : `smartctl.exe`.
+- `src-tauri/resources/` : `nvidiaProfileInspector.exe` (NVIDIA Profile Inspector « Modified by DeadManWalking » 3.5.0.0, licence MIT) et `THIRD_PARTY_NOTICES.txt` (son avis de licence), installés tels quels avec l'app ; la CI y ajoute `PresentMon.exe` et `PresentMon-LICENSE.txt`.
 - `src-tauri/assets/` : `extremelatencylow.nip` + `LowLatency.pow` (plan d'alimentation Rago Low Latency, fourni le 10 octobre 2026). Chiffrés dans l'exe à la compilation, jamais installés en clair (`src/assets.rs`).
 
 ## Compiler l'installateur (.exe)
@@ -24,7 +24,7 @@ Sans ces variables, un build de développement se connecte au serveur local (`ht
 
 Nouvelle version : `npm run bump 1.2.0` (met à jour `package.json`, lu par `tauri.conf.json` et affiché dans Settings, et `src-tauri/Cargo.toml`, envoyé au serveur de licences), puis push.
 
-Ou via GitHub : ce dossier vit sous `app/` dans le dépôt du projet, et `ci/build-windows.yml` va dans `.github/workflows/app-windows.yml` à la racine. Ajouter les secrets `RAGO_API_BASE` et `RAGO_LICENSE_PUBKEY`, puis lancer le workflow `app-windows`. L'installateur sort en artefact et en brouillon de release.
+Ou via GitHub : le workflow `.github/workflows/app-windows.yml` (racine du dépôt) construit l'exe à chaque PR qui touche `app/`, refabrique l'exe de test à chaque push sur `staging` et se lance aussi à la main (serveur production ou staging). Secrets : `RAGO_API_BASE`, `RAGO_LICENSE_PUBKEY`, `RAGO_SCRIPTS_SECRET`, `TAURI_SIGNING_PRIVATE_KEY` (+ mot de passe) et leurs équivalents `STAGING_*`. L'installateur sort en artefact (et en brouillon de release pour un tag `app-v*`).
 
 `npm run tauri dev` doit être lancé depuis un terminal administrateur (l'app demande les droits admin).
 

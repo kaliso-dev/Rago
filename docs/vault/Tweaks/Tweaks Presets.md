@@ -2,13 +2,13 @@
 type: catalogue
 tags: [tweaks, presets, généré]
 généré: docs/tools/catalogue_vault.py
-version_app: 1.3.0
-maj: 2026-11-10
+version_app: 1.4.1
+maj: 2026-11-28
 ---
 
 # Tweaks Presets
 
-Les 20 presets de l'app 1.3.0 et leur contenu exact (`ids:variante`). Note générée, voir [[Presets]] pour le fonctionnement.
+Les 20 presets de l'app 1.4.1 et leur contenu exact (`ids:variante`). Note générée, voir [[Presets]] pour le fonctionnement.
 
 ## Minecraft PvP (`mc_pvp`, 20 tweaks · étiquette MC · reconnu pour : minecraft)
 Hitreg, ping et entrées brutes pour le PvP Minecraft.

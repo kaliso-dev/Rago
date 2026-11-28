@@ -3704,7 +3704,9 @@
        "risk": "advanced",
        "reboot": true,
        "kind": "tweak",
-       "requires": [],
+       "requires": [
+        "gpu:nvidia"
+       ],
        "lines": 56,
        "gain": {
         "en": "Rarely measurable in games.",
@@ -3859,7 +3861,9 @@
        "risk": "advanced",
        "reboot": true,
        "kind": "tweak",
-       "requires": [],
+       "requires": [
+        "gpu:nvidia"
+       ],
        "lines": 49,
        "gain": {
         "en": "Rarely measurable: most of these settings are undocumented.",
@@ -3937,7 +3941,9 @@
        "risk": "advanced",
        "reboot": true,
        "kind": "tweak",
-       "requires": [],
+       "requires": [
+        "gpu:nvidia"
+       ],
        "lines": 4,
        "gain": {
         "en": "Can avoid small clock drops in games; on laptops it may target the built-in chip instead.",
@@ -4128,7 +4134,9 @@
        "risk": "advanced",
        "reboot": true,
        "kind": "tweak",
-       "requires": [],
+       "requires": [
+        "gpu:amd"
+       ],
        "lines": 314,
        "gain": {
         "en": "Anti-Lag can reduce input lag when the GPU is at 100%; the rest is rarely measurable.",
