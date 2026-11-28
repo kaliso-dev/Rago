@@ -1910,7 +1910,7 @@ window.__xPage = X => {
     disc.classList.toggle("x-hot", f > .45 && f < .999);
     const D = io3(seg(f, .32, .6));
     lns.forEach(l => css(l, { "--lx": (120 * (+l.dataset.line || 1) * (1 - D)).toFixed(2), "--lo": D.toFixed(3) }));
-    setCur(f >= .6);
+    // v7 (Sofiene, 28/11) : plus de réticule qui suit la souris sur le disque rouge ; le reste de l'animation est celui de la #136
   } });
 
   /* ---------- 6. Pricing: the cards build themselves (background from the top, label, title, text, dots, lines, buttons) ---------- */
