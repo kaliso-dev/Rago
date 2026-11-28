@@ -1286,7 +1286,7 @@ pub fn run() {
                 ledger.save();
             }
             // ce qu'une version précédente a laissé et qui fait planter le PC (RAG-67), sans attendre le joueur
-            let removed = repair::at_startup(&backup::Sys::new(data_dir.join("backup")), &mut ledger, &data_dir.join("logs"));
+            let removed = repair::at_startup(&backup::Sys::new(data_dir.join("backup")), &mut ledger, &data_dir);
             let library = Arc::new(games::Library::new(&data_dir));
             // mode arrière-plan et barre en jeu (RAG-82) : lancée avec Windows, la fenêtre reste cachée près de l'horloge
             let started_hidden = std::env::args_os().any(|a| a == background::BACKGROUND_ARG);

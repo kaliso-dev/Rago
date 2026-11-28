@@ -614,6 +614,7 @@ function Do-Status {
     $cp = RGet ($IFEO + '\javaw.exe\PerfOptions') 'CpuPriorityClass'
     $cpTxt = 'normal'
     if ("$cp" -eq '3') { $cpTxt = 'high' }
+    if ("$cp" -eq '6') { $cpTxt = 'above normal' }
     & $add 'power' 'Minecraft CPU priority' $cpTxt
     Result @{ kind = 'status'; rows = $rows.ToArray() }
     return 0

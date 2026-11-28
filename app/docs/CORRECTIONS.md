@@ -464,7 +464,7 @@ par réglage appliqué, pour annuler après une déconnexion ou une fin de licen
 
 Priorité par jeu (pri_game), 1.2.0 (`add_games`, après l'audit) :
 - Valorant visait `ValorantClient-Win64-Shipping.exe`, qui n'existe pas : rien ne s'appliquait. La variante écrit
-  maintenant la stratégie QoS et la priorité haute de `VALORANT-Win64-Shipping.exe` ;
+  maintenant la stratégie QoS et la priorité de `VALORANT-Win64-Shipping.exe` ;
 - Fortnite, CS2, Apex et GTA V : nom d'appli de la stratégie QoS faux (`cs2.exe.exe`, `FortniteClient-Win64.exe`),
   donc marquage réseau sans effet ; Apex DirectX 12 (`r5apex_dx12.exe`), GTA V Enhanced (`GTA5_Enhanced.exe`) et
   CS:GO (`csgo.exe`) ajoutés ;
@@ -472,7 +472,11 @@ Priorité par jeu (pri_game), 1.2.0 (`add_games`, après l'audit) :
   111 valeurs PerfOptions par exe que Windows ignore (et un `CpuPriorityClass` 8, qui n'existe pas) ;
 - dix jeux ajoutés (`GAMES`) : PUBG, Roblox, Rainbow Six Siege, Overwatch 2, Marvel Rivals, The Finals, Escape from
   Tarkov, Rocket League, League of Legends, Minecraft Bedrock (`Minecraft.Windows.exe`). Seulement ce que Windows lit :
-  stratégie QoS DSCP 46, `CpuPriorityClass` et `IoPriority` à 3 (haute) dans les PerfOptions de l'exe ;
+  stratégie QoS DSCP 46, `CpuPriorityClass` à 6 (supérieure à la normale) et `IoPriority` à 3 (haute) dans les
+  PerfOptions de l'exe ;
+- `CpuPriorityClass` à 6 au lieu de 3 (haute) pour toutes les variantes depuis le 2026-11-13 : en haute, le jeu
+  passait avant Discord (capture et encodage du stream) et les autres programmes dès que le processeur était plein,
+  d'où des streams qui saccadent. L'app ramène à 6 au démarrage les 3 qu'elle avait écrits (`repair.rs`) ;
 - chaque variante écrit aussi `Do not use NLA` (chaîne « 1 ») sous `Tcpip\QoS` : hors d'un domaine d'entreprise,
   Windows n'appliquait pas la stratégie QoS sans elle (GAME V1).
 

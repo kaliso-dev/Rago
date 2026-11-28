@@ -134,7 +134,7 @@ Télémétrie, suivi et diagnostics coupés.
 - Désactiver les journaux automatiques `dbl_autologgers` · [[Tweaks Windows]]
 
 ## Fortnite (`game_fortnite`, 21 tweaks · étiquette FN · reconnu pour : fortnite)
-Fortnite en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif.
+Fortnite en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif.
 
 - Priorité avancée par jeu `pri_game` → fortnite · [[Tweaks Latence]]
 - Planificateur multimédia (MMCSS) `pri_mmcss` · [[Tweaks Latence]]
@@ -159,7 +159,7 @@ Fortnite en priorité haute, avec entrées, réseau et alimentation réglés pou
 - Désactiver la mise en veille USB `usb_power` · [[Tweaks Latence]]
 
 ## Valorant (`game_valorant`, 21 tweaks · étiquette VAL · reconnu pour : valorant)
-Valorant en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif.
+Valorant en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif.
 
 - Priorité avancée par jeu `pri_game` → valorant · [[Tweaks Latence]]
 - Planificateur multimédia (MMCSS) `pri_mmcss` · [[Tweaks Latence]]
@@ -184,7 +184,7 @@ Valorant en priorité haute, avec entrées, réseau et alimentation réglés pou
 - Désactiver la mise en veille USB `usb_power` · [[Tweaks Latence]]
 
 ## Counter-Strike 2 (`game_cs2`, 21 tweaks · étiquette CS2 · reconnu pour : counterstrike)
-Counter-Strike 2 en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif.
+Counter-Strike 2 en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif.
 
 - Priorité avancée par jeu `pri_game` → cs2 · [[Tweaks Latence]]
 - Planificateur multimédia (MMCSS) `pri_mmcss` · [[Tweaks Latence]]
@@ -209,7 +209,7 @@ Counter-Strike 2 en priorité haute, avec entrées, réseau et alimentation rég
 - Désactiver la mise en veille USB `usb_power` · [[Tweaks Latence]]
 
 ## Apex Legends (`game_apex`, 21 tweaks · étiquette APEX · reconnu pour : apexlegends)
-Apex Legends en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif.
+Apex Legends en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif.
 
 - Priorité avancée par jeu `pri_game` → apex · [[Tweaks Latence]]
 - Planificateur multimédia (MMCSS) `pri_mmcss` · [[Tweaks Latence]]
@@ -234,7 +234,7 @@ Apex Legends en priorité haute, avec entrées, réseau et alimentation réglés
 - Désactiver la mise en veille USB `usb_power` · [[Tweaks Latence]]
 
 ## PUBG (`game_pubg`, 21 tweaks · étiquette PUBG · reconnu pour : pubg, playerunknown)
-PUBG en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif.
+PUBG en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif.
 
 - Priorité avancée par jeu `pri_game` → pubg · [[Tweaks Latence]]
 - Planificateur multimédia (MMCSS) `pri_mmcss` · [[Tweaks Latence]]
@@ -259,7 +259,7 @@ PUBG en priorité haute, avec entrées, réseau et alimentation réglés pour le
 - Désactiver la mise en veille USB `usb_power` · [[Tweaks Latence]]
 
 ## Rainbow Six Siege (`game_r6`, 21 tweaks · étiquette R6 · reconnu pour : rainbowsix)
-Rainbow Six Siege en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif.
+Rainbow Six Siege en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif.
 
 - Priorité avancée par jeu `pri_game` → r6 · [[Tweaks Latence]]
 - Planificateur multimédia (MMCSS) `pri_mmcss` · [[Tweaks Latence]]
@@ -284,7 +284,7 @@ Rainbow Six Siege en priorité haute, avec entrées, réseau et alimentation ré
 - Désactiver la mise en veille USB `usb_power` · [[Tweaks Latence]]
 
 ## Overwatch 2 (`game_overwatch`, 21 tweaks · étiquette OW2 · reconnu pour : overwatch)
-Overwatch 2 en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif.
+Overwatch 2 en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif.
 
 - Priorité avancée par jeu `pri_game` → overwatch · [[Tweaks Latence]]
 - Planificateur multimédia (MMCSS) `pri_mmcss` · [[Tweaks Latence]]
@@ -309,7 +309,7 @@ Overwatch 2 en priorité haute, avec entrées, réseau et alimentation réglés 
 - Désactiver la mise en veille USB `usb_power` · [[Tweaks Latence]]
 
 ## Marvel Rivals (`game_rivals`, 21 tweaks · étiquette MR · reconnu pour : marvelrivals)
-Marvel Rivals en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif.
+Marvel Rivals en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif.
 
 - Priorité avancée par jeu `pri_game` → rivals · [[Tweaks Latence]]
 - Planificateur multimédia (MMCSS) `pri_mmcss` · [[Tweaks Latence]]
@@ -334,7 +334,7 @@ Marvel Rivals en priorité haute, avec entrées, réseau et alimentation réglé
 - Désactiver la mise en veille USB `usb_power` · [[Tweaks Latence]]
 
 ## The Finals (`game_finals`, 21 tweaks · étiquette TF · reconnu pour : thefinals)
-The Finals en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif.
+The Finals en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif.
 
 - Priorité avancée par jeu `pri_game` → finals · [[Tweaks Latence]]
 - Planificateur multimédia (MMCSS) `pri_mmcss` · [[Tweaks Latence]]
@@ -359,7 +359,7 @@ The Finals en priorité haute, avec entrées, réseau et alimentation réglés p
 - Désactiver la mise en veille USB `usb_power` · [[Tweaks Latence]]
 
 ## Escape from Tarkov (`game_tarkov`, 21 tweaks · étiquette EFT · reconnu pour : escapefromtarkov)
-Escape from Tarkov en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif.
+Escape from Tarkov en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif.
 
 - Priorité avancée par jeu `pri_game` → tarkov · [[Tweaks Latence]]
 - Planificateur multimédia (MMCSS) `pri_mmcss` · [[Tweaks Latence]]
@@ -384,7 +384,7 @@ Escape from Tarkov en priorité haute, avec entrées, réseau et alimentation r�
 - Désactiver la mise en veille USB `usb_power` · [[Tweaks Latence]]
 
 ## Rocket League (`game_rl`, 21 tweaks · étiquette RL · reconnu pour : rocketleague)
-Rocket League en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif.
+Rocket League en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif.
 
 - Priorité avancée par jeu `pri_game` → rl · [[Tweaks Latence]]
 - Planificateur multimédia (MMCSS) `pri_mmcss` · [[Tweaks Latence]]
@@ -409,7 +409,7 @@ Rocket League en priorité haute, avec entrées, réseau et alimentation réglé
 - Désactiver la mise en veille USB `usb_power` · [[Tweaks Latence]]
 
 ## League of Legends (`game_lol`, 21 tweaks · étiquette LoL · reconnu pour : leagueoflegends)
-League of Legends en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif.
+League of Legends en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif.
 
 - Priorité avancée par jeu `pri_game` → lol · [[Tweaks Latence]]
 - Planificateur multimédia (MMCSS) `pri_mmcss` · [[Tweaks Latence]]
@@ -434,7 +434,7 @@ League of Legends en priorité haute, avec entrées, réseau et alimentation ré
 - Désactiver la mise en veille USB `usb_power` · [[Tweaks Latence]]
 
 ## Roblox (`game_roblox`, 17 tweaks · étiquette RBX · reconnu pour : roblox)
-Roblox en priorité haute, avec alimentation et réseau réglés pour un jeu fluide.
+Roblox en priorité supérieure à la normale, avec alimentation et réseau réglés pour un jeu fluide.
 
 - Priorité avancée par jeu `pri_game` → roblox · [[Tweaks Latence]]
 - Planificateur multimédia (MMCSS) `pri_mmcss` · [[Tweaks Latence]]
@@ -455,7 +455,7 @@ Roblox en priorité haute, avec alimentation et réseau réglés pour un jeu flu
 - Désactiver les applis en arrière-plan `win_background` · [[Tweaks Windows]]
 
 ## GTA V (`game_gta`, 17 tweaks · étiquette GTA · reconnu pour : grandtheftauto, gtav, gta5)
-GTA V en priorité haute, avec alimentation et réseau réglés pour un jeu fluide.
+GTA V en priorité supérieure à la normale, avec alimentation et réseau réglés pour un jeu fluide.
 
 - Priorité avancée par jeu `pri_game` → gta · [[Tweaks Latence]]
 - Planificateur multimédia (MMCSS) `pri_mmcss` · [[Tweaks Latence]]
@@ -476,7 +476,7 @@ GTA V en priorité haute, avec alimentation et réseau réglés pour un jeu flui
 - Désactiver les applis en arrière-plan `win_background` · [[Tweaks Windows]]
 
 ## Minecraft Bedrock (`game_bedrock`, 21 tweaks · étiquette MCBE · reconnu pour : minecraftforwindows, minecraftwindows, minecraftbedrock)
-Minecraft Bedrock en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif.
+Minecraft Bedrock en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif.
 
 - Priorité avancée par jeu `pri_game` → bedrock · [[Tweaks Latence]]
 - Planificateur multimédia (MMCSS) `pri_mmcss` · [[Tweaks Latence]]

@@ -391,8 +391,8 @@
   ]
  },
  "pri_game": {
-  "summary": "Runs the game you pick at high priority and marks its network traffic as important.",
-  "about": "Pick one of six supported games and Windows will put it ahead of other programs when they compete for your processor. Its online traffic is also tagged as important, though that only helps if your router pays attention to those tags. The gain shows up mainly when other programs keep your CPU busy. Discord or streaming apps may slow down as a result, and choosing Minecraft affects every Java program on your PC, not just the game.",
+  "summary": "Runs the game you pick at above normal priority and marks its network traffic as important.",
+  "about": "Pick one of 16 supported games and Windows will put it one step ahead of other programs when they compete for your processor (above normal priority, never high). Its online traffic is also tagged as important, though that only helps if your router pays attention to those tags. The gain shows up mainly when other programs keep your CPU busy. When your CPU is maxed out, other programs such as Discord wait a little behind the game, and choosing Minecraft affects every Java program on your PC, not just the game.",
   "helps": [
    "Smoothness",
    "Connection"

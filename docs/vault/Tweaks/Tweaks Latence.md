@@ -40,10 +40,10 @@ Demande une priorité haute pour le processus clavier-souris de Windows, plus d'
 - Dans les presets : Latence minimale (voir [[Tweaks Presets]]).
 
 ### Priorité avancée par jeu `pri_game` 🔒 🔁
-Seize jeux au choix (Minecraft Java et Bedrock, Fortnite, Valorant, CS2, PUBG, Roblox…) : le jeu choisi passe en priorité haute et son trafic réseau est marqué comme prioritaire.
+Seize jeux au choix (Minecraft Java et Bedrock, Fortnite, Valorant, CS2, PUBG, Roblox…) : le jeu choisi passe en priorité supérieure à la normale et son trafic réseau est marqué comme prioritaire.
 - Variantes : Minecraft (`minecraft`), Fortnite (`fortnite`), Valorant (`valorant`), CS2 (`cs2`), Apex (`apex`), GTA V (`gta`), PUBG (`pubg`), Roblox (`roblox`), Rainbow Six Siege (`r6`), Overwatch 2 (`overwatch`), Marvel Rivals (`rivals`), The Finals (`finals`), Escape from Tarkov (`tarkov`), Rocket League (`rl`), League of Legends (`lol`), Minecraft Bedrock (`bedrock`) ; par défaut `minecraft`.
 - Gain : Peut aider si d'autres programmes chargent le processeur ; le marquage réseau n'agit que si ta box le gère.
-- Inconvénient : Les autres programmes (Discord, stream) peuvent ralentir ; pour Minecraft, tous les programmes Java sont concernés.
+- Inconvénient : Quand le processeur est à fond, les autres programmes passent un peu après le jeu ; pour Minecraft, tous les programmes Java sont concernés.
 - Dans les presets : Minecraft PvP, Fortnite, Valorant, Counter-Strike 2, Apex Legends, PUBG, Rainbow Six Siege, Overwatch 2, Marvel Rivals, The Finals, Escape from Tarkov, Rocket League, League of Legends, Roblox, GTA V, Minecraft Bedrock (voir [[Tweaks Presets]]).
 
 ### Planificateur multimédia (MMCSS) `pri_mmcss` 🔒 🔁

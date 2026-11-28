@@ -2,7 +2,7 @@
 type: code
 tags: [code, app, catalogue, python, carte]
 fichier: app/tools/
-lignes: 6 488 (18 fichiers .py, .mjs et .sh de app/tools/ et app/tools/undo/), plus descriptions.json 2 773
+lignes: 6 350 (17 fichiers .py, .mjs et .sh de app/tools/ et app/tools/undo/), plus descriptions.json 2 773
 maj: 2026-11-28
 ---
 # Code du générateur de catalogue
@@ -33,7 +33,7 @@ Tout est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`, app 1.3.0). **V�
 ### Chef d'orchestre
 | Note | Lignes | Rôle |
 |---|---|---|
-| [[build_catalog_v6.py]] | 1 254 | `npm run catalog` : lance tout, fusionne, corrige, vérifie par `assert`, écrit les 4 JSON et `CORRECTIONS.md` |
+| [[build_catalog_v6.py]] | 1 260 | `npm run catalog` : lance tout, fusionne, corrige, vérifie par `assert`, écrit les 4 JSON et `CORRECTIONS.md` |
 | [[build_catalog.py]] | 301 | première étape (sous-processus) : les 189 réglages de l'ancien programme tirés du `.bat` v5.2, sorties provisoires |
 | [[corrections_md.py]] | 38 | réécrit `CORRECTIONS.md` en gardant les sections écrites à la main sous la ligne marqueur |
 

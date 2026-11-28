@@ -248,7 +248,7 @@ const FR_EXACT: Record<string, string> = {
   "Wi-Fi at full power": "Wi-Fi à pleine puissance",
   MTU: "MTU",
   "Game traffic priority": "Priorité au trafic du jeu",
-  "High CPU priority for Minecraft": "Minecraft en priorité processeur haute",
+  "Above normal CPU priority for Minecraft": "Minecraft en priorité processeur supérieure à la normale",
   "Windows gaming performance": "Performances de Windows pour le jeu",
   "Windows Update sharing": "Partage des mises à jour Windows",
   "Resetting to Windows defaults": "Retour aux valeurs de Windows",
@@ -273,6 +273,7 @@ const FR_EXACT: Record<string, string> = {
   Enabled: "Activé",
   Disabled: "Désactivé",
   high: "haute",
+  "above normal": "supérieure à la normale",
   normal: "normale",
 };
 const FR_PATTERNS: [RegExp, string][] = [

@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, catalogue, générateur, python]
 fichier: app/tools/build_catalog_v6.py
-lignes: 1254
-maj: 2026-11-10
+lignes: 1260
+maj: 2026-11-27
 ---
 # build_catalog_v6.py
 
@@ -48,7 +48,7 @@ Le fichier n'a pas d'API : `main()` est lancé par `if __name__ == '__main__'`. 
 | `PRESET_EXTRA` | ajouts aux presets `laptop` et `privacy` repris de l'ancien programme |
 | `RBW_TOUCHED` | regex de tout ce que lit le vérificateur de screenshare Ranked Bedwars (SysMain, PcaSvc, DPS, BAM, EventLog, WSearch, DusmSvc, BFE, AppInfo, DCOMLaunch, PlugPlay, CDPUserSvc, DisableCMD, ScriptBlockLogging, EnableActivityFeed, EnablePrefetcher, Start_TrackDocs, AppCompat) |
 | `GAMES`, `LEGACY_GAMES`, `QOS`, `game_priority(exes)`, `add_games()` | priorité par jeu `pri_game` : 10 jeux ajoutés + 6 jeux d'origine réécrits (16 variantes) |
-| `COMPETITIVE` (20 réglages), `SMOOTH` (16), `GAME_PRESETS` (15), `game_presets()` | presets par jeu de la [[Bibliothèque de jeux]] |
+| `COMPETITIVE` (20 réglages), `SMOOTH` (16), `GAME_PRESETS` (15), `game_presets()` | presets par jeu de la [[Bibliothèque de jeux]] ; description « <jeu> en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif. » (ou « … avec alimentation et réseau réglés pour un jeu fluide. »), « en priorité haute » jusqu'au 13/11 |
 | `INTO`, `REPLACED` (14 ids), `RENAMED`, `QUEUE_VARIANTS`, `MOVE` (26 ids), `SECTION_NAMES`, `NAMES`, `NAME_FIX`, `UK_US` | fusion avec l'ancien programme et noms |
 | `REVERT` | variante « retour arrière » de chaque réglage (`game_mode: off`, `rbw_mode: on`, complété par `T(revert=)`) |
 | `SCRIPT_FIXES` (7), `DROP_LINES` (5), `SUB_LINES` (2) | corrections faites avant l'audit |
@@ -82,7 +82,7 @@ Le fichier n'a pas d'API : `main()` est lancé par `if __name__ == '__main__'`. 
    3. **copie `before_audit`** : les scripts tels que les PC les ont lancés avant l'audit, gardés pour l'annulation ;
    4. `apply_audit()` : [[audit_fixes.py]] (`SCRIPT_FIXES_PLUS`, `DROP_BLOCKS`, `DROP_LINES_PLUS`, `SUB_LINES_PLUS`) ;
    5. [[optis_120.py]] : `FIXES`, `DROP`, `SUB`, `REPLACE` (le script entier, seulement pour un réglage à variante unique `_`), `APPEND` ;
-   6. `add_games()` : `pri_game` réécrit pour les 6 jeux d'origine et 10 jeux ajoutés (`game_priority` : `Do not use NLA` en chaîne, stratégie QoS DSCP 46 par exe, `CpuPriorityClass` et `IoPriority` à 3 dans `PerfOptions`) ;
+   6. `add_games()` : `pri_game` réécrit pour les 6 jeux d'origine et 10 jeux ajoutés (`game_priority` : `Do not use NLA` en chaîne, stratégie QoS DSCP 46 par exe, `CpuPriorityClass` à **6** (Supérieure à la normale) et `IoPriority` à 3 dans `PerfOptions`). `CpuPriorityClass` valait 3 (Haute) jusqu'au 13/11 : le jeu prenait le processeur à Discord et au stream ; changé sur le choix de Sofiene du 13/11, confirmé le 27/11 (dans `staging` par la PR #155 (fusionnée dans `staging` le 28/11), pas encore en prod, jamais testé sur Windows), les PC déjà en Haute sont ramenés par [[repair.rs]] ;
    7. `WMIC_SUBS` (`wmic` remplacé par `powershell … Get-CimInstance`, absent de Windows 11 24H2) puis `TEMP_QUOTES` (`%temp%` entre guillemets) ;
    8. [[safety.py]] `apply()` : lignes risquées retirées partout ; le build s'arrête si `SAFETY.remaining()` trouve encore une ligne ;
    9. scripts `rbw_mode` remplacés en entier par `RBW.ON` / `RBW.OFF` de [[rbw.py]] (posés après l'audit et `safety.py` pour qu'aucune ligne n'en soit retirée) ;
