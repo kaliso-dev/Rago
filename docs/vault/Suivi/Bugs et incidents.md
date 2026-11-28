@@ -1,7 +1,7 @@
 ---
 type: registre
 tags: [bug, suivi]
-maj: 2026-11-25
+maj: 2026-11-28
 ---
 # Bugs et incidents
 
@@ -42,7 +42,7 @@ Voir [[Version 1.1.14]].
 - **Noms des modes d'alimentation abîmés** (« RECOMMAND� PAR�HP ») : la sortie de `powercfg` était lue en UTF-8 au lieu de la page de code de la console ([[shell.rs]], [[tools.rs]]). Un mode sans nom affiché par son identifiant devient « Unnamed plan (F31FECF6) ».
 
 ## Incidents historiques
-- **GitHub Pages** a publié le dépôt privé du 04/10 au 07/10 00:48 (`.bat` Premium, scripts, code serveur). Coupé ; `_config.yml` neutralise une partie du dépôt. **Toujours actif le 10/11** (OBSERVÉ) : Pages publie à chaque push de la branche de prod, et comme `docs/` n'est pas exclu, le vault y est lisible en pages web. À couper dans les réglages de GitHub (q80, [[Fichiers de la racine du dépôt]]).
+- **GitHub Pages** a publié le dépôt privé du 04/10 au 07/10 00:48 (`.bat` Premium, scripts, code serveur). Coupé ; `_config.yml` neutralise une partie du dépôt. Pages a ensuite publié le vault de la branche de prod (OBSERVÉ le 10/11). **Coupé par Sofiene le 28/11** (q80) : plus aucune page publiée (404 vérifié le 28/11) ; une configuration Pages reste visible dans l'API GitHub, À VÉRIFIER ([[Fichiers de la racine du dépôt]]).
 - Secrets collés dans le chat le 04/10 : régénération demandée ([[Clés et secrets]]).
 - Netlify ne publiait plus (appli Netlify désinstallée de GitHub, 10-11/10) : résolu.
 - 14/10 : Claude a affirmé à tort que la 1.1.12 contenait « tout le travail » → règle « jamais sans preuve » ([[Règles de travail]]).

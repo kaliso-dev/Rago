@@ -1,7 +1,7 @@
 ---
 type: carte
 tags: [code, ci, github-actions, dépôt, carte]
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # Code de la CI et du dépôt
 
@@ -55,7 +55,7 @@ Le dépôt est public : ces minutes ne sont pas décomptées (voir [[CI GitHub A
 
 ## Problèmes relevés le 10/11
 - **`site-check` rouge sur la branche de prod** : la prod a encore `ubuntu-latest` (Ubuntu 26.04 depuis le 09/11), où Playwright 1.56.1 ne s'installe pas ; le correctif `98181fb` n'est que sur `staging`. Le push de la prod du 10/11 à 15:05 a échoué ([[site-check.yml]]).
-- **GitHub Pages actif** et qui publie le vault de la branche de prod ([[Fichiers de la racine du dépôt]], `_config.yml`).
+- **GitHub Pages coupé par Sofiene le 28/11** (q80) : le vault n'est plus publié (404 vérifié le 28/11) ; une configuration Pages reste visible dans l'API, À VÉRIFIER ([[Fichiers de la racine du dépôt]], `_config.yml`).
 - Le test de la fonction edge `netlify/launch-gate.test.mjs` n'est lancé par aucun workflow et échoue depuis la date du lancement ([[launch-gate.js]]).
 - `app/ci/build-windows.yml` est une ancienne copie inactive du workflow Windows ([[app-windows.yml]]).
 - Les guides de la racine sont en retard sur plusieurs points ([[Fichiers de la racine du dépôt]]).

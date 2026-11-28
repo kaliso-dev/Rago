@@ -2,7 +2,7 @@
 type: marketing
 tags: [marketing, rago-route, concurrence, site, conversion]
 source: https://claude.ai/artifact/NyWmDzuXV8iHKP7dmRbhYG
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # Page de vente Rago Route
 
@@ -86,7 +86,7 @@ La page n'affiche que des mesures, chacune avec ses conditions et sa date ; les 
 ## Après la sortie (22/11) : ce qui reste
 - **Au plus vite** : test P0-9 et message à Hypixel (voir « Objection n°1 »).
 - **Tests P0-1 à P0-9** (protocoles dans le dossier, partie 6 ; ils ouvrent les blocs cachés de la page) : ping sur Windows avec et sans (P0-1), pertes simulées avec et sans (P0-2), ressenti à l'aveugle (P0-3), vraies coupures (P0-4), téléphone sur Windows (P0-5), Minemen (P0-6), cinq soirées de jeu normal et une vraie capture de l'onglet (P0-7), nouvel export du test réseau par PC et par pays (P0-8), blocage de compte avec 3 à 5 comptes de l'équipe (P0-9, en premier).
-- **Questions ouvertes** ([[Questions ouvertes]]) : q97 (autres régions), q100 (bouton « Get notified on Discord » de l'accueil). q101 traitée le 27/11 (PR #157) ; q102 à q105 traitées le 27/11 (résiliation sur la page compte, un Premium par e-mail, carte seule et un essai par réseau, titre gardé).
+- **Questions ouvertes** ([[Questions ouvertes]]) : q100 (bouton « Get notified on Discord » de l'accueil). q97 traitée le 27/11 (Paris reste la seule sortie tant que les abonnés ne financent pas d'autres serveurs) ; q101 traitée le 27/11 (PR #157) ; q102 à q105 traitées le 27/11 (résiliation sur la page compte, un Premium par e-mail, carte seule et un essai par réseau, titre gardé).
 - **En prod depuis le 22/11** : la [[Version 1.3.0]] sur `/download` et la route `/route/token` du [[Serveur de licences]].
 - **Ailleurs sur le site** : `privacy.html` ne parle pas encore de Rago Route ; la carte Lifetime de l'accueil dit « Rago Route is a separate subscription, also for Lifetime » et le bandeau devient « Already Premium or Lifetime? » (27/11, décision de Sofiene : le Lifetime n'inclut pas Rago Route, q101 et q108 traitées ; la carte Premium a la case « Add Rago Route » depuis le 13/11) ; la phrase d'essai de l'accueil dit « charged automatically on day 3 », « Cancel from the app or from your account page » et « One trial per person, card and network » (27/11) ([[page.html]]).
 - **Blocs en attente** : toujours dans le HTML de prod (cachés à l'écran) ; à retirer ou ouvrir selon les tests. Les blocs en attente (cachés à l'écran, leur texte reste lisible dans le code source).
