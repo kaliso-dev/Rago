@@ -252,7 +252,7 @@ Ce qui dépend du mode Stripe : la clé, les deux prix, le webhook et son secret
 8. **Vérifie sur `/admin/services`**, section **Paiements Stripe** : clé, compte, prix (dont « Prix Lifetime »), webhook, portail et lien doivent être « OK ». Chaque ligne « À corriger » dit quoi changer (un prix du mode test, un événement manquant, le portail pas enregistré…). « Secret du webhook » reste « À vérifier » jusqu'au premier achat : le secret ne se lit pas dans Stripe, seul un événement reçu le confirme.
 9. **Achats de test** : les licences achetées en mode test sont dans la même base. Elles donnent encore Premium, comptent pour les affiliés et empêchent ces comptes d'acheter. Sur `/admin/services`, **Arrêter les licences de test** les passe en « Test purchase » (rien d'autre n'est touché : licences offertes, achats live, comptes, avis). Une licence offerte se redonne avec `npm run admin -- grant`.
 10. **Code du pop-up** : le code créé en test n'existe pas en live. Sur `/admin/site`, tape `RAGO50`, `50` et `15`, puis **Enregistrer** : « Code créé dans Stripe ». Les codes d'affiliation sont recréés en live tout seuls dans l'heure (ou dès que l'affilié ouvre `/affiliate`).
-11. **Un vrai achat, puis remboursé**, dans une fenêtre de navigation privée. Avant le lancement, ouvre d'abord ton lien `https://account.rago-optimizer.com/acces/<PREVIEW_KEY>`.
+11. **Un vrai achat, puis remboursé**, dans une fenêtre de navigation privée.
     - Prends le **mensuel**, avec un email qui n'a jamais acheté, **sans** le code du pop-up : chaque utilisation de `RAGO50` prend une des 15 places, et un remboursement ne la rend pas.
     - La page Stripe ne doit plus afficher « Mode test ». Paie avec ta carte : « Payment confirmed », crée le compte, la licence s'affiche, l'email d'achat arrive. Sur `/admin`, « Secret du webhook » passe à « OK » avec `checkout.session.completed`.
     - Stripe → Paiements → ce paiement → **Rembourser** (en entier). Le tableau de bord affiche « Refunded » et l'abonnement est annulé dans Stripe. Stripe garde ses frais (quelques dizaines de centimes).
@@ -285,7 +285,7 @@ Railway redéploie tout seul. Paie ensuite avec `4242 4242 4242 4242`, une date 
 
 Le site lit à chaque visite ce que le pop-up propose (`/api/v1/promo` du serveur de comptes) : le code, la réduction, le petit titre, le titre, le texte et le nombre de places restantes. La réduction et le nombre d'utilisations viennent de Stripe, donc le pop-up ne promet jamais plus que ce que Stripe accorde.
 
-**Une fois pour toutes** : dans Railway → Variables, ajoute `ADMIN_KEY` = une clé d'au moins 16 lettres et chiffres (différente de `PREVIEW_KEY`, à garder dans ton gestionnaire de mots de passe). Railway redéploie tout seul.
+**Une fois pour toutes** : dans Railway → Variables, ajoute `ADMIN_KEY` = une clé d'au moins 16 lettres et chiffres (à garder dans ton gestionnaire de mots de passe). Railway redéploie tout seul.
 
 **Changer le pop-up** : ouvre `https://account.rago-optimizer.com/admin`, entre la clé (l'accès dure 7 jours sur ce navigateur ; **Quitter l'admin** le retire, changer la clé coupe tous les accès), modifie, **Enregistrer**. Le site suit en moins d'une minute.
 
@@ -427,6 +427,7 @@ Le bot compte à partir du moment où il est connecté : rien avant. Un test (st
 | `SUPPORT_URL` | Ton invitation Discord |
 | `STRIPE_PORTAL_LOGIN_URL` | Stripe → Portail client → lien de connexion (étape 3.5) |
 | `PRICE_LABEL` | Le prix affiché aux comptes gratuits : `$5.99 a month or $29.99 a year` (avec Lifetime : `$5.99 a month, $29.99 a year or $59.99 once`), mêmes montants que Stripe et le site |
+| `FREE_TWEAKS`, `PREMIUM_TWEAKS` | Facultatives : les chiffres de la page compte, `68` et `218` par défaut (mêmes chiffres que le site). Ne les mets que pour les changer |
 | `LICENSE_SIGNING_KEY`, `SESSION_SECRET` | `npm run admin -- export-keys` (étape 5.7) |
 | `SCRIPTS_SECRET` | Une valeur aléatoire que tu génères une fois (étape 8), identique au secret GitHub `RAGO_SCRIPTS_SECRET`. Ne la change jamais |
 | `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`, `DISCORD_ROLE_ID` | Discord Developer Portal et ton serveur (« Le rôle Pro sur Discord »). Facultatives : sans elles, le rôle se donne à la main |

@@ -4,12 +4,12 @@ Tout le code de Rago dans un seul dépôt :
 
 | Dossier | Quoi | Techno |
 |---|---|---|
-| `app/` | **Rago Optimizer**, l'app Windows (198 réglages, 10 modules, 5 presets). Gratuite avec 11 réglages ouverts, tout le reste avec Premium | Tauri 2, React + TypeScript, Rust |
+| `app/` | **Rago Optimizer**, l'app Windows (218 réglages, 10 modules, 20 presets). Gratuite avec 68 réglages ouverts (30 actifs à la fois au plus), tout le reste avec Premium | Tauri 2, React + TypeScript, Rust |
 | `brand/` | Logo, tailles d'icônes, `.ico`, images d'installeur, favicons, couleurs et voix de la marque | SVG, PNG |
 | `site/` | La page de vente publique (anglais) et les pages légales | HTML statique, sans framework |
 | `licensing/` | Le serveur : abonnements Stripe, comptes, licences, verrou sur un PC, affiliation, téléchargement de l'app | Node 22, Hono, Supabase (Postgres + Storage) |
 | `.github/workflows/` | `app-windows.yml` fabrique le `setup.exe` sur un Windows de GitHub ; `licensing-tests.yml` lance les tests du serveur ; `site-check.yml` vérifie que `site/index.html`, `site/reviews.html` et `site/tweaks.html` ont été régénérées | GitHub Actions |
-| `netlify.toml` / `Dockerfile` (racine) | Publication du site sur Netlify / variante qui sert site + serveur ensemble | Netlify / Docker |
+| `netlify.toml` | Publication du site sur Netlify | Netlify |
 
 Chaque dossier a son propre README avec le détail technique. Ce guide-ci explique comment les trois s'emboîtent et comment tout lancer, dans l'ordre.
 
@@ -54,7 +54,7 @@ Dans ce guide, `ragohub.com` et `account.ragohub.com` sont des exemples : rempla
 
 ### L'offre
 
-- **Gratuit** : l'app elle-même, sans compte ni licence. 11 réglages sont ouverts (Game Mode, Game DVR, effets visuels, plein écran, notifications, bulles et suggestions, Copilot et Recall, et les 4 outils de Restaurer, liste dans `app/src/data/free.json`), plus le retour arrière de RBW Mod et du mode jeu ; rien de Latence, Réseau, Hitreg ni Minecraft. Tout le reste est sous cadenas, presets compris ; un clic sur un cadenas propose « Unlock », qui ouvre la section Pricing du site. Le moteur Rust refuse aussi les réglages verrouillés : on ne contourne pas le cadenas en bricolant l'interface.
+- **Gratuit** : l'app elle-même, sans compte ni licence. 68 réglages sont ouverts, plus les outils de Restaurer (liste dans `app/src/data/free.json`), 30 actifs à la fois au plus, et le retour arrière de RBW Mod et du mode jeu. Tout le reste est sous cadenas, presets compris ; un clic sur un cadenas propose « Unlock », qui ouvre la section Pricing du site. Le moteur Rust refuse aussi les réglages verrouillés : on ne contourne pas le cadenas en bricolant l'interface.
 - **Premium** : abonnement Stripe **5,99 $ par mois ou 29,99 $ par an** (prix choisis le 7 octobre 2026). Tout est débloqué tant que l'abonnement est payé.
 - **L'ancien .bat n'est plus proposé** : la seule offre gratuite, c'est l'app. Les anciens liens `/downloads/...` renvoient vers l'accueil du site.
 - **Affiliation** : chaque affilié a un code, qui donne aussi −5 % au client sur son premier paiement Stripe (lien de l'affilié, ou code tapé dans **Add promotion code**). Un client n'utilise qu'un code, pour toujours. À 3 clients valides, l'affilié reçoit 6 mois de Premium, une seule fois, pour 3 filleuls (3 filleuls au maximum par affilié). Un client compte dès qu'il active l'app sur son PC (pas celui de l'affilié), tant qu'il n'est ni remboursé ni contesté.
@@ -132,20 +132,8 @@ const CONFIG = {
 - `priceLifetime` doit être **exactement** le prix du `price_...` Lifetime de Stripe (variable `STRIPE_PRICE_LIFETIME` du serveur) **et** la valeur `LIFETIME_PRICE` de `licensing/src/billing.js` : le serveur ne vend Lifetime qu'à ce prix, et `site/tools/build.py` s'arrête si le site et le serveur ne sont pas d'accord. Tant que le serveur ne vend pas Lifetime (pas de prix, ou un prix différent), la carte Lifetime affiche « Coming soon » sans lien d'achat, et ses questions de la FAQ restent masquées.
 - Tant que `discord` est vide, les liens Discord du site sont masqués.
 - Les avis viennent de l'application, ou du site pour les comptes Premium : un joueur connecté à son compte Rago laisse une note (1 à 5 étoiles) et un commentaire, qu'il peut modifier ou supprimer ensuite (dans l'app, ou sur la page compte : ligne « Your review » et `/account/review` pour les Premium, onglet Profile pour supprimer). C'est le même avis partout (un par compte). Le site les lit sur le serveur de comptes (`/api/v1/reviews`) à chaque visite : la section `#reviews` reste masquée tant qu'aucun avis n'existe et apparaît dès le premier, sans modifier le site. Les cartes restent fixes tant qu'elles tiennent sur deux lignes à la largeur de l'écran ; au-delà, elles défilent en deux bandes. Toutes les cartes ont la même taille (4 lignes de texte) : un avis plus long est coupé après un mot, à la mesure de la carte, avec « See more », qui ouvre la page `reviews.html` sur cet avis : elle montre tous les avis en entier (`/api/v1/reviews?all=1`), avec la moyenne, un filtre par note et un tri. Modération : `npm run admin -- reviews`, `hide-review <email>`, `show-review <email>` (dossier `licensing/`).
-- `site/index.html` (la page publiée) est fabriquée à partir de `site/src/page.html`, `site/reviews.html` à partir de `site/src/reviews.html`, `site/partners.html` à partir de `site/src/partners.html`, et `site/tweaks.html` (la page qui présente les 198 réglages, avec le téléchargement gratuit et la recherche) à partir de `site/src/tweaks.html`. La liste des réglages de cette page vient du catalogue de l'app (`app/src/data/catalog.json`) et des textes de `site/src/tweaks-copy.json`, recopiés par `site/tools/sync_app.py`. Ne les modifie pas à la main : demande la modification sur le projet, elles sont refaites par `site/tools/build.py`.
+- `site/index.html` (la page publiée) est fabriquée à partir de `site/src/page.html`, `site/reviews.html` à partir de `site/src/reviews.html`, `site/partners.html` à partir de `site/src/partners.html`, et `site/tweaks.html` (la page qui présente les 218 réglages, avec le téléchargement gratuit et la recherche) à partir de `site/src/tweaks.html`. La liste des réglages de cette page vient du catalogue de l'app (`app/src/data/catalog.json`) et des textes de `site/src/tweaks-copy.json`, recopiés par `site/tools/sync_app.py`. Ne les modifie pas à la main : demande la modification sur le projet, elles sont refaites par `site/tools/build.py`.
 - **Partenaires** : la liste (nom exact, lien d’invitation, logo) est dans `site/src/partners.json`, la seule source. La section « Partners » de l'accueil et la page `partners.html` en sont tirées par `site/tools/build.py` (qui lance `site/tools/sync_partners.py`). Pour ajouter un partenaire : une entrée dans ce fichier, son logo officiel en WebP carré de 256 px dans `site/img/partners/` (pour un logo animé, sa première image en plus, dans `"still"`), puis `python3 site/tools/build.py`. L'accueil montre ceux marqués `"home": true` (en garder 4 pour que les rangées restent pleines) et « See all » mène à la page qui les montre tous.
-
-### Avant le lancement : compte à rebours et accès de l'équipe
-
-Jusqu'au samedi 10 octobre 2026 à 15 h, heure de Paris, `rago-optimizer.com` n'affiche qu'un compte à rebours (fonction Netlify `netlify/edge-functions/launch-gate/`) : le site lui-même n'est pas envoyé. Sur le serveur de comptes, `/signup`, `/buy`, `/download` et `/affiliate` renvoient vers ce compte à rebours ; la connexion, le compte, l'API des apps et le webhook Stripe marchent normalement. À l'heure dite, tout s'ouvre sans rien toucher et les pages ouvertes se rechargent seules.
-
-- **Accès de l'équipe** : choisis une clé d'au moins 16 lettres et chiffres et mets-la dans la variable `PREVIEW_KEY` de Netlify (Site configuration → Environment variables, puis Deploys → Trigger deploy) **et** de Railway (même valeur). Ensuite, ouvrir une fois `https://rago-optimizer.com/acces/<la clé>` donne le vrai site et les pages de compte pendant 30 jours sur ce navigateur ; `https://rago-optimizer.com/acces/sortir` retire l'accès. Changer la clé coupe tous les accès donnés.
-- **Changer l'heure** : variable `LAUNCH_AT` (par exemple `2026-10-10T13:00:00Z`, en UTC) dans Netlify et Railway, puis redéployer Netlify.
-- **Après le lancement**, la fonction laisse tout passer : on peut retirer `netlify/edge-functions/launch-gate/`, son bloc `[[edge_functions]]` dans `netlify.toml` et le verrou de `licensing/src/app.js`.
-
-### Variante : site et serveur sur un seul domaine
-
-Le `Dockerfile` à la racine sert la page de vente **et** le serveur depuis Railway, sans Netlify ni sous-domaine. Pour l'utiliser : Root Directory vide sur Railway, mêmes variables que dans `MISE-EN-LIGNE.md` (dont `DATABASE_URL`), `PUBLIC_URL` et `SITE_URL` sur le même domaine, et `accountBase: ""` dans le `CONFIG` du site. Ce n'est pas le chemin recommandé.
 
 ---
 
@@ -188,7 +176,7 @@ Un certificat ne fait pas disparaître l'alerte du jour au lendemain : un certif
 Le test complet est l'étape 9 de `licensing/docs/MISE-EN-LIGNE.md`. En résumé, avec les clés Stripe de **test**, dans une fenêtre de navigation privée :
 
 0. Si tu avais installé l'ancienne version de test **« Rago Hub »**, désinstalle-la d'abord : Paramètres Windows → **Applications → Applications installées** → Rago Hub → **Désinstaller**. Elle a un autre identifiant que Rago Optimizer, donc les deux s'installeraient côte à côte.
-1. Sur le site, **Download free** : l'app s'installe et tourne en gratuit, 11 réglages ouverts.
+1. Sur le site, **Download free** : l'app s'installe et tourne en gratuit, 68 réglages ouverts.
 2. **Get Premium** (mensuel), paie avec `4242 4242 4242 4242`.
 3. Crée ton compte, vérifie que le tableau de bord montre la licence et que l'exe se télécharge.
 4. Dans l'app, connecte-toi, clique **Activate** : tout se débloque.

@@ -177,35 +177,8 @@ export function createApp({ cfg, db, keys, stripe, mailer, log = console, fetchI
 
   app.use('/assets/*', serveStatic({ root: publicDir, rewriteRequestPath: (p) => p.replace(/^\/assets/, '') }));
 
-  // ---------- before the launch ----------
-  // Until cfg.launchAt the pages that sell or hand out Rago Optimizer send visitors to the site's countdown.
-  // Sign-in, the account pages, the app's API and the Stripe webhook keep working. The team gets through with
-  // the cookie set by /acces/<PREVIEW_KEY>, here or on the site (netlify/edge-functions/launch-gate/).
-  const LOCKED = new Set(['/signup', '/buy', '/buy/lifetime', '/download', '/affiliate', '/affiliate/join']);
-  const PREVIEW_COOKIE = 'rago_preview';
-  // HMAC-SHA256(PREVIEW_KEY, "rago-preview-v1"), base64url: same as passFor() in the Netlify function.
-  const previewPass = cfg.previewKey.length >= 16 ? createHmac('sha256', cfg.previewKey).update('rago-preview-v1').digest('base64url') : null;
+  // Compares two secrets without leaking their length or content through timing (OAuth states, admin key, app links).
   const sameHash = (a, b) => timingSafeEqual(createHash('sha256').update(String(a)).digest(), createHash('sha256').update(String(b)).digest());
-  const hasPreviewPass = (c) => !!previewPass && sameHash(getCookie(c, PREVIEW_COOKIE) || '', previewPass);
-  app.use('*', async (c, next) => {
-    if (!LOCKED.has(c.req.path) || Date.now() >= cfg.launchAt || hasPreviewPass(c)) return next();
-    c.header('Cache-Control', 'no-store');
-    if (cfg.siteUrl !== cfg.publicUrl) return c.redirect(`${cfg.siteUrl}/`, 302);
-    return c.html(V.messagePage(cfg, { overline: 'Rago Optimizer', title: 'Opening soon.', text: 'Rago Optimizer isn’t open yet. Come back at the launch.' }), 503);
-  });
-  app.get('/acces/:key', (c) => {
-    // On a subdomain of the site (account.rago-optimizer.com) the cookie covers the site too.
-    const siteHost = new URL(cfg.siteUrl).hostname;
-    const host = (c.req.header('host') || '').split(':')[0];
-    const domain = host.endsWith(`.${siteHost}`) ? siteHost : undefined;
-    if (c.req.param('key') === 'sortir') {
-      deleteCookie(c, PREVIEW_COOKIE, { path: '/', domain, secure: cfg.prod });
-      return c.redirect('/login', 302);
-    }
-    if (!allow(`acces:${ipOf(c)}`, 20, 60 * 60 * 1000) || !previewPass || !sameHash(c.req.param('key'), cfg.previewKey)) return c.notFound();
-    setCookie(c, PREVIEW_COOKIE, previewPass, { ...cookieBase, domain, maxAge: 30 * 86400 });
-    return c.redirect('/signup', 302);
-  });
   // Checks the database too, so an uptime monitor notices when Supabase is down.
   app.get('/healthz', async (c) => {
     try {
