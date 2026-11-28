@@ -1,11 +1,13 @@
 ---
 type: fonctionnalité
 tags: [fonctionnalité, produit, en-cours]
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # Proxy
 
 Linear RAG-50 : nouveau produit, d'abord en Europe, à intégrer à l'app. Consigne du 17/10 : « à moindre coût voir gratuitement », sinon mis de côté.
+
+**Une seule sortie : Paris** (décision de Sofiene du 27/11, q97) : pas d'autre sortie tant que les abonnés ne peuvent pas financer d'autres serveurs ; la page de vente n'annonce donc que Paris ([[Infrastructure Rago Route]], [[Page de vente Rago Route]], [[Décisions]]).
 
 - **Données en prod depuis le 29/10** : chaque [[Test réseau]] envoie ville, fournisseur, ping, gigue et pertes vers Hypixel, Minemen EU, Cloudflare et 6 villes candidates (Paris, Francfort, Londres, Stockholm, Madrid, Virginie). Admin : `/admin/reseau` ([[Serveur de licences]], `network.js`, `geo.js`).
 - **Ce qui manque** (analyse du 29/10) : 1) le trajet proxy → serveur de jeu, mesuré depuis chaque ville (le plus important, sans toucher à l'app) ; 2) tester les vraies adresses de l'hébergeur choisi (les villes sont mesurées sur Amazon) ; 3) traceroute (nouvelle version d'app) ; 4) Wi-Fi ou câble (nouvelle version) ; 5) volume de mesures.

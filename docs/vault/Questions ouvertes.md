@@ -44,8 +44,6 @@ Posées le 10/11 au soir (q70 à q93), après la relecture complète du code pou
 - q76 : réglée le 22/11 sans réponse nécessaire : la nouvelle image de partage v5 dit « 218 tweaks » (PR #109, [[Kit de marque (brand)]]).
 - q77 : étoiles Google des avis perdues (RAG-33, [[page.html]]).
 - q79 : retirer la protection d'avant lancement ([[launch-gate.js]]).
-- q80 : GitHub Pages publie le vault ([[Fichiers de la racine du dépôt]]).
-- q81 : supprimer les branches `claude/project-thread-tzbch5` et `trailer-4k-footage` ([[Branches du dépôt]]).
 - q82 : supprimer les fichiers qui ne servent plus ([[recherche-conversion (site)]], [[fix_free_bat.py]]…). Pour [[LicenseGate.tsx]], le mode plein écran jamais monté est retiré le 24/11 avec la refonte des fenêtres sur les maquettes v5 (PR #131).
 - q83 : textes en retard dans le code (README, `FREE_TWEAKS`, commentaires).
 - q84 : l'e-mail d'achat renvoie vers un ticket Discord même avec le bot ([[mailer.js]]).
@@ -59,15 +57,16 @@ Posées le 10/11 au soir (q70 à q93), après la relecture complète du code pou
 - q93 : passer en « Canceled » les 5 tâches d'Abel dans [[Linear]] ?
 
 Posées le 11/11 (q78 traitée le même jour : Sofiene a demandé la page de vente, voir [[Page de vente Rago Route]]) :
-- q94 : [[Graphismes des jeux]] gratuits pour tous ou Premium ? (le code les laisse gratuits)
-- q96 : [[Page Souris]] gratuite pour tous ? (codée gratuite ; le réglage « Souris 1:1 » reste Premium)
-- q97 : d'autres sorties que Paris, pour que la page Rago Route les annonce ? ([[Page de vente Rago Route]], [[Infrastructure Rago Route]]).
 - q100 : le bouton « Get notified on Discord » de l'encart Rago Route de l'accueil devient « Try 3 days free », disparaît ou reste ? (dans le code de prod de la 1.3.0, il est caché par l'attribut `hidden` ; CONFIRMÉ, 27/11) ([[page.html]])
 
 Posée le 27/11 (fil HUB-d1451f, Rago Route pour les Lifetime, [[Paiements Stripe]]) :
 - q131 : la consigne disait que les 5 Lifetime vendus ont Rago Route gratuit en prod et le perdront à la mise en prod ; or le code de prod (1.3.0) demande déjà l'option à tout Lifetime. Un Lifetime a-t-il eu Rago Route sans payer ? Veux-tu les prévenir que l'option existe pour eux ? (À VÉRIFIER)
 
+Posée le 28/11 (fil HUB-cdb468, ménage des branches, q81) :
+- q138 : supprimer les 15 branches jamais fusionnées listées dans [[Branches du dépôt]] ? Claude recommande d'en supprimer 14 (dépassées ou refaites ailleurs) et de garder `trailer-4k-footage` (17 rushes du trailer 1.2) jusqu'à ce que Sofiene confirme avoir les vidéos.
+
 ## À vérifier (sans Sofiene)
+- GitHub Pages (q80, coupé par Sofiene le 28/11) : plus aucune page servie sur `kaliso-dev.github.io/Rago` (404, vérifié le 28/11), mais l'API GitHub montre encore une configuration Pages (source : branche de prod) et le workflow « pages build and deployment » a encore tourné le 28/11 à 00:09 UTC ([[Fichiers de la racine du dépôt]]).
 - Rago Route (sorti et annoncé le 22/11) : tous les joueurs sortent par la même adresse à Paris ; Hypixel coupe déjà les connexions venant de Frankfurt (09/11, sans effet tant que Frankfurt n'est qu'un relais). Test P0-9 et message à Hypixel à faire au plus vite (q99) ; surveiller les retours des joueurs ([[Proxy]], [[Page de vente Rago Route]]).
 - Concurrents, lus le 11/11 sans navigateur : prix d'ExitLag sur son propre site (seuls ceux de l'App Store, États-Unis, ont été lus : 9,99 $ par mois, 75 $ par an) ; durée de l'essai (24 h ou 7 jours), prix et remboursement de NoPing (chiffres de tiers) ; durée de l'essai WTFast (3 jours dans l'aide, une semaine payante sur l'accueil). À revoir dans un navigateur avant d'en citer un ; la page ne nomme aucun concurrent ([[Page de vente Rago Route]], [[Étude - Outils réseau et ping]]).
 - [[Couleurs et résolution]] (11/11, jamais testé sur Windows) : saturation NVIDIA (NVAPI) et AMD (ADL), rampe gamma, retour des couleurs au Alt+Tab, résolution étirée (`DMDFO_STRETCH`) et retour à la fin de la partie, écriture des fichiers de Valorant, Fortnite et CS2 ; comportement avec le HDR de Windows.

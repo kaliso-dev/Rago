@@ -3,7 +3,7 @@ type: code
 tags: [code, dépôt, documentation, config]
 fichier: README.md, DEVELOPPEMENT.md, CLAUDE.md, Dockerfile, _config.yml, .gitignore, .dockerignore
 lignes: 493
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # Fichiers de la racine du dépôt
 
@@ -28,7 +28,7 @@ Guide en français écrit pour Sofiene (« Ce guide-ci explique comment les troi
 - **« Ctrl+Maj+R »** pour la barre en jeu (ligne 206) : le raccourci par défaut est **Alt+X** depuis la 1.2.0 (`DEFAULT_SHORTCUT` de `background.rs`, voir [[background.rs]] et [[Barre en jeu]]).
 - « Les pages légales sont des brouillons avec un bandeau « Draft » » (ligne 272) : bandeau retiré le 09/10 (PR #9) ; il reste l'identité du vendeur ([[Conformité juridique]]).
 - Exemple de code promo `RAGO50` (lignes 61 et 227) : simple exemple d'usage de `npm run admin -- popup`, pas l'état actuel ([[Promotions et affiliation]]).
-- « Désactiver GitHub Pages … Rien du dépôt n'y est plus publié » (ligne 261) : **faux depuis l'arrivée du vault en prod**, voir `_config.yml` plus bas.
+- « Désactiver GitHub Pages … Rien du dépôt n'y est plus publié » (ligne 261) : vrai à nouveau depuis le 28/11 (Pages coupé par Sofiene, q80), voir `_config.yml` plus bas.
 - Le README ne parle ni de l'essai gratuit de 3 jours, ni de l'absence de remboursement (depuis le 10/11), ni de Rago Route.
 
 ## `DEVELOPPEMENT.md` (154 lignes) : développer sans toucher à la prod
@@ -44,8 +44,8 @@ Image `node:22-alpine` qui sert **le serveur et le site ensemble** sur un seul d
 ## `_config.yml` (17 lignes) : GitHub Pages
 Configuration Jekyll de GitHub Pages. Commentaire : « GitHub Pages ne doit rien publier de ce dépôt privé : le site est servi par Netlify … Tant que Pages reste activé sur le dépôt, il publie ainsi un site vide. » Liste `exclude` : `app`, `brand`, `guide`, `licensing`, `site`, `README.md`, `DEVELOPPEMENT.md`, `Dockerfile`, `netlify.toml`, `_config.yml`, `.github`, `.gitignore`, `.dockerignore`.
 - Origine : incident du 04 au 07/10, où Pages a publié le dépôt alors privé ([[Bugs et incidents]]).
-- **OBSERVÉ le 10/11** : GitHub Pages est **toujours actif**. Le workflow automatique « pages build and deployment » tourne sur chaque push de la branche de prod (84 exécutions, dernière le 10/11 à 15:05 UTC, réussie) et publie sur l'adresse `github.io` du dépôt. Comme `docs/`, `netlify/`, `proxy/` et `CLAUDE.md` **ne sont pas exclus**, le vault de la branche de prod y est publié en pages web : une note du vault et `CLAUDE.md` répondent en HTTP 200 (vérifié le 10/11), comme `netlify/preview.sh`. Le dépôt étant public, ce contenu est déjà lisible sur GitHub, mais il est aussi servi comme un site et peut être indexé par les moteurs de recherche. Le commentaire « dépôt privé » est faux depuis que le dépôt est public.
-- Correctifs possibles (décision de Sofiene, À VÉRIFIER) : désactiver Pages (Settings → Pages, ce que le README demande déjà) ou ajouter `docs`, `netlify`, `proxy`, `CLAUDE.md` à `exclude`.
+- **Coupé par Sofiene le 28/11** (q80, [[Décisions]]) : le vault n'est plus publié. Avant, Pages publiait à chaque push de la branche de prod tout ce qui n'est pas dans `exclude` (`docs/` donc le vault, `netlify/`, `proxy/`, `CLAUDE.md`).
+- **OBSERVÉ le 28/11** : `kaliso-dev.github.io/Rago/` et les pages du vault répondent 404. L'API GitHub (`repos/kaliso-dev/Rago/pages`) montre pourtant encore une configuration Pages (source : branche de prod) et le workflow « pages build and deployment » a encore tourné le 28/11 à 00:09 UTC : À VÉRIFIER (si Pages doit être entièrement désactivé : Settings → Pages → « Unpublish » puis source « None »).
 
 ## `.gitignore` (5 lignes)
 `__pycache__/`, `*.pyc`, `.DS_Store`, `node_modules/`, `.env`. Le vault a son propre `docs/vault/.gitignore` (réglages locaux d'Obsidian).

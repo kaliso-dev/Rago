@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, ci, github]
-maj: 2026-11-23
+maj: 2026-11-28
 ---
 # CI GitHub Actions
 
@@ -49,7 +49,7 @@ Les trois workflows de `.github/workflows/`. Secrets et variables : [[Variables 
 - Durée : ≈ 0,7 min. Détail : [[site-check.yml]].
 
 ## Autre exécution automatique
-GitHub Pages est encore actif : le workflow automatique « pages build and deployment » tourne à chaque push de la branche de prod (84 exécutions, dernière le 10/11) et publie notamment le vault. Voir [[Fichiers de la racine du dépôt]] (`_config.yml`).
+GitHub Pages est coupé par Sofiene depuis le 28/11 (q80) : le vault n'est plus publié (404). Le workflow automatique « pages build and deployment » a pourtant encore tourné le 28/11 à 00:09 UTC : À VÉRIFIER. Voir [[Fichiers de la racine du dépôt]] (`_config.yml`).
 
 ## Code
 Carte : [[Code de la CI et du dépôt]]. Une note par workflow : [[app-windows.yml]], [[licensing-tests.yml]], [[site-check.yml]] ; branches : [[Branches du dépôt]].
