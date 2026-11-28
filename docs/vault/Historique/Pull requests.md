@@ -17,7 +17,7 @@ Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08
 - **153 PR** : 137 fusionnées, 15 fermées sans fusion, 1 ouverte (#136 accueil du site v6). Fermées sans fusion le 26/11 : #71 (bot communauté vers la prod, code déjà en prod par la #105) et #106 (vault de la 1.3.0, repris par la #153) ; le 27/11 : #143 (ouverte par erreur vers la prod).
 - Cible des #95 à #153 : 10 vers la prod (#101, #103, #105, #114, #117, #143, #145, #150, #151, #152), 49 vers `staging`. Les #150 à #152 ([[Rago Hub]]) sont allées directement en prod ; leur `.claude/` a été recopié dans `staging` le 27/11 (q130). Pour les #1 à #94, compté le 11/11 : 47 vers la prod, 43 vers `staging`, 1 vers une autre branche.
 - PR #107 à #141 : la refonte v5 et v6 du [[New Brand Rago]]. PR #142 à #149 : cerveaux des autres projets dans le [[Cerveau du vault]] et vault du passage au nouveau compte ; #150 à #152 : [[Rago Hub]] ; #153 : vault regroupé.
-- Fermées sans fusion, entre autres : #16, #21, #24, #26, #28, #46, #47, #50, #51, #69. Les branches de ces PR sont gardées (décision du 01/11, [[Branches et environnements]]).
+- Fermées sans fusion, entre autres : #16, #21, #24, #26, #28, #46, #47, #50, #51, #69. Leurs branches ont été supprimées le 28/11 (q81, q138) ; voir [[Branches du dépôt]].
 - Jusqu'au 12/10, une PR vers `staging` était souvent suivie d'une PR « port en prod » qui reprenait le même travail (#25 → #27, #29 → #30, #31 + #32 → #33, #34 à #37 → #38, #39 + #41 + #42 → #43, #44 → #45). Depuis la 1.2, la prod n'a plus reçu que des PR ciblées (#59, #61, #63, #66 à #68, #72, #81, #87) : le 10/11, `staging` avait environ 160 commits de plus que la prod, et **le code de l'app sur la branche de prod était encore la 1.1.14** (les exe sont construits depuis `staging`).
 
 ## Tableau
@@ -190,10 +190,7 @@ Certains fils ont poussé leurs commits directement sur `staging`, après un acc
 - **Vault** : des commits de vault seuls, poussés par les fils sur `staging` (règle du 10/11, q57 : Claude peut pousser seul ce qui ne touche que le vault, [[Décisions]]). Exemple : `9d63ce8` (10/11).
 
 ## Branches poussées mais jamais fusionnées
-- `claude/project-thread-tzbch5` (fil « Sauvegarder les clés et régler Supabase », 10/11) : 2 commits de vault **jamais arrivés sur `staging`** (`8246bd4` : l'e-mail de Supabase parle d'un dépassement de quota, pas d'une suppression ; `803b9d6` : décision de Sofiene sur Supabase). Le contenu est repris dans [[Journal]], [[Décisions]], [[Supabase]], [[Clés et secrets]], [[Prochaines étapes]] et [[État actuel]] (PR #85 du [[Cerveau du vault]], 10/11).
-- `claude/project-thread-8teqin` (charte 2.2, PR #69 fermée) : gardée, travail abandonné ([[Décisions]]).
-- Les branches des versions non retenues 1.1.11 à 1.1.13 : voir [[Versions 1.1.11 à 1.1.13]].
-- Une branche temporaire sans préfixe `claude/` existe encore sur GitHub (4 commits du 29/10) ; elle servait au trailer de la 1.2, abandonné le 10/11 (voir [[Décisions]]). La supprimer revient à Sofiene.
+Toutes supprimées le 28/11 (décision de Sofiene, q138), sauf `trailer-4k-footage` (rushes du trailer 1.2, gardée). La charte 2.2 (`claude/project-thread-8teqin`, PR #69) est copiée sur le Mac de Sofiene dans `Rago data /charte-2.2/`. Détail et têtes des branches supprimées : [[Branches du dépôt]].
 
 ## Liens
 [[Fils du projet]] · [[Chronologie du projet]] · [[Journal]] · [[Historique des versions]] · [[Publier une version]]

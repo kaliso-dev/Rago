@@ -40,9 +40,6 @@ Posées le 11/11 (q78 traitée le même jour : Sofiene a demandé la page de ven
 Posée le 27/11 (fil HUB-d1451f, Rago Route pour les Lifetime, [[Paiements Stripe]]) :
 - q131 : la consigne disait que les 5 Lifetime vendus ont Rago Route gratuit en prod et le perdront à la mise en prod ; or le code de prod (1.3.0) demande déjà l'option à tout Lifetime. Un Lifetime a-t-il eu Rago Route sans payer ? Veux-tu les prévenir que l'option existe pour eux ? (À VÉRIFIER)
 
-Posée le 28/11 (fil HUB-cdb468, ménage des branches, q81) :
-- q138 : supprimer les 15 branches jamais fusionnées listées dans [[Branches du dépôt]] ? Claude recommande d'en supprimer 14 (dépassées ou refaites ailleurs) et de garder `trailer-4k-footage` (17 rushes du trailer 1.2) jusqu'à ce que Sofiene confirme avoir les vidéos.
-
 ## À vérifier (sans Sofiene)
 - GitHub Pages (q80, coupé par Sofiene le 28/11) : plus aucune page servie sur `kaliso-dev.github.io/Rago` (404, vérifié le 28/11), mais l'API GitHub montre encore une configuration Pages (source : branche de prod) et le workflow « pages build and deployment » a encore tourné le 28/11 à 00:09 UTC ([[Fichiers de la racine du dépôt]]).
 - Rago Route (sorti et annoncé le 22/11) : tous les joueurs sortent par la même adresse à Paris ; Hypixel coupe déjà les connexions venant de Frankfurt (09/11, sans effet tant que Frankfurt n'est qu'un relais). Test P0-9 et message à Hypixel à faire au plus vite (q99) ; surveiller les retours des joueurs ([[Proxy]], [[Page de vente Rago Route]]).

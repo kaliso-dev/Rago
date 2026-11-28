@@ -48,6 +48,7 @@ Supprimés le 10/11 à la demande de Sofiene (q58) :
 - les anciens patchs `vault/maj-*`, sauf `maj-2026-11-10-point/`, qui est encore là.
 
 ## Ailleurs
+- Mac de Sofiene, `/Users/kaliso/Desktop/Rago data /charte-2.2/` : copie de la charte graphique 2.2 (branche `claude/project-thread-8teqin`, PR #69 fermée, supprimée le 28/11) : `site/`, patch du commit `a4ec5ab`, `LISEZMOI.txt` ; ouvrir `site/index.html` pour l'aperçu ([[Charte graphique]], [[Branches du dépôt]]).
 - Dossier du projet Claude « [[New Brand Rago]] » : `rago-redesign/` (maquettes v5 `rendus-v5/`, kit `marque/`, scripts `outils/`, captures `app-strict/`, `images/` et `sources.md`), sur GitHub dans le dépôt privé [`kaliso-dev/rago-design`](https://github.com/kaliso-dev/rago-design) depuis le 28/11 (dans `design/rago-redesign/` de `rago` du 27 au 28/11, retiré car l'archive de `staging` dépassait la limite de 120 Mo du [[Cerveau du vault]]).
 - Passage sur un nouveau compte Claude (25/11) : ce qu'il faut emporter, [[Reprendre sur un nouveau compte Claude]].
 - Artefacts GitHub Actions (exe) : expirent après 90 jours ; ceux de la 1.1.10 le 08/01/2027.
