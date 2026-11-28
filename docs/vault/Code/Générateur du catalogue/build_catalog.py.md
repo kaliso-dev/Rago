@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, catalogue, générateur, python]
 fichier: app/tools/build_catalog.py
-lignes: 301
-maj: 2026-11-10
+lignes: 302
+maj: 2026-11-28
 ---
 # build_catalog.py
 
@@ -14,7 +14,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11). Créé le 07/10 (comm
 ## Rôle et place dans l'ensemble
 - **Ne pas le lancer seul pour fabriquer l'app** : ses sorties sont incomplètes (catalogue en `version: 1`, sans les réglages v6, sans relevés ni annulations). `npm run catalog` lance [[build_catalog_v6.py]], qui l'exécute en sous-processus (`python3 tools/build_catalog.py`, `check=True`), relit ce qu'il vient d'écrire, puis réécrit tout.
 - Il fait le lien entre les métadonnées de [[meta.py]] (noms, textes, risques, `label@ligne`) et le texte des scripts, extrait par `LegacyBat` de [[extract_bat.py]].
-- Le docstring en tête dit encore `python3 tools/build_catalog.py` comme commande et décrit ses sorties comme finales : c'était vrai avant le 06/10 (catalogue v6). Le commentaire d'en-tête de [[catalog.rs]] cite aussi encore ce fichier comme générateur (petit retard de commentaire, sans effet).
+- Le docstring en tête (corrigé le 28/11, q83) dit qu'il est lancé par [[build_catalog_v6.py]] (`npm run catalog`) et que ses sorties sont intermédiaires, réécrites ensuite ; ne pas le lancer seul.
 
 ## Ce que le fichier expose
 Pas de fonction `main` : **tout le code tourne au niveau du module** (l'importer lancerait la génération). Constantes et fonctions :

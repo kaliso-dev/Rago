@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, 1.2]
 version_app: 1.2.1
-maj: 2026-11-25
+maj: 2026-11-28
 ---
 # Bibliothèque de jeux
 
@@ -17,7 +17,7 @@ Page « Jeux » (groupe « En jeu »). RAG-57. Code : [[games.rs]], [[icon.rs]],
 - **Graphismes du jeu** : dans la case « in-game graphics » de Valorant, Fortnite, CS2, Apex, Marvel Rivals et The Finals, trois niveaux Performance, Équilibré, Qualité écrits dans les réglages du jeu, comme OptiFine. Voir [[Graphismes des jeux]].
 - « En cours » / « Dernière partie » : processus lancés depuis le dossier du jeu, regardés toutes les 4 s.
 - **Réglages conseillés** (PR #91 du 11/11) : dans la [[Barre en jeu]] seulement depuis le 23/11 (plus sous le jeu en avant) : les réglages à changer dans le jeu que conseillent les pros (VALORANT, Fortnite, Counter-Strike 2, Apex Legends, PUBG, League of Legends, Marvel Rivals, THE FINALS), à cocher « fait ». Voir [[Conseils au lancement du jeu]].
-- « Retirer de la bibliothèque » (deux clics) ne désinstalle rien.
+- « Retirer de la bibliothèque » (deux clics) ne désinstalle rien. **Depuis le 28/11 dans `staging`** (q85, PR PR_NUM, pas encore en prod) : « Show hidden games (N) » sous la bibliothèque liste les jeux retirés toujours installés, avec « Show again » pour chacun ([[Games.tsx]]). Dans la 1.3.0 en prod, un jeu retiré ne revient pas depuis l'interface.
 - **Couleurs et résolution** (codée le 11/11, en prod avec la 1.3.0 depuis le 22/11) : les cases « resolution » (« 1280×960 », « stretched ») et « saturation » (« 100 % », « windows is 50% ») du jeu en tête ouvrent la page [[Couleurs et résolution]] sur ce jeu ; lancé depuis Jeux, le jeu démarre déjà dans sa résolution.
 
 Liens : [[Barre en jeu]], [[Pendant la partie]], [[Problèmes joueurs]] (curseur perdu après Optimiser et jouer).

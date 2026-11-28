@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, rust]
 fichier: app/src-tauri/src/lib.rs
-lignes: 1546
-maj: 2026-11-25
+lignes: 1561
+maj: 2026-11-28
 ---
 # lib.rs
 
@@ -100,7 +100,7 @@ Ordre de `generate_handler!`. Côté interface, chaque commande est appelée par
 | `netopt_run` | `action`, `options?` → `netopt::Outcome` | voir plus bas |
 
 **Bibliothèque de jeux** ([[Bibliothèque de jeux]], [[games.rs]])
-`games_list(refresh)`, `game_art(id)` (image en `data:` URL, gardée dans `art\`), `game_launch(id)` (pose d'abord la résolution du jeu et l'écrit dans son fichier de réglages, `display.prepare` ; `cancel_prepare` si le lancement échoue ; émet `display:state`), `launchers_list(refresh)`, `launcher_launch(id)`, `launcher_icon(id)` (`data:` URL tirée de l'exe), `preset_icons()` (logo des jeux des [[Presets]] installés, par clé de jeu), `game_add(path)` → id, `game_remove(id)`, `games_unhide()`.
+`games_list(refresh)`, `game_art(id)` (image en `data:` URL, gardée dans `art\`), `game_launch(id)` (pose d'abord la résolution du jeu et l'écrit dans son fichier de réglages, `display.prepare` ; `cancel_prepare` si le lancement échoue ; émet `display:state`), `launchers_list(refresh)`, `launcher_launch(id)`, `launcher_icon(id)` (`data:` URL tirée de l'exe), `preset_icons()` (logo des jeux des [[Presets]] installés, par clé de jeu), `game_add(path)` → id, `game_remove(id)`, `games_hidden()` → jeux retirés toujours installés, `game_unhide(id)`, `games_unhide()` (q85, 28/11).
 
 **Mise à jour** ([[Mise à jour automatique]])
 | Commande | Arguments → retour | Ce qu'elle fait |

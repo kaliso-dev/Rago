@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, rust, moteur, catalogue]
 fichier: app/src-tauri/src/catalog.rs
-lignes: 1405
-maj: 2026-11-10
+lignes: 1406
+maj: 2026-11-28
 ---
 # catalog.rs
 
@@ -82,7 +82,7 @@ Tout est CONFIRMÉ (code de `staging`, 10/11). Créé le 07/10 (1.1.5), 12 commi
 Les tests ouvrent le paquet Premium d'un build de développement avec `seal::version_key(TEST_SECRET, RAGO_APP_VERSION ou CARGO_PKG_VERSION)`. Lancer : `cargo test --manifest-path src-tauri/Cargo.toml` ([[Développer et tester]]).
 
 ## À savoir avant de modifier
-- On ne modifie **jamais** un script ici : on modifie le générateur Python (`npm run catalog`, `tools/build_catalog_v6.py` et `tools/*.py`) qui réécrit `scripts/*.json`, puis on recompile. Le commentaire en tête du fichier cite encore `tools/build_catalog.py` (l'ancien générateur, toujours présent) : c'est `build_catalog_v6.py` que lance `npm run catalog`.
+- On ne modifie **jamais** un script ici : on modifie le générateur Python (`npm run catalog`, `tools/build_catalog_v6.py` et `tools/*.py`) qui réécrit `scripts/*.json`, puis on recompile. Le commentaire en tête du fichier nomme `tools/build_catalog_v6.py` (`npm run catalog`), qui lance aussi `build_catalog.py` (corrigé le 28/11, q83).
 - Ajouter un réglage gratuit : `app/src/data/free.json` (partagé avec l'interface), puis vérifier `free_plan`. Les notes `Tweaks/` du vault se régénèrent avec `python3 docs/tools/catalogue_vault.py`.
 - Un nouveau réglage qui coupe un service lu par le vérificateur RBW fait échouer `rbw_mode_puts_back_what_other_tweaks_turn_off` : c'est voulu.
 - Le paquet Premium dépend de la version (`CARGO_PKG_VERSION`) : une nouvelle version demande une nouvelle clé côté serveur ([[Publier une version]]).

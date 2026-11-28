@@ -3,7 +3,7 @@ type: code
 tags: [code, app, catalogue, python, carte]
 fichier: app/tools/
 lignes: 6 488 (18 fichiers .py, .mjs et .sh de app/tools/ et app/tools/undo/), plus descriptions.json 2 773
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # Code du générateur de catalogue
 
@@ -74,7 +74,6 @@ Tout est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`, app 1.3.0). **V�
 | [[bump-version.mjs]] | 16 | `npm run bump` : change la version dans `package.json` et `Cargo.toml` |
 | [[window.mjs]] | 46 | `npm run window` : l'interface en démo navigateur, à la taille de l'app |
 | [[sync_icons.sh]] | 21 | copie les icônes et images d'installeur depuis `brand/logo` |
-| [[fix_free_bat.py]] | 149 | ancien `.bat` gratuit, gardé pour mémoire, à ne pas lancer |
 
 ## Qui appelle qui
 - `npm run catalog` → [[build_catalog_v6.py]], qui importe [[extract_bat.py]], [[audit_fixes.py]], [[optis_120.py]], [[safety.py]], [[rbw.py]], [[paths.py]] (qui importe [[probes.py]]), [[probes.py]] et [[corrections_md.py]].
@@ -123,4 +122,4 @@ Modifier `tweaks` dans [[free.json]] (pas besoin de `npm run catalog` : le tri e
 ## À savoir avant de modifier
 - Les sources sont dans un **dépôt public** au 10/11 : les scripts Premium y sont lisibles en clair, seuls ceux de l'exe sont chiffrés ([[Catalogue des tweaks]]).
 - Les modules Python s'importent entre eux par le dossier courant : les lancer avec `python3 -B` hors du build évite de créer des `__pycache__` (ignorés par git de toute façon).
-- Plusieurs textes du dépôt sont en retard sur ce code (OBSERVÉ le 10/11) : le `README.md` de la racine annonce « 198 réglages, 10 modules, 5 presets » et « 11 réglages ouverts » (au 10/11 : 218 réglages distincts, 20 presets, 73 entrées gratuites) ; `V6_NOTES` écrit « 226/199 » ; le commentaire d'en-tête de [[catalog.rs]] attribue les scripts à `tools/build_catalog.py` (c'est [[build_catalog_v6.py]]) ; [[undo_gen.py]] cite encore `app/rago-hub/tools` et `audit/outils-annulation`. Détail dans les notes de chaque fichier.
+- Plusieurs textes du dépôt sont en retard sur ce code (OBSERVÉ le 10/11) : le `README.md` de la racine annonce « 198 réglages, 10 modules, 5 presets » et « 11 réglages ouverts » (au 10/11 : 218 réglages distincts, 20 presets, 73 entrées gratuites) ; `V6_NOTES` écrit « 226/199 » ; les commentaires de [[catalog.rs]], [[build_catalog.py]] et [[undo_gen.py]] ont été remis à jour le 28/11 (q83). `app/tools/fix_free_bat.py` (ancien `.bat` gratuit) a été supprimé le 28/11 (q82).

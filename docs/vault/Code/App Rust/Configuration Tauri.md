@@ -3,7 +3,7 @@ type: code
 tags: [code, app, config, tauri]
 fichier: app/src-tauri/tauri.conf.json, tauri.staging.conf.json, capabilities/default.json, capabilities/overlay.json, app.manifest, keys/, assets/, icons/, resources/
 lignes: 71 (tauri.conf.json), 5 (staging), 29 + 12 (capabilities), 30 (app.manifest)
-maj: 2026-11-11
+maj: 2026-11-28
 ---
 # Configuration Tauri
 
@@ -59,7 +59,8 @@ Clé publique **de test** (113 octets) du contrat de licence (`licensing/docs/te
 Placés dans `assets/` le 16/10 ([[Version 1.1.14]]) ; avant, ils étaient dans `resources\` en clair. Chiffrement : [[build.rs]], lecture : [[assets.rs]]. Les `.bat` d'origine (Rago Hub) les utilisaient déjà par `%RAGO_RES%\<nom>` (commentaire d'[[assets.rs]]) ; leur provenance exacte n'est pas documentée dans le dépôt.
 
 ## `resources/`
-- `nvidiaProfileInspector.exe` (1 118 208 octets), dans git depuis le 07/10 (1.1.5). Métadonnées du fichier (OBSERVÉ) : nom d'origine `NVidiaProfileInspectorDmW.exe`, version 3.5.0.0, mention « Modified by DeadManWalking (DeadManWalkingTO-Github) » : c'est une version modifiée de NVIDIA Profile Inspector. **À VÉRIFIER** : d'où il a été téléchargé et si sa licence permet de le redistribuer.
+- `nvidiaProfileInspector.exe` (1 118 208 octets), dans git depuis le 07/10 (1.1.5) : **NVIDIA Profile Inspector « Modified by DeadManWalking » 3.5.0.0** (nom d'origine `NVidiaProfileInspectorDmW.exe`), fork de `Orbmu2k/nvidiaProfileInspector` publié sur [github.com/DeadManWalkingTO/NVidiaProfileInspectorDmW](https://github.com/DeadManWalkingTO/NVidiaProfileInspectorDmW) ; 3.5.0.0 y est la dernière version (fichier `version` du dépôt). **Licence MIT** pour l'original (© 2016 Orbmu2k) comme pour la version modifiée (© 2018-2023 DeadManWalking) : redistribution permise à condition de livrer l'avis de copyright et de licence (CONFIRMÉ le 28/11 en lisant `LICENSE` des deux dépôts, q74). L'exe contient un lien de vérification de mise à jour vers ce dépôt.
+- `THIRD_PARTY_NOTICES.txt` (depuis le 28/11, q74, PR PR_NUM) : l'avis MIT complet de NVIDIA Profile Inspector (les deux copyrights, lien des deux dépôts, « Not affiliated with or endorsed by NVIDIA Corporation »), installé à côté de l'exe dans `<installation>\resources\` par `bundle.resources`. L'écran À propos de [[Settings.tsx]] renvoie vers le dépôt de la version modifiée.
 - `PresentMon.exe` et `PresentMon-LICENSE.txt` : **pas dans git**, ajoutés par la CI à chaque build (FPS de la [[Barre en jeu]], [[fps.rs]]).
 - `smartctl.exe` : cherché par [[system.rs]] mais jamais livré : seul le réglage `pow_storage_apm` s'en servirait (APM/AAM des disques), il marche sans, en partie.
 

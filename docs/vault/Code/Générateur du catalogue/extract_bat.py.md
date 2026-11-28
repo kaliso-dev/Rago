@@ -3,7 +3,7 @@ type: code
 tags: [code, app, catalogue, générateur, python]
 fichier: app/tools/extract_bat.py
 lignes: 232
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # extract_bat.py
 
@@ -14,7 +14,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11). Fichier créé le 07/
 ## Rôle et place dans l'ensemble
 - L'ancien programme `app/legacy/Premium v5.2 - Rago Hub.bat` ([[Anciens scripts .bat]]) est un seul fichier de 14 435 lignes, piloté par des menus : chaque choix fait `goto <label>`, le code sous le label s'exécute puis revient au menu par un autre `goto`. L'app, elle, a besoin d'**un script autonome par réglage**.
 - Ce module transforme « un label » en « un script » : il suit le fil d'exécution comme le ferait `cmd.exe`, retire tout ce qui est interface (dessins, `pause`, `cls`, questions), remplace les retours au menu par `exit /b 0` et corrige les bugs connus du fichier.
-- Utilisé par [[build_catalog.py]] (classe `LegacyBat`, constante `NPI_CALL`) pour les 189 réglages de [[meta.py]], et par [[build_catalog_v6.py]] (seulement `LegacyBat._fix_blocks`, pour refermer les boucles `for` des `.bat` v6). [[fix_free_bat.py]] reprend ses corrections mécaniques à part (il ne l'importe pas).
+- Utilisé par [[build_catalog.py]] (classe `LegacyBat`, constante `NPI_CALL`) pour les 189 réglages de [[meta.py]], et par [[build_catalog_v6.py]] (seulement `LegacyBat._fix_blocks`, pour refermer les boucles `for` des `.bat` v6).
 
 ## Ce que le fichier expose
 | Nom | Type | Rôle |

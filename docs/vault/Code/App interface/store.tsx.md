@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, react, interface]
 fichier: app/src/lib/store.tsx
-lignes: 732
-maj: 2026-11-25
+lignes: 749
+maj: 2026-11-28
 ---
 # store.tsx
 
@@ -22,7 +22,8 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`).
 ### Constantes et petites fonctions
 | Nom | Valeur / rôle |
 |---|---|
-| `FREE` | `Set` des ids de `free.json > tweaks` (73 réglages ouverts sans licence) |
+| `FREE` | `Set` des ids de `free.json > tweaks` (73 ids ouverts sans licence) |
+| `FREE_COUNT` | nombre de réglages gratuits **affiché** (68) : une fiche par jumeau, la première rencontrée dans l'ordre du catalogue, gratuite si son id est dans `FREE` ; même règle que `n_free` de [[sync_tweaks.py]] et même façon de compter que `totalTweaks` (218). Décision de Sofiene du 28/11, q75 : « 68 free tweaks » partout (PR PR_NUM) |
 | `FREE_SLOTS` | `free.json > slots` (30 en 1.3.0) : nombre de réglages gratuits de type `tweak` allumés en même temps sans licence |
 | `REVERTS` | `Map` id → id de la variante marquée `revert` dans le catalogue (retour à l'état de Windows) |
 | `FREE_REVERTS` | `Set` de `free.json > reverts` : réglages Premium dont seul le retour arrière est gratuit (`rbw_mode`, `game_mode`) |

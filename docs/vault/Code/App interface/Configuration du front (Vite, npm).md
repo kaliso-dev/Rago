@@ -3,7 +3,7 @@ type: code
 tags: [code, app, config, vite, npm]
 fichier: app/package.json, app/vite.config.ts, app/tsconfig.json, app/index.html, app/overlay.html, app/public/, app/ci/
 lignes: 181
-maj: 2026-11-24
+maj: 2026-11-28
 ---
 # Configuration du front (Vite, npm)
 
@@ -90,14 +90,6 @@ Sans ces variables (développement), le compte pointe vers `http://localhost:878
 - Connexion de démo : n'importe quel e-mail avec un mot de passe de 4 caractères ou plus donne Premium ; un e-mail qui commence par « free » reste au plan gratuit.
 - Les paramètres d'URL de la démo (`?playing`, `?fastnet`, `?update`…) sont décrits dans [[Code de l'app (interface)]].
 
-## `app/ci/build-windows.yml` (83 lignes)
-- C'est une **ancienne copie** du workflow Windows. Son en-tête dit « À placer à la racine du dépôt : .github/workflows/app-windows.yml ».
-- GitHub ne l'exécute pas. Le vrai workflow est `.github/workflows/app-windows.yml` (189 lignes, voir [[app-windows.yml]]), qui a en plus :
-  - le choix du serveur staging ou prod ;
-  - les mises à jour signées ;
-  - PresentMon ;
-  - le numéro de version de test.
-- `app/README.md` renvoie encore à cette copie, et donne des chiffres d'avant (11 réglages gratuits, 198 réglages). Les deux sont en retard.
 
 ## À savoir avant de modifier
 - Changer le port 1420 demande de changer aussi `devUrl` dans `tauri.conf.json` ([[Configuration Tauri]]).

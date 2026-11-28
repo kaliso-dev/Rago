@@ -3,7 +3,7 @@ type: code
 tags: [code, app, typescript, react, licence]
 fichier: app/src/components/LicenseGate.tsx
 lignes: 327
-maj: 2026-11-23
+maj: 2026-11-28
 ---
 # LicenseGate.tsx
 
@@ -24,7 +24,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, PR #131 fusionnée le 24/11 :
 Une variable de CI non renseignée arrive comme chaîne vide : d'où `||` et non `??`.
 
 ### Composant
-`LicenseGate({ onDone })` : le contenu de la fenêtre de connexion, que [[Upsell.tsx]] affiche pour l'offre `signin` (`Modal v5="gate2"`, 500 px). `onDone` est appelé par « Commencer » sur l'écran de succès. L'ancien mode plein écran (`div.gate`, avec son lien de langue), monté nulle part depuis le plan gratuit, a été retiré le 24/11.
+`LicenseGate({ onDone })` : le contenu de la fenêtre de connexion, que [[Upsell.tsx]] affiche pour l'offre `signin` (`Modal v5="gate2"`, 500 px). `onDone` est appelé par « Commencer » sur l'écran de succès. L'ancien mode plein écran (`div.gate`, avec son lien de langue), monté nulle part depuis le plan gratuit, a été retiré le 24/11 ; aucun reste dans le code ni dans le CSS (vérifié le 28/11, q82).
 
 ## Fonctionnement détaillé (étapes)
 En-tête `.gb` : icône de l'app (`rago-app-dark-64.svg`), « rago optimizer », étiquette rouge « Premium ». Chaque étape apparaît en fondu (0,2 s).

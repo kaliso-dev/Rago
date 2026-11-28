@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app]
 version_app: 1.3.0
-maj: 2026-11-23
+maj: 2026-11-28
 ---
 # Paramètres de l'app
 
@@ -17,7 +17,7 @@ Page Paramètres, en bas de la barre latérale. Voir [[App Windows]]. En 1.3.0 (
 - **Mémoire** : « Nettoyer » réduit aussi les applis en arrière-plan (coupé par défaut, voir [[Tableau de bord]]).
 - **Partage et support** : ouvre [[Partage et support]].
 - **Dossiers** : ouvrir Journaux, Ressources, Données.
-- **À propos** : logo, version et nombre de réglages, signature « Par KALISO et RAGO » (1.3.0), licences des logiciels tiers avec un lien chacun (NVIDIA Profile Inspector, PresentMon, Barlow, Tauri, React, Motion, Lucide). La ligne de recherche de [[Mise à jour automatique]] (« Mise à jour : … ») n'existe **que dans l'exe de test** (`VITE_RAGO_SERVER=staging`).
+- **À propos** : logo, version et nombre de réglages, signature « Par KALISO et RAGO » (1.3.0), licences des logiciels tiers avec un lien chacun (NVIDIA Profile Inspector dans sa version « DeadManWalking mod » livrée avec l'app, avis complet dans `resources\THIRD_PARTY_NOTICES.txt` depuis le 28/11 ; PresentMon, Barlow, Tauri, React, Motion, Lucide). La ligne de recherche de [[Mise à jour automatique]] (« Mise à jour : … ») n'existe **que dans l'exe de test** (`VITE_RAGO_SERVER=staging`).
 - **Compte** (licence) : e-mail, appareil, clé masquée, offre et date de vérification, **lignes d'abonnement** (prochain paiement, « Résilier l'abonnement », « Reprendre l'abonnement », voir [[Abonnement dans l'app]]), « Gérer mon compte », « Aide sur Discord », « Se déconnecter » avec une confirmation qui dit combien de réglages seront remis comme avant ([[Licence dans l'app]], [[Remise à zéro]]). En plan gratuit : « {73} réglages sur {218} sont ouverts », « Passer Premium », « Se connecter ».
 - **Profil** (compte Rago) : nom public, photo de profil, avis (après environ 5 min d'utilisation réelle, l'app invite à laisser un avis), déconnexion du compte.
 - Depuis le 11/11 (PR #91, dans `staging`) : dans « Pendant la partie », l'option « Vérifications au lancement d'un jeu » s'appelle « **Conseils au lancement d'un jeu** » ([[Conseils au lancement du jeu]]).

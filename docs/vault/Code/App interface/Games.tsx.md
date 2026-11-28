@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, react, page, jeux]
 fichier: app/src/pages/Games.tsx
-lignes: 610
-maj: 2026-11-23
+lignes: 649
+maj: 2026-11-28
 ---
 # Games.tsx
 
@@ -63,6 +63,9 @@ Panneau de `app-games-empty.html` : grand « 0 » en contour, grande manette imp
 ### Ajouter un jeu
 `api.gameAdd(titre)` ouvre le choix d'un `.exe` (« Choisir le programme du jeu ») ; la liste est rechargée et le nouveau jeu passe en tête. Un fichier qui n'est pas un programme n'ajoute rien, sans message.
 
+### Réafficher un jeu retiré (28/11, q85)
+Décision de Sofiene du 28/11 (PR PR_NUM) : sous la bibliothèque, un lien discret `section.hidg` « Show hidden games (N) » (« Voir les jeux retirés (N) ») apparaît dès qu'un jeu détecté a été retiré et qu'il est toujours installé (`api.gamesHidden()`, chargé avec la liste et après chaque retrait). Un clic ouvre un panneau qui liste ces jeux par nom (« Minecraft (Lunar Client) » pour un client), avec leur launcher et un bouton `btn sm` « Show again » (« Remettre ») : `api.gameUnhide(id)`, puis la bibliothèque est rechargée ; le panneau se ferme quand il n'y a plus de jeu retiré. Le lien passe à « Hide this list » quand le panneau est ouvert. Visible aussi quand la bibliothèque est vide (tous les jeux retirés). Un jeu ajouté à la main puis retiré est oublié, il ne figure pas dans cette liste (on le rajoute par « Add a game »). Styles : `.pg-games .hidg` dans `s5/app.css` (charte v5 : lien condensé en capitales gris, rouge au survol ; panneau `.panel` en lignes séparées). Jamais testé sur Windows.
+
 ## Retiré le 23/11 (la maquette ne le montre pas)
 - La rangée des launchers en haut de page : un launcher s'ouvre maintenant par la puce d'une vignette ; un launcher sans jeu trouvé ne s'ouvre plus depuis la page.
 - La carte « Graphismes du jeu » (`GameGraphics.tsx`, supprimé) : devenue la case « in-game graphics ».
@@ -71,10 +74,10 @@ Panneau de `app-games-empty.html` : grand « 0 » en contour, grande manette imp
 
 ## Données touchées
 - `localStorage` via [[store.tsx]] : `rago.gamePresets`, `rago.mcLauncher`.
-- Jeux ajoutés ou retirés : gardés par le moteur ([[games.rs]], listes `manual` et `hidden`). `api.gamesUnhide()` (commande `games_unhide`) existe mais **aucun écran ne l'appelle** : un jeu trouvé par un launcher puis retiré ne revient pas depuis l'interface. À VÉRIFIER : bouton prévu puis oublié, ou retiré exprès ?
+- Jeux ajoutés ou retirés : gardés par le moteur ([[games.rs]], listes `manual` et `hidden` de `games.json`).
 
 ## Simulateur
-Avec `npm run window` : la bibliothèque de la maquette (9 jeux : Valorant, League of Legends, Counter-Strike 2, Apex Legends, Rocket League, Fortnite, Minecraft par Lunar Client, Overwatch 2, Rainbow Six Siege), Valorant réglé en 1280×960 étiré à 100 % de saturation et en graphismes « balanced ». `?nogames` : bibliothèque vide. `?playing` : le dernier jeu joué est « Playing ». Voir [[api.ts]].
+Avec `npm run window` : la bibliothèque de la maquette (9 jeux : Valorant, League of Legends, Counter-Strike 2, Apex Legends, Rocket League, Fortnite, Minecraft par Lunar Client, Overwatch 2, Rainbow Six Siege), Valorant réglé en 1280×960 étiré à 100 % de saturation et en graphismes « balanced ». `?nogames` : bibliothèque vide. Un jeu retiré dans la démo passe dans la liste des jeux retirés (`mockHidden`). `?playing` : le dernier jeu joué est « Playing ». Voir [[api.ts]].
 
 ## Liens avec le reste
 - Fonctionnalités : [[Bibliothèque de jeux]], [[Presets]], [[Graphismes des jeux]], [[Couleurs et résolution]].

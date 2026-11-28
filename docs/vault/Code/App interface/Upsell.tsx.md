@@ -3,7 +3,7 @@ type: code
 tags: [code, app, typescript, react, abonnement]
 fichier: app/src/components/Upsell.tsx
 lignes: 240
-maj: 2026-11-23
+maj: 2026-11-28
 ---
 # Upsell.tsx
 
@@ -24,7 +24,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, PR #131 fusionnée le 24/11 :
 |---|---|---|---|
 | `analysis` (avec une analyse gardée) | « Plan gratuit » | « Premium règle {p} des {n} points trouvés » | liste `.fnd` des points Premium avec leur valeur mesurée (« 141 fps », « 3 jours »), puis « Le plan gratuit en règle {free}, et {diy} sont à faire toi-même : l'analyse dit comment. » |
 | `slots` | « Plan gratuit » | « Tes 30 places gratuites sont prises » | « Le plan gratuit garde 30 réglages actifs en même temps. Annule un réglage pour en activer un autre, ou passe Premium : aucune limite. » et les 30 cases pleines (`.slt`) |
-| `tweak` avec un réglage | « Ce réglage fait partie de Premium » | « {nom} fait partie de Premium » | « Le plan gratuit ouvre {73} réglages… » (+ « En gratuit, tu peux toujours remettre ce réglage par défaut. » pour `rbw_mode`/`game_mode`) |
+| `tweak` avec un réglage | « Ce réglage fait partie de Premium » | « {nom} fait partie de Premium » | « Le plan gratuit ouvre {68} réglages… » (+ « En gratuit, tu peux toujours remettre ce réglage par défaut. » pour `rbw_mode`/`game_mode`) |
 | `plan` | « Plan gratuit » | « Tout débloquer avec Premium » | idem |
 | `preset` | « Les presets font partie de Premium » | « Débloque les {218} réglages » | idem |
 
@@ -53,7 +53,7 @@ Lien permanent en bas : « J'ai déjà Premium, me connecter » (→ `signin`).
   - `analysis` : {p} / {n} « points Premium » (`upsell.sideFound`, `upsell.sideFoundSub`) ;
   - `slots` : 30 / 30 « places prises » (`upsell.sideSlots`, `upsell.sideSlotsSub`) ;
   - `preset` : 20 « presets » (`upsell.sidePresets`, `upsell.sidePresetsSub`) ;
-  - sinon : 218 « tweaks », « {73} ouverts en gratuit » (`upsell.sideTweaks`, `upsell.sideFree`).
+  - sinon : 218 « tweaks », « {68} ouverts en gratuit » (`upsell.sideTweaks`, `upsell.sideFree`). Le nombre gratuit est `FREE_COUNT` de [[store.tsx]] (q75, 28/11).
 - **À droite** `.upr` : surtitre `.ukk` avec un cadenas, titre rouge `.h2.tape`, le texte ou la liste, « Choisis ton plan » (`.grp`), les plans, les promesses, le grand bouton rouge `.cta` avec une flèche, la note de l'essai `.tn`, puis les liens du bas `.uln`.
 - Styles : `s5/pages/win.css` (maquette) ; boutons radio, trois colonnes et grille dans `s5/app.css` ([[Maquettes v5 dans l'app (s5)]]).
 
