@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, base-de-données]
 fichier: licensing/supabase/schema.sql
 lignes: 20-48, 123
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # Table licenses
 
@@ -59,6 +59,6 @@ Tables liées : [[Table users]], [[Table devices]], [[Table referrals]], [[Table
 
 ## À savoir avant de modifier
 
-- Les commentaires du schéma sont en retard : `status_reason` n'y cite que `refunded | disputed | manual`, `source` que `stripe | grant` et `plan` que `month | year | lifetime`.
+- Les commentaires du schéma listent toutes les valeurs écrites par le code depuis le 28/11 (q83) : `status_reason` (refunded, disputed, manual, subscription_ended, payment_failed, replaced, duplicate, banned, deleted, test_mode), `source` (stripe, grant, affiliate, discord), `plan` (month, year, lifetime, reward).
 - Un compte n'a qu'une licence active à la fois (vérifié par le code, pas par une contrainte).
 - Toute modification du schéma passe par [[schema.sql]] (changements idempotents seulement) : le serveur le rejoue à chaque démarrage ([[db.js]]).

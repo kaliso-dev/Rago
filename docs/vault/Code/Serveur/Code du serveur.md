@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, carte]
 fichier: licensing/
 lignes: 8534 (src) + 755 (scripts et JS du navigateur) + 1085 (CSS) + 342 (schema)
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # Code du serveur
 
@@ -90,12 +90,12 @@ Détail complet dans [[app.js]] :
 1. **En-têtes** : CSP stricte (`'self'` partout, formulaires vers Stripe seulement, pas de cadre) sur les pages du serveur ; `CORP cross-origin` pour les images des e-mails et `/avatars/` ; pas de CSP sur le site servi par `SITE_DIR` (local seulement).
 2. **Contrôle d'origine** : un `POST` de formulaire venant d'un autre hôte → 403 (l'API et le webhook en sont exemptés).
 3. **Taille des corps** : 64 Ko (1 Mo pour le webhook, 5 Mo + 64 Ko pour une photo).
-4. **Fichiers** `/assets/*` ; **verrou d'avant lancement** (`LAUNCH_AT`, passage `rago_preview`).
+4. **Fichiers** `/assets/*` (plus de verrou d'avant lancement depuis le 28/11, q79).
 5. **Route** : page (session `rg_session`), API (jeton `Bearer`), admin (cookie `rago_admin`), webhook (signature Stripe).
 6. **Limites de débit** en mémoire par IP, e-mail, compte ou licence (connexion : 10 / 15 min par IP + e-mail ; API compte : 300 / h ; mises à jour : 120 / h…).
 7. **Erreurs** : JSON `{error:{code, message}}` sous `/api/`, page HTML ailleurs.
 
-**Cookies** : `rg_session` (30 j), `rg_claim` (2 j), `rg_ref` (30 j), `rg_signup` (24 h), `rg_oauth` (10 min), `rg_discord` (10 min), `rago_preview` (30 j), `rago_admin` (7 j, `SameSite=Strict`). Tous `HttpOnly`, `Secure` en prod ; valeurs signées par HMAC avec `SESSION_SECRET` quand elles portent un identifiant.
+**Cookies** : `rg_session` (30 j), `rg_claim` (2 j), `rg_ref` (30 j), `rg_signup` (24 h), `rg_oauth` (10 min), `rg_discord` (10 min), `rago_admin` (7 j, `SameSite=Strict`). Tous `HttpOnly`, `Secure` en prod ; valeurs signées par HMAC avec `SESSION_SECRET` quand elles portent un identifiant.
 
 ## Tâches de fond (dans le processus web)
 

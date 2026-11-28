@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, tests]
 fichier: licensing/test/
 lignes: 4179
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # Tests du serveur
 
@@ -39,8 +39,8 @@ Les tests automatiques du serveur de comptes et licences : `npm test` dans `lice
 - **Promotions** : `/buy?promo=…`, code refusé par Stripe, pop-up du site réglé depuis `/admin`.
 - **Comptes** : mot de passe, verrouillage contre les inconnus, contrôle d'`Origin` par hôte, 404 de l'API en JSON, code d'inscription à 6 chiffres (5 erreurs bloquent, expiration, renvoi), boutons Google/Discord, connexion Google/Discord ([[oauth.js]]).
 - **Avis et profil** : avis depuis l'app et le site, suppression, 60 derniers sur l'accueil ; photo de profil depuis l'app et le site, stockage Supabase simulé ([[reviews.js]], [[profile.js]]).
-- **Discord** : rôle Pro, une liaison par compte, récompenses VIP/MVP/boosts ([[discord.js]]).
-- **Serveur** : site servi par `SITE_DIR` sans CSP stricte, site sur une autre origine, installateur Supabase et mises à jour automatiques ([[installer.js]]), version de l'installateur, clés gardées en base, config, e-mails, staging qui refuse les clés live, base réservée au premier environnement ([[db.js]]), verrou d'avant lancement, purge des anciennes données ([[retention.js]]).
+- **Discord** : rôle Pro, une liaison par compte, récompenses VIP/MVP/boosts ([[discord.js]]) ; e-mail d'achat qui renvoie vers la page compte pour lier Discord quand le bot est réglé (28/11, q84, [[mailer.js]]).
+- **Serveur** : site servi par `SITE_DIR` sans CSP stricte, site sur une autre origine, installateur Supabase et mises à jour automatiques ([[installer.js]]), version de l'installateur, clés gardées en base, config, e-mails, staging qui refuse les clés live, base réservée au premier environnement ([[db.js]]), purge des anciennes données ([[retention.js]]).
 - **Admin** : `/admin` en 404 sans `ADMIN_KEY`, contrôles de mise en ligne (prix, webhook, portail), clés de test, prix Lifetime, et « /admin dashboard: players, Premium time, revoke, ban, gifts, sales, journal (2026-11-10) » ([[admin.js (serveur)]]).
 - **Vraie base** (seulement avec `TEST_DATABASE_URL`) : connexion coupée par la base, table verrouillée au démarrage, staging sur la base de prod arrêté avant le schéma.
 

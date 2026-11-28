@@ -3,7 +3,7 @@ type: code
 tags: [code, site, netlify, fichiers]
 fichier: site/
 lignes: 3381
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # Fichiers publiés du site
 
@@ -35,7 +35,6 @@ Ce que [[build.py]] change entre une source et sa page : empreinte `?v=` sur `v5
 | `robots.txt` | `User-agent: *`, `Allow: /`, `Sitemap: https://rago-optimizer.com/sitemap.xml` | à la main |
 | `favicon.svg`, `favicon.ico`, `favicon-32.png`, `apple-touch-icon.png` | icônes v5 : R rouge sur tuile blanche | copies de `brand/logo/web/` ([[Kit de marque (brand)]]), 22/11 |
 | `og-image.png` | image de partage 1 200 × 630 (449 Ko) : « Every millisecond counts. », pastille « 218 tweaks », carte de trois tweaks | copie de `brand/logo/web/og-image.png` (v5, 22/11) |
-| `og-launch.png` | image de partage du compte à rebours (421 Ko, v5) | copie de `brand/logo/web/og-launch.png` ; utilisée seulement par [[launch-gate.js]] |
 | `bimi.svg` | logo au format SVG Tiny PS pour BIMI (avatar des e-mails envoyés depuis le domaine) | ajouté le 08/10 (`e5b1fd4`) ; référencé par l'enregistrement DNS du domaine, pas par le code |
 | `fonts/Barlow-*.woff2` (400, 500, 600, 700), `fonts/BarlowCondensed-*.woff2` (600 à 900, dont 700, 800 et 900 italiques), `fonts/OFL-Barlow.txt` (licence) | polices v5 auto-hébergées (276 Ko en tout, aucune IP envoyée à Google), déclarées dans [[v5.css]] | ajoutées le 22/11 (PR #109) ; les polices Geist sont retirées |
 | `img/v5/` : `rago-icon.svg` (tuile blanche au R rouge, en-têtes), `rago-cap.svg`, `brush.svg` (coup de pinceau des titres), `grain.svg` (grain du fond), `shot-dashboard.webp` (capture de l'app du héros) | images du design v5 | copiées des maquettes le 22/11 |
@@ -50,7 +49,7 @@ Ce que [[build.py]] change entre une source et sa page : empreinte `?v=` sur `v5
 La commande de [[netlify.toml]] (et [[preview.sh]]) supprime avant publication :
 - `site/src/` : les sources ([[page.html]], [[tweaks.html]], [[reviews.html]], [[partners.html]], [[route.html]], [[partners.json]], [[tweaks-copy.json]], `legal/` : [[Textes juridiques (src-legal)]]) ;
 - `site/tools/` : les outils ([[build.py]], [[prerender.js]], [[sync_app.py]], [[sync_partners.py]], [[sync_tweaks.py]], [[sync_icons.py]], [[icons_v5.json]], [[make_legal.py]]) ;
-- `site/*.md` : `site/CLAUDE.md` (8 lignes, consignes pour Claude : modifier `src/`, lancer `build.py`, `sync_app.py` si le catalogue change, prix Lifetime égal à `LIFETIME_PRICE`) et `site/recherche-conversion.md` ([[recherche-conversion (site)]]).
+- `site/*.md` : `site/CLAUDE.md` (8 lignes, consignes pour Claude : modifier `src/`, lancer `build.py`, `sync_app.py` si le catalogue change, prix Lifetime égal à `LIFETIME_PRICE`). (`site/recherche-conversion.md` supprimé le 28/11, q82.)
 
 ## Liens avec le reste
 - Fabrication et contrôle : [[Code du site]], [[site-check.yml]] (compare `index`, `reviews`, `tweaks`, `partners`, `route` ; ne compare pas les pages légales).
@@ -59,5 +58,5 @@ La commande de [[netlify.toml]] (et [[preview.sh]]) supprime avant publication :
 
 ## À savoir avant de modifier
 - `sitemap.xml` n'est pas généré : penser à y ajouter une nouvelle page et à mettre à jour les dates.
-- Une nouvelle image ou vidéo se dépose directement dans `site/` (pas de chaîne de traitement) ; la garder légère (règle de vitesse, voir [[recherche-conversion (site)]]).
+- Une nouvelle image ou vidéo se dépose directement dans `site/` (pas de chaîne de traitement) ; la garder légère (règle de vitesse).
 - Tout ce qui est à la racine de `site/` (hors `src/`, `tools/`, `*.md`) est public.

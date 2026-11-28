@@ -1,7 +1,7 @@
 ---
 type: procédure
 tags: [technique, développement, tests]
-maj: 2026-11-14
+maj: 2026-11-28
 ---
 # Développer et tester
 
@@ -49,13 +49,12 @@ Serveur `https://rago-staging.up.railway.app`, site `https://staging--rago-optim
 | `app/src-tauri/` | `cargo test --manifest-path src-tauri/Cargo.toml` ; hors Windows, une partie seulement compile : `cargo check --target x86_64-pc-windows-msvc` si la cible est installée | tests complets sur Windows |
 | Catalogue | `npm run catalog` puis `cargo test` ; puis `python3 docs/tools/catalogue_vault.py` et `python3 site/tools/sync_app.py` + `build.py` | — |
 | `site/` | `python3 site/tools/build.py` (lance aussi `sync_partners.py` et `prerender.js`), commiter sources et pages générées ; `python3 site/tools/make_legal.py` si les pages légales changent | `site-check` (sans les pages légales) |
-| `netlify/` (fonction edge) | `node --test netlify/launch-gate.test.mjs` : le 10/11, 7 tests sur 8 passent, celui de la date par défaut du lancement échoue (date passée) | — |
 | `proxy/` | `python3 proxy/fabriquer-install.py` si `rago-route.py` ou `mcping.py` changent | — |
 
 Test de bout en bout de la licence contre le serveur local : `cargo test --manifest-path src-tauri/Cargo.toml live_flow -- --ignored` (serveur `npm run local` lancé).
 
 ## Code
-Notes de code utiles pour ces tests : site [[Code du site]] ([[build.py]], [[prerender.js]], [[make_legal.py]], [[launch-gate.js]]) ; CI [[Code de la CI et du dépôt]] ([[app-windows.yml]], [[licensing-tests.yml]], [[site-check.yml]]) ; guides de la racine (`README.md`, `DEVELOPPEMENT.md`, écarts connus) : [[Fichiers de la racine du dépôt]].
+Notes de code utiles pour ces tests : site [[Code du site]] ([[build.py]], [[prerender.js]], [[make_legal.py]]) ; CI [[Code de la CI et du dépôt]] ([[app-windows.yml]], [[licensing-tests.yml]], [[site-check.yml]]) ; guides de la racine (`README.md`, `DEVELOPPEMENT.md`, écarts connus) : [[Fichiers de la racine du dépôt]].
 
 ## Ce que Claude peut et ne peut pas faire
 - Peut : lire et modifier le code, lancer les tests Node et Python, la démo de l'interface, `cargo check`/`cargo test` de ce qui compile hors Windows, lire GitHub (PR, CI) et Stripe (lecture).

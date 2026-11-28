@@ -65,5 +65,5 @@ Pas de test propre : les pages sont contrôlées à travers `flow.test.js` (text
 
 - Tout passe par `html` : n'utiliser `raw` que pour du HTML construit par le serveur, jamais pour une saisie.
 - Pas d'attribut `style=` ni de `<script>` en ligne : la CSP les bloque.
-- `FREE_TWEAKS` vaut 11 par défaut dans [[config.js]] alors que la version gratuite compte 73 réglages depuis le 04/11 : À VÉRIFIER (valeur réglée sur Railway).
-- Le bloc Discord sans bot demande d'ouvrir un ticket ; l'e-mail d'achat ([[mailer.js]]) le dit aussi même avec le bot : À VÉRIFIER.
+- `FREE_TWEAKS` vaut 68 et `PREMIUM_TWEAKS` 218 par défaut dans [[config.js]] depuis le 28/11 (q75, « 68 free tweaks » partout, dans `staging`).
+- Le bloc Discord sans bot demande d'ouvrir un ticket ; avec le bot, la page et l'e-mail d'achat ([[mailer.js]], q84 du 28/11) proposent de lier son Discord.

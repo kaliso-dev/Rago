@@ -10,6 +10,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 28/11 | **Site et serveur** (réponses de Sofiene) : q75 « 68 free tweaks » partout (accueil, page Tweaks, page compte ; `FREE_TWEAKS` = 68 par défaut) ; q77 remettre les étoiles Google (`aggregateRating` dès 10 avis, RAG-33) ; q79 retirer la protection d'avant lancement (`launch-gate`, `rago_preview`, ligne de la confidentialité) ; q82 supprimer `site/recherche-conversion.md`, le `Dockerfile` de la racine (la dépendance `geist` était déjà retirée par la PR #108) ; q83 corriger les textes en retard (README « 11 réglages », commentaires) ; q84 e-mail d'achat : « Link your Discord from your account page » au lieu du ticket, aussi en prod tout de suite (« l'e-mail est faux aujourd'hui ») | fait : PR staging #174, PR prod #173 (q84 + `FREE_TWEAKS`) ; le reste du site part en prod avec la refonte |
 | 28/11 | **Branches jamais fusionnées supprimées, sauf le trailer** (q138) : « faut tout supprimer mais la charte je veux une copie sur mon PC et les trailer on n'y touche pas, sinon tout le reste on peut supprimer » | fait le 28/11 : copie de la charte 2.2 dans `Rago data /charte-2.2/` sur le Mac, 14 branches supprimées (plus 7 fusionnées), `trailer-4k-footage` gardée ([[Branches du dépôt]]) |
 | 28/11 | **Réglages de carte graphique grisés** (q73) : `nv_preemption`, `nv_advanced`, `nv_kboost` (NVIDIA) et `amd_advanced` (AMD) grisés sur un PC sans la bonne carte, comme les autres réglages de leur section | FAIT dans `staging` (PR #172, `requires` dans [[meta.py]]) ; prochaine release |
 | 28/11 | **Licence de NVIDIA Profile Inspector** (q74) : chercher la provenance et la licence de la version « Modified by DeadManWalking » 3.5.0.0 livrée depuis la 1.1.5, et livrer l'avis de licence | FAIT : MIT (comme l'original d'Orbmu2k), version gardée ; avis dans `resources\THIRD_PARTY_NOTICES.txt` et lien dans À propos (PR #172, [[Configuration Tauri]]) |
@@ -157,6 +158,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 Une ligne par projet ou fonctionnalité arrêtés, pour qu'aucun Claude ne les relance. Le reste du vault n'en parle plus.
 | Date | Quoi | Raison |
 |---|---|---|
+| 28/11 | Protection d'avant lancement (compte à rebours `launch-gate`, cookie `rago_preview`, `LAUNCH_AT`, `PREVIEW_KEY`), `Dockerfile` site + serveur de la racine, note `site/recherche-conversion.md` | inutiles depuis le lancement du 10/10 ou jamais utilisés ; supprimés sur décision de Sofiene (q79, q82) |
 | 28/11 | [[Linear]] (tickets RAG, règle « chaque tâche a son ticket ») | « on ne prévoit plus de l'utiliser maintenant qu'on peut planifier des tâches ici dans Rago Hub » : tâches planifiées dans le [[Rago Hub]] ; Sofiene supprime lui-même les tâches Linear ; les numéros RAG-xx restent comme historique (q93) |
 | 28/11 | Vidéo du logo dans « La Création d'Adam » (02/11, `marketing/logo-creation-adam/`) | abandonnée par Sofiene (q88) ; dossier mis à la Corbeille de son Mac |
 | 28/11 | Messages de démarchage des partenaires (`launch/outreach/`) | ne servent plus (q90) |

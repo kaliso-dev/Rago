@@ -3,7 +3,7 @@ type: code
 tags: [code, site, python]
 fichier: site/tools/build.py
 lignes: 190
-maj: 2026-11-23
+maj: 2026-11-28
 ---
 # build.py
 
@@ -79,5 +79,5 @@ Pas de test unitaire. Le contrôle est la CI [[site-check.yml]] : relance compl�
 - Les prix de l'option Rago Route aussi : `CONFIG.priceRoute` et `CONFIG.priceRouteYear` dans [[page.html]], `ROUTE_PRICE` et `ROUTE_PRICE_YEARLY` dans `licensing/src/route-addon.js` (arrêt avec `priceRouteYear (…) and ROUTE_PRICE_YEARLY (…) differ: change both`).
 - Le prix Lifetime se change **à deux endroits** : `CONFIG.priceLifetime` dans [[page.html]] et `LIFETIME_PRICE` dans `licensing/src/billing.js`. Le script refuse de construire s'ils diffèrent.
 - Les 302 de `netlify.toml` (`/buy`, `/login`…) ne servent qu'aux adresses tapées à la main ; les liens de la page sont déjà absolus après ce script.
-- Le commentaire sur `aggregateRating` (« added by the page itself ») est trompeur : la page ne l'ajoute pas. À VÉRIFIER (relevé le 10/11).
+- `aggregateRating` (étoiles Google) n'est pas écrit ici : [[page.html]] l'ajoute au `SoftwareApplication` (`@id` `/#app`) dès 10 avis publiés, avec la moyenne et le nombre lus sur `/api/v1/reviews` (RAG-33, remis le 28/11, q77).
 - Toute nouvelle page source doit être ajoutée ici **et** dans la liste de [[site-check.yml]] (`git diff --exit-code …` et `git ls-files --error-unmatch …`), sinon elle ne sera ni construite ni vérifiée.
