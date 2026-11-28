@@ -2,12 +2,12 @@
 type: code
 tags: [code, site, netlify, config]
 fichier: netlify.toml
-lignes: 82
-maj: 2026-11-10
+lignes: 78
+maj: 2026-11-28
 ---
 # netlify.toml
 
-Le fichier de configuration de [[Netlify]] à la racine du dépôt : ce qui est publié, la commande lancée selon le contexte (production, branche `staging`, aperçus de PR), la fonction edge, les en-têtes de sécurité et les redirections. Fiche parente : [[Code du site]]. Fonctionnalité : [[Site]], [[Branches et environnements]].
+Le fichier de configuration de [[Netlify]] à la racine du dépôt : ce qui est publié, la commande lancée selon le contexte (production, branche `staging`, aperçus de PR), les en-têtes de sécurité et les redirections. Fiche parente : [[Code du site]]. Fonctionnalité : [[Site]], [[Branches et environnements]].
 
 Tout ce qui suit est CONFIRMÉ (fichier de `staging`, 10/11). Les commentaires du fichier sont en français.
 
@@ -17,13 +17,13 @@ Netlify lit ce fichier à chaque déploiement. Il ne construit **rien** : les pa
 ## Contenu, bloc par bloc
 ### `[build]` (contexte production, branche de prod)
 - `publish = "site"` : tout le dossier `site/` est publié.
-- `command = "rm -rf site/src site/tools && rm -f site/*.md"` : les sources (`site/src/`), les outils (`site/tools/`) et les notes internes (`site/CLAUDE.md`, `site/recherche-conversion.md`) ne sont jamais publiés.
+- `command = "rm -rf site/src site/tools && rm -f site/*.md"` : les sources (`site/src/`), les outils (`site/tools/`) et les notes internes (`site/CLAUDE.md`) ne sont jamais publiés.
 
 ### `[context.deploy-preview]` et `[context.branch-deploy]`
 `command = "sh netlify/preview.sh"` pour les aperçus de pull request et pour les déploiements de branche (dans la pratique la branche `staging`, à l'adresse `staging--rago-optimiser.netlify.app`). Le commentaire explique : leurs liens de compte, les avis et le pop-up passent par le serveur de comptes de **staging** (variable Netlify `STAGING_ACCOUNT_URL`), jamais par le vrai ; sans la variable, ces liens sont coupés. Détails : [[preview.sh]].
 
-### `[[edge_functions]]`
-`function = "launch-gate"`, `path = "/*"` : la fonction [[launch-gate.js]] passe devant **toutes** les requêtes. Commentaire : avant `LAUNCH_AT` (par défaut le samedi 10 octobre 2026 à 15 h, heure de Paris) tout le site était remplacé par un compte à rebours, sauf pour l'équipe (`/acces/<PREVIEW_KEY>` pose un cookie, `/acces/sortir` le retire) ; « Après le lancement la fonction laisse tout passer ; on pourra la retirer ». Elle est donc inactive depuis le 10/10.
+### Plus de fonction edge
+Le bloc `[[edge_functions]]` (fonction `launch-gate`, compte à rebours d'avant le lancement du 10/10, inactive depuis) et le dossier `netlify/edge-functions/` sont retirés dans `staging` le 28/11 (q79). La prod les a encore jusqu'à la sortie du site refait.
 
 ### `[[headers]]` sur `/*`
 | En-tête | Valeur |
@@ -57,12 +57,10 @@ Le commentaire rappelle que `rago-production.up.railway.app` (l'adresse Railway 
 - La redirection `/refunds.html` n'existe que sur `staging` tant que la 1.3.0 n'est pas en prod (la branche de prod a encore `site/refunds.html`).
 
 ## Liens avec le reste
-- Commandes lancées : [[preview.sh]] ; fonction edge : [[launch-gate.js]].
+- Commandes lancées : [[preview.sh]].
 - Pages publiées : [[Fichiers publiés du site]] ; génération : [[build.py]], [[make_legal.py]].
 - Hébergement, contextes et variables : [[Netlify]], [[Variables d'environnement]] ; adresses du serveur de comptes : [[Serveur de licences]], [[Railway]].
-- Pendant de ce fichier côté Docker (jamais utilisé) : `Dockerfile` de la racine ([[Fichiers de la racine du dépôt]]).
 
 ## À savoir avant de modifier
 - Toute nouvelle page ou ressource publique doit être dans `site/` ; tout fichier de `site/` hors `src/`, `tools/` et `*.md` est public.
-- Supprimer la fonction edge : retirer le bloc `[[edge_functions]]` **et** le dossier `netlify/edge-functions/launch-gate/` (et, côté serveur, le verrou équivalent de `licensing/src/app.js`). Pas encore fait (À VÉRIFIER : décision de Sofiene).
 - Une redirection ajoutée ici n'agit qu'après fusion dans la branche du contexte voulu (staging ou prod).

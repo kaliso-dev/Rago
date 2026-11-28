@@ -2,8 +2,8 @@
 type: code
 tags: [code, site, html, javascript]
 fichier: site/src/page.html
-lignes: 1873
-maj: 2026-11-23
+lignes: 1883
+maj: 2026-11-28
 ---
 # page.html
 
@@ -18,7 +18,7 @@ CONFIRMÉ d'après la branche `claude/project-thread-7emsbt` (23/11/2026, PR « 
 - Le fichier est un **fragment** : `<title>`, description, `<link rel="stylesheet" href="v5.css">`, un `<style>` propre à l'accueil (sections v6, points de rupture 1 080 et 760 px, « réduire les animations »), le sprite d'icônes, puis le corps. [[build.py]] met devant un `<head>` complet et ajoute `?v=<empreinte>` à `v5.css` et `v5.js`.
 - `<main id="home" class="x">` : la classe `x` déclenche le moteur v6 de [[v5.js]] (et coupe les anciennes animations v5 sur cette page).
 - Le sprite d'icônes (entre `<!-- icons -->` et `<!-- /icons -->`) est écrit par [[sync_icons.py]].
-- Outils qui réécrivent des morceaux de la source (commiter le résultat) : [[sync_app.py]] (les dix cartes `article.x-cap` entre `<!-- mods -->` et `<!-- /mods -->`, compteurs « Nearly 220 tweaks », `n-all`, `n-free`, « 73 of 218 », barre `#free-bar`) et [[sync_partners.py]] (bandeau des partenaires entre `<!-- partners:home -->` et `<!-- /partners:home -->`, logos de la carte Partners entre `<!-- partners:homecard -->` et `<!-- /partners:homecard -->`).
+- Outils qui réécrivent des morceaux de la source (commiter le résultat) : [[sync_app.py]] (les dix cartes `article.x-cap` entre `<!-- mods -->` et `<!-- /mods -->`, compteurs « Nearly 220 tweaks », `n-all`, `n-free`, « 68 of 218 », barre `#free-bar`) et [[sync_partners.py]] (bandeau des partenaires entre `<!-- partners:home -->` et `<!-- /partners:home -->`, logos de la carte Partners entre `<!-- partners:homecard -->` et `<!-- /partners:homecard -->`).
 - Images ajoutées pour la v6 : `site/img/x/` (six découpes 640 × 400 de la capture de l'app et de la barre en jeu), utilisées par les images du titre et la traînée d'images ([[Fichiers publiés du site]]).
 
 ## Sections, dans l'ordre (et leur animation)
@@ -36,8 +36,8 @@ CONFIRMÉ d'après la branche `claude/project-thread-7emsbt` (23/11/2026, PR « 
 - **Rago Route** `#route` (se fige) : le R de Rago se dessine puis se remplit, des cases rouges s'allument derrière, le R rétrécit et monte, le texte « Your PC is tuned. Now Rago takes the road. » arrive, puis cinq cartes (two roads, lost packets rebuilt, held open through a cut, made for Minecraft PvP, an option of Premium) glissent sur un arc et s'ouvrent en éventail. Bouton **Discover Rago Route** → `route.html`.
 - **What's new** `#new` : « Now Rago plays with you, in game and around it. » ; des pastilles d'icônes s'ouvrent et se ferment entre les mots ; une bande penchée des lanceurs (Steam, Epic Games, Riot, Battle.net, EA app, Ubisoft Connect, Lunar Client, Badlion, Minecraft Launcher) et les huit cartes 1.2 qui défilent (s'arrêtent au survol) : network test, clean ram, game library, share presets, packet optimizer (Premium), tools, automatic updates, background. « Illustrations of Rago Optimizer 1.2. The numbers are examples, not measurements. »
 - **La barre en jeu** `#ingame` (se fige) : la scène `#igst` (inchangée, boucle de 10 s) grandit jusqu'à toute la largeur, un voile se pose, puis « Alt+X / The in-game bar. », le texte et l'encadré free / premium.
-- **Every game** `#games` : « The right tweaks for every game. », bandeau des jeux en contour, « Measured, not promised. » avec six chiffres (`n-all` 218, `n-free` 73, `n-presets` 20, 15 jeux, 10 sections, 21 réglages en jeu), bandeau papier, puis la liste des jeux `#games-list` qui se fige et allume un jeu à la fois.
-- **Reviews** `#reviews` (`js-rev`, cachée sans avis) : inchangée dans son fonctionnement (`#rev-sum`, `#r1`, `#r2`, `#rev-pause`, « See all reviews »).
+- **Every game** `#games` : « The right tweaks for every game. », bandeau des jeux en contour, « Measured, not promised. » avec six chiffres (`n-all` 218, `n-free` 68, `n-presets` 20, 15 jeux, 10 sections, 21 réglages en jeu), bandeau papier, puis la liste des jeux `#games-list` qui se fige et allume un jeu à la fois.
+- **Reviews** `#reviews` (`js-rev`, cachée sans avis) : inchangée dans son fonctionnement (`#rev-sum`, `#r1`, `#r2`, `#rev-pause`, « See all reviews »). **Étoiles Google** (RAG-33, remises le 28/11, q77) : dès `RATED_FROM` = 10 avis et une moyenne entre 1 et 5, le script ajoute `aggregateRating` (`ratingValue` à une décimale, `ratingCount`, `bestRating` 5, `worstRating` 1) au `SoftwareApplication` des données structurées écrites par [[build.py]] (Google lit la page rendue). Vérifié le 28/11 dans Chromium : 12 avis → balise ajoutée ; 3 avis → rien.
 - **Community** `#community` : « Built by players. Played together. », le même texte court sur un arc pendant que la section se fige, puis trois cartes qui glissent : Discord (`js-discord`), affiliation `#affiliate` (animation `#affvis` / `#c3` / `#unlock`), partenaires `#partners` (logos, « See all partners »).
 - **FAQ** `#faq` (fond papier) : « Questions? Before you buy. », `#faq-n`, six réponses d'abord ; le rond `#faq-more-b` en ajoute six à chaque clic (« Showing N of M », `#faq-more-s`) ; elles montent en apparaissant. « Still stuck? » → ticket Discord.
 - **Bannière finale** `.x-end` : « Tune your PC once. Feel it on the first combo. », disque **Download free** à cheval sur le pied de page.
@@ -56,5 +56,5 @@ Un script en fin de page, sans bibliothèque, puis le moteur partagé ([[v5.js]]
 - [[build.py]] dépend de motifs exacts (assertions) : `<link rel="stylesheet" href="v5.css">` une seule fois, aucun texte « v5.js » dans la source (même en commentaire), `<b id="p-amt">`, `<p class="bil" id="p-note">`, `<em id="save">`, `<b id="l-amt">`, la liste `const F = [`, `<span id="faq-n">`, `<div class="faq" id="faqs"></div>`, `href="#discord"`, la classe `js-discord … hidden>` (`hidden` en dernier attribut), `<h2 class="s-h2" id="feat-h">(Nearly )N tweaks.`.
 - Une section qui se fige : `X.pin` sur l'élément dont l'enfant direct est `.x-stage` (le moteur lui donne la classe `.x-pinned`) ; les règles « pas figé » de la page visent cet élément.
 - L'id `#discord` est réservé (remplacé par l'invitation) : l'icône Discord s'appelle `i-discord`.
-- Deux chiffres du plan gratuit coexistent : 73 ici (taille de `free.json`) et 68 sur la page Tweaks (tweaks distincts). À VÉRIFIER (déjà relevé le 10/11).
+- Plan gratuit : 68 ici comme sur la page Tweaks et la page compte (q75, 28/11) ; FAQ « Free opens 68 tweaks plus the Restore tools ».
 - Les autres pages (Rago Route, Tweaks, Reviews, Partners, légales, 404) gardent pour l'instant l'en-tête, le pied de page et les animations v5 ; leur passage au style v6 est la suite prévue.

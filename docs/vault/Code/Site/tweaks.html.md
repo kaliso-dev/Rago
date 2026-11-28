@@ -3,7 +3,7 @@ type: code
 tags: [code, site, html, javascript]
 fichier: site/src/tweaks.html
 lignes: 876
-maj: 2026-11-22
+maj: 2026-11-28
 ---
 # tweaks.html
 
@@ -86,7 +86,7 @@ Apparition des blocs au défilement (`IntersectionObserver`, classe `pre`), anim
 - Pages sœurs : [[page.html]] (accueil, même feuille `v5.css`), [[reviews.html]], [[partners.html]].
 
 ## À savoir avant de modifier
-- Le chiffre « 68 » (tweaks gratuits distincts) diffère du « 73 » de l'accueil (voir [[sync_app.py]]). À VÉRIFIER avec Sofiene.
+- « 68 » tweaks gratuits : le même chiffre sur l'accueil et la page compte depuis le 28/11 (q75, [[sync_app.py]]).
 - Ne pas retirer les marqueurs `<!-- tw:… -->` ni changer les classes `n-all`, `n-free`, `n-mods`, `n-presets` sans adapter [[sync_tweaks.py]].
 - La page doit garder une seule ligne `<link rel="stylesheet" href="v5.css">` (attendue par [[build.py]]).
 - Les icônes des modules et des fiches viennent du jeu v5 (`#i-network`, `#i-graphics`…), plus des icônes Lucide.

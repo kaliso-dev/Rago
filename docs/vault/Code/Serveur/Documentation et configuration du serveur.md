@@ -2,7 +2,7 @@
 type: code
 tags: [code, serveur, documentation, configuration]
 fichier: licensing/README.md, licensing/CLAUDE.md, licensing/docs/API.md, licensing/docs/MISE-EN-LIGNE.md, licensing/.env.example, licensing/Dockerfile, licensing/package.json
-lignes: 63 + 9 + 266 + 489 + 80 + 11 + 29
+lignes: 63 + 9 + 266 + 517 + 92 + 11 + 29
 maj: 2026-11-10
 ---
 # Documentation et configuration du serveur
@@ -41,9 +41,9 @@ Mise en ligne pas à pas : étapes 1 à 10 (domaine, Supabase, Stripe, Resend, R
 
 ## .env.example (80 lignes) : les noms des variables
 
-Modèle commenté, en sections : **Required** (`NODE_ENV`, `PUBLIC_URL`, `SITE_URL`, `DATABASE_URL`, `STRIPE_SECRET_KEY`, `STRIPE_PRICE_MONTHLY`, `TRIAL_DAYS`, `STRIPE_PRICE_YEARLY`, `STRIPE_WEBHOOK_SECRET`, `TRUST_PROXY`) ; **Installer** (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `INSTALLER_VERSION`) ; **Emails and support** (`RESEND_API_KEY`, `MAIL_FROM`, `MAIL_REPLY_TO`, `SUPPORT_URL`) ; **Optional** (`ROUTE_TESTERS`, `SELF_SERVICE_RESET_DAYS`, `LICENSE_TOKEN_DAYS`, `SUBSCRIPTION_GRACE_DAYS`, les 7 `AFFILIATE_*`, `STRIPE_PORTAL_LOGIN_URL`, `PRICE_LABEL`, `STRIPE_PRICE_LIFETIME`, `INSTALLER_OBJECT`, `GEOIP`, `LICENSE_SIGNING_KEY`, `SESSION_SECRET`, `SCRIPTS_SECRET`, `CHECKOUT_CANCEL_URL`, `SITE_DIR`, `LAUNCH_AT`, `PREVIEW_KEY`) ; **Discord Pro role** (5 variables) ; **rewards** (`DISCORD_VIP_ROLE_ID`, `DISCORD_MVP_ROLE_ID`, `DISCORD_BOOST2_ROLE_ID`) ; **Community bot** (`DISCORD_COMMUNITY`, `DISCORD_WELCOME_CHANNEL_ID`, `DISCORD_WELCOME_TEXT`, `DISCORD_INVITE_ROLES`, `DISCORD_VIP_INVITES`, `DISCORD_MVP_INVITES`) ; **Google/Discord** (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `DISCORD_LOGIN`, `EMAIL_VERIFICATION`). Aucune vraie valeur.
+Modèle commenté, en sections : **Required** (`NODE_ENV`, `PUBLIC_URL`, `SITE_URL`, `DATABASE_URL`, `STRIPE_SECRET_KEY`, `STRIPE_PRICE_MONTHLY`, `TRIAL_DAYS`, `STRIPE_PRICE_YEARLY`, `STRIPE_WEBHOOK_SECRET`, `TRUST_PROXY`) ; **Installer** (`SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `INSTALLER_VERSION`) ; **Emails and support** (`RESEND_API_KEY`, `MAIL_FROM`, `MAIL_REPLY_TO`, `SUPPORT_URL`) ; **Optional** (`ROUTE_TESTERS`, `SELF_SERVICE_RESET_DAYS`, `LICENSE_TOKEN_DAYS`, `SUBSCRIPTION_GRACE_DAYS`, les 7 `AFFILIATE_*`, `STRIPE_PORTAL_LOGIN_URL`, `PRICE_LABEL`, `STRIPE_PRICE_LIFETIME`, `INSTALLER_OBJECT`, `GEOIP`, `LICENSE_SIGNING_KEY`, `SESSION_SECRET`, `SCRIPTS_SECRET`, `FREE_TWEAKS` (68), `PREMIUM_TWEAKS` (218), `CHECKOUT_CANCEL_URL`, `SITE_DIR`) ; **Discord Pro role** (5 variables) ; **rewards** (`DISCORD_VIP_ROLE_ID`, `DISCORD_MVP_ROLE_ID`, `DISCORD_BOOST2_ROLE_ID`) ; **Community bot** (`DISCORD_COMMUNITY`, `DISCORD_WELCOME_CHANNEL_ID`, `DISCORD_WELCOME_TEXT`, `DISCORD_INVITE_ROLES`, `DISCORD_VIP_INVITES`, `DISCORD_MVP_INVITES`) ; **Google/Discord** (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `DISCORD_LOGIN`, `EMAIL_VERIFICATION`). Aucune vraie valeur.
 
-Variables lues par [[config.js]] mais **absentes** du modèle (16) : `ADMIN_KEY`, `APP_ENV`, `AVATAR_BUCKET`, `FREE_TWEAKS`, `GEOIP_ASN_URL`, `GEOIP_CITY_URL`, `INSTALLER_FILENAME`, `INSTALLER_PATH`, `INSTALLER_URL`, `PORT`, `PREMIUM_TWEAKS`, `RAILWAY_ENVIRONMENT_NAME` (mise par Railway), `STRIPE_PRICE_ID` (ancien prix unique), `UPDATE_NOTES`, `UPDATE_PAUSED`, `UPDATE_ROLLOUT`. La liste complète avec le sens de chacune : [[Variables d'environnement]].
+Variables lues par [[config.js]] mais **absentes** du modèle (14) : `ADMIN_KEY`, `APP_ENV`, `AVATAR_BUCKET`, `GEOIP_ASN_URL`, `GEOIP_CITY_URL`, `INSTALLER_FILENAME`, `INSTALLER_PATH`, `INSTALLER_URL`, `PORT`, `RAILWAY_ENVIRONMENT_NAME` (mise par Railway), `STRIPE_PRICE_ID` (ancien prix unique), `UPDATE_NOTES`, `UPDATE_PAUSED`, `UPDATE_ROLLOUT`. La liste complète avec le sens de chacune : [[Variables d'environnement]].
 
 ## Dockerfile (11 lignes)
 
@@ -59,5 +59,5 @@ Variables lues par [[config.js]] mais **absentes** du modèle (16) : `ADMIN_KEY`
 
 ## À savoir avant de modifier
 
-- README : « 11 réglages » pour le plan gratuit, alors que la version gratuite en a 73 depuis le 04/11 : À VÉRIFIER (même écart que `FREE_TWEAKS` dans [[config.js]]).
+- README : plan gratuit à 68 réglages, 30 actifs à la fois (corrigé le 28/11, q83 ; il disait « 11 réglages »).
 - Garder `API.md` en accord avec [[app.js]] : l'app Windows s'y réfère.

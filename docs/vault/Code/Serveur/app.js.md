@@ -2,8 +2,8 @@
 type: code
 tags: [code, serveur, javascript, api, hono]
 fichier: licensing/src/app.js
-lignes: 1845
-maj: 2026-11-27
+lignes: 1818
+maj: 2026-11-28
 ---
 # app.js
 
@@ -22,11 +22,12 @@ Toutes les routes du serveur de comptes et licences : pages du site de compte (i
 
 ## Cycle d'une requête (middlewares, dans l'ordre)
 
-1. **En-têtes de sécurité** : `/assets/email-*` et `/avatars/*` → `Cross-Origin-Resource-Policy: cross-origin` (images lues par les clients mail et le site). Chemins du serveur (`OWN` : `assets, download, buy, checkout, claim, signup, login, logout, forgot, reset, account, affiliate, webhooks, api, healthz, acces, admin, auth`) ou serveur sans `SITE_DIR` → **CSP stricte** : `default/style/font/script-src 'self'`, `img-src 'self' data:`, `form-action 'self'` + `checkout.stripe.com` + `billing.stripe.com`, `frame-ancestors 'none'`, `Referrer-Policy: same-origin` (avec `no-referrer`, les navigateurs envoient `Origin: null` et le contrôle suivant échoue). Le site servi par `SITE_DIR` n'a pas de CSP (styles et scripts en ligne).
+1. **En-têtes de sécurité** : `/assets/email-*` et `/avatars/*` → `Cross-Origin-Resource-Policy: cross-origin` (images lues par les clients mail et le site). Chemins du serveur (`OWN` : `assets, download, buy, checkout, claim, signup, login, logout, forgot, reset, account, affiliate, webhooks, api, healthz, admin, auth`) ou serveur sans `SITE_DIR` → **CSP stricte** : `default/style/font/script-src 'self'`, `img-src 'self' data:`, `form-action 'self'` + `checkout.stripe.com` + `billing.stripe.com`, `frame-ancestors 'none'`, `Referrer-Policy: same-origin` (avec `no-referrer`, les navigateurs envoient `Origin: null` et le contrôle suivant échoue). Le site servi par `SITE_DIR` n'a pas de CSP (styles et scripts en ligne).
 2. **Contrôle d'origine** : tout `POST` hors `/api/` et `/webhooks/` dont l'en-tête `Origin` ne correspond ni à `Host`, ni à `X-Forwarded-Host` (avec `TRUST_PROXY`), ni à l'hôte de `PUBLIC_URL` → 403 « Forbidden ».
 3. **Taille des corps** : webhook 1 Mo ; toute écriture 64 Ko ; envoi de photo (`/account/profile/photo`, `/api/v1/account/avatar`) 5 Mo + 64 Ko. Trop gros : JSON `image_too_large` sous `/api/`, redirection `?n=toolarge` pour le profil, sinon texte 413.
 4. **Fichiers** `/assets/*` → dossier `public/` ([[Styles du serveur (CSS)]], [[admin.js (page admin)]], [[account.js]]).
-5. **Verrou d'avant lancement** : jusqu'à `LAUNCH_AT`, `/signup`, `/buy`, `/buy/lifetime`, `/download`, `/affiliate`, `/affiliate/join` renvoient vers le site (ou 503 « Opening soon. »), sauf avec le cookie `rago_preview` = HMAC(`PREVIEW_KEY`, `rago-preview-v1`) en base64url, le même que la fonction Netlify `launch-gate` du [[Site]].
+
+Le verrou d'avant lancement (`LAUNCH_AT`, cookie `rago_preview`, route `/acces/:key`) est retiré le 28/11 (q79, dans `staging` ; inactif depuis le 10/10). `sameHash` (comparaison à temps constant) reste, pour les états OAuth, la clé admin et les liens de l'app.
 
 **Adresse du visiteur** (`ipOf`) : avec `TRUST_PROXY`, `X-Real-IP` (mis par Railway), sinon le **dernier** saut de `X-Forwarded-For` ; sinon l'adresse du socket.
 
@@ -61,7 +62,6 @@ Toutes les routes du serveur de comptes et licences : pages du site de compte (i
 | `rg_signup` | id de la demande d'inscription signé | 24 h, `/signup` |
 | `rg_oauth` | `fournisseur.state.verifier.next` signé | 10 min, `/auth` |
 | `rg_discord` | `userId.state` signé | 10 min, `/account/discord` |
-| `rago_preview` | passage d'avant lancement | 30 j, domaine du site si sous-domaine |
 | `rago_admin` | voir [[admin.js (serveur)]] | 7 j, `/admin`, `Strict` |
 
 ## Routes des pages (site de compte)
@@ -69,7 +69,6 @@ Toutes les routes du serveur de comptes et licences : pages du site de compte (i
 | Méthode, chemin | Accès | Ce qu'elle fait |
 |---|---|---|
 | GET `/healthz` | public | `SELECT 1` → `{ok:true}` ou 503 `database unreachable`. |
-| GET `/acces/:key` | public | Bonne clé `PREVIEW_KEY` → cookie `rago_preview` et `/signup` ; `sortir` l'efface ; sinon 404. |
 | GET et POST `/buy`, `/buy/lifetime` | public | Déconnecté (27/11, q103) : GET affiche la page « Your email » (`buyEmailPage`), le POST vérifie l'e-mail (Premium actif → « You already have Premium, log in. », 409). Essai : un par réseau (q104, `trialIpUsed`, sinon `trialUsedPage` et `notrial=1`). Crée la session Stripe Checkout (voir plus bas) et redirige. `route=1` : Premium avec l'option Rago Route ; un compte connecté qui a déjà Premium est envoyé sur `/buy/route` (13/11, sur `staging` depuis le 13/11 au soir). |
 | GET `/buy/route`, `/checkout/route` | session | Déconnecté : `/login?next=/buy/route?interval=…`, le choix au mois ou à l'année est gardé après la connexion (`withInterval`, `ROUTE_NEXT` dans `nextPath`, 14/11). Option Rago Route seule pour un compte avec Premium actif (`?n=routenopremium`, `routeowned`, `routesoon` sinon), au mois ou à l'année (`?interval=month|year` ; sans, comme le Premium du compte, `licenses.plan`, 14/11), puis page de retour qui l'enregistre ([[route-addon.js]]). |
 | GET `/checkout/success` | public | `session_id` `cs_…` : `fulfillCheckoutSession`, `settleTrial`, `addRouteWithPremium` (case Rago Route), e-mail, puis compte ou page de connexion/inscription. |
