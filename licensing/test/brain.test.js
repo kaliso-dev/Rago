@@ -215,6 +215,7 @@ test('brains: one archive per repository, each brain built apart, an empty one s
     { id: 'rago-os', name: 'RAGO-OS', repo: 'kaliso-dev/RAGO-OS-' },
     { id: 'rago-client', name: 'Rago Client', repo: 'kaliso-dev/Rago-Client' },
     { id: 'rago-minecraft', name: 'Serveur Minecraft Rago', repo: 'kaliso-dev/network-server-rago' },
+    { id: 'rago-design', name: 'Rago Design', repo: 'kaliso-dev/rago-design', kind: 'files' },
   ]);
   const a = await brain.read();
   assert.deepEqual(a.data.notes.map((n) => n.id), ['Journal', 'Projet']);
@@ -334,7 +335,7 @@ test('/admin/cerveau: behind the admin key, page without inline code, data reval
   assert.match(remembered, /^rago_cerveau=rago-os$/);
   const osData = await (await get('/admin/cerveau/donnees.json?c=rago-os')).json();
   assert.equal(osData.brain, 'rago-os');
-  assert.deepEqual(osData.brains.map((b) => b.id), ['rago', 'rago-os', 'rago-client', 'rago-minecraft']);
+  assert.deepEqual(osData.brains.map((b) => b.id), ['rago', 'rago-os', 'rago-client', 'rago-minecraft', 'rago-design']);
   assert.equal(osData.repo, 'kaliso-dev/RAGO-OS-');
   assert.deepEqual(osData.notes.map((n) => n.id), ['Architecture', 'Projet']);
   assert.ok(!osData.notes.some((n) => n.id === 'État actuel'));
