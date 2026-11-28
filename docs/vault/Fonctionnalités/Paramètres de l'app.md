@@ -13,7 +13,7 @@ Page Paramètres, en bas de la barre latérale. Voir [[App Windows]]. En 1.3.0 (
 - **Langue** : anglais (défaut) ou français (tutoiement).
 - **Animations** : complètes ou réduites.
 - **Barre en jeu et arrière-plan** : activer la [[Barre en jeu]] ; **raccourci** (Alt+X par défaut, modifiable : Ctrl, Alt ou Maj + lettre, chiffre ou touche F ; refusé s'il est déjà pris) ; « FPS et ping à l'écran pendant la partie » ; « Rester près de l'horloge à la fermeture » ; « Lancer avec Windows » ([[Arrière-plan et démarrage]]).
-- **Pendant la partie** : carte graphique performante, mode Performances élevées, jeu en priorité supérieure à la normale (11/11 ; « priorité haute » dans la prod 1.3.0, changé dans `staging` par la PR #155 du 27/11), vérifications ([[Pendant la partie]]).
+- **Pendant la partie** : carte graphique performante, mode Performances élevées, jeu en priorité supérieure à la normale (11/11 ; « priorité haute » dans la prod 1.3.0, changé dans `staging` par la PR #155 (fusionnée dans `staging` le 28/11)), vérifications ([[Pendant la partie]]).
 - **Mémoire** : « Nettoyer » réduit aussi les applis en arrière-plan (coupé par défaut, voir [[Tableau de bord]]).
 - **Partage et support** : ouvre [[Partage et support]].
 - **Dossiers** : ouvrir Journaux, Ressources, Données.

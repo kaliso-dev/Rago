@@ -41,7 +41,7 @@ Tout ce qui suit est CONFIRMÉ (fichier de `staging`, 10/11 : 762 lignes, 77 895
 - Réglages ajoutés par l'app en 1.1.6 : `win_ai`, `win_autoplay`.
 - Audit ligne par ligne du 07/10 ([[audit_fixes.py]]) : 7 corrections de texte, 3 blocs et 590 lignes retirés, 144 lignes réécrites ; `wmic` remplacé par PowerShell dans 21 réglages ; 7 réglages passés en action ponctuelle.
 - Annulation (`undo.json`, [[undo_gen.py]], [[merge_full.py]]).
-- Priorité par jeu (`pri_game`, 1.2.0) : noms d'exe faux corrigés (Valorant, QoS de Fortnite, CS2…), 111 valeurs ignorées par Windows retirées, 10 jeux ajoutés, `Do not use NLA` ajouté. Presets enrichis et presets par jeu. Depuis la PR #155 du 27/11 (correctif écrit le 13/11) : `CpuPriorityClass` à 6 (Supérieure à la normale) au lieu de 3 (Haute), qui faisait saccader le stream Discord.
+- Priorité par jeu (`pri_game`, 1.2.0) : noms d'exe faux corrigés (Valorant, QoS de Fortnite, CS2…), 111 valeurs ignorées par Windows retirées, 10 jeux ajoutés, `Do not use NLA` ajouté. Presets enrichis et presets par jeu. Depuis la PR #155 (fusionnée dans `staging` le 28/11) (correctif écrit le 13/11) : `CpuPriorityClass` à 6 (Supérieure à la normale) au lieu de 3 (Haute), qui faisait saccader le stream Discord.
 - **Chiffres en dur faux** : la section dit « 226 réglages au total (199 réglages distincts depuis 1.1.8) ». Ce sont des chiffres d'octobre ; au 10/11 c'est 231 entrées et 218 distincts (la section « Réglages risqués retirés », calculée, donne les bons).
 
 ### Optimisations du 21/10 (section générée)

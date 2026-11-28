@@ -3,7 +3,7 @@ type: catalogue
 tags: [tweaks, catalogue, généré]
 généré: docs/tools/catalogue_vault.py
 version_app: 1.4.1
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 
 # Tweaks Carte graphique

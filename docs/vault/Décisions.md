@@ -10,6 +10,7 @@ Registre daté des décisions de Sofiene. **La plus récente prime.** Citations 
 ## App et versions
 | Date | Décision | Statut |
 |---|---|---|
+| 28/11 | **Fusion du correctif du stream Discord dans `staging`** : « oui fusionne la 155 » (le 27/11 : « oui on l'ajoute », q109) : le jeu en « Supérieure à la normale » au lieu de « Haute » | fait : PR #155 fusionnée dans `staging` ; pas encore en prod, test Windows à faire ([[Bugs et incidents]]) |
 | 28/11 | **Ménage des branches GitHub** (q81 élargie) : « oui c'est parti ». Supprimer les branches dont le contenu est déjà dans `staging` ou la prod ; garder `staging`, la prod, les PR ouvertes et les branches récentes ; lister les branches jamais fusionnées pour que Sofiene décide | fait le 28/11 : 71 supprimées, 32 restantes ; 15 jamais fusionnées en attente (q138) ([[Branches du dépôt]]) |
 | 28/11 | **GitHub Pages coupé** (q80) : Sofiene a coupé Pages sur `kaliso-dev/Rago` ; le vault n'est plus publié sur `github.io` | fait par Sofiene ; 404 vérifié le 28/11, configuration encore visible dans l'API (À VÉRIFIER) ([[Fichiers de la racine du dépôt]]) |
 | 27/11 | **Graphismes des jeux gratuits** (q94) : « ça reste comme c'est » ; pas de verrou Premium | DÉCIDÉ, déjà ainsi dans le code ([[Graphismes des jeux]]) |

@@ -57,7 +57,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11). Portage de `network_o
 `Action` : `apply`, `restore`, `defaults`, `quality`, `loaded`, `mtu`, `detect`, `status`. Seules `apply`, `restore`, `defaults` changent Windows (`changes()`) ; délai maximal **240 s** pour elles (la carte qui redémarre attend jusqu'à 45 s), **90 s** pour les tests.
 
 ### Autres
-- `Line { action, tag, text, step, total }` (tags `ok`, `warn`, `fail`, `info`, `title`, `progress`), `Outcome { code, ok, warn, fail, result }`, `Saved { options, at, ok, warn, fail, aboveNormal }`, `State { applied, backup, busy }`. `aboveNormal` (PR #155 du 27/11, correctif écrit le 13/11) : vrai pour une application faite par le moteur qui met Minecraft en Supérieure à la normale, ou ramenée de Haute au lancement par [[repair.rs]] ; absent (faux) dans les fichiers d'avant.
+- `Line { action, tag, text, step, total }` (tags `ok`, `warn`, `fail`, `info`, `title`, `progress`), `Outcome { code, ok, warn, fail, result }`, `Saved { options, at, ok, warn, fail, aboveNormal }`, `State { applied, backup, busy }`. `aboveNormal` (PR #155 (fusionnée le 28/11), correctif écrit le 13/11) : vrai pour une application faite par le moteur qui met Minecraft en Supérieure à la normale, ou ramenée de Haute au lancement par [[repair.rs]] ; absent (faux) dans les fichiers d'avant.
 - `script(action, premium)`, `dir(data_dir)`, `saved`, `applied`, `state`, `run(...)`, `put_back(data_dir, run_dir)`.
 - 13/11 : `wrote_high(data_dir)` (application avec `priorityMode` et sans `aboveNormal` : le moteur d'avant avait écrit Haute), `set_above_normal(data_dir)` (la marque, le reste d'`applied.json` gardé), `snapshot_path(data_dir)` (`netopt\snapshot.json`, aussi lu et réécrit par [[repair.rs]]).
 
