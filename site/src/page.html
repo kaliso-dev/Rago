@@ -765,6 +765,19 @@ details.s-q p{padding:0 0 calc(24 * var(--u));font-size:calc(15.5 * var(--u));li
   .x-pc-f li{padding:calc(7 * var(--u)) 0!important;font-size:calc(18 * var(--u))!important}
   .x-pc-cta .fine,.x-pc .bil{font-size:calc(15 * var(--u))!important}
 }
+/* Community (Sofiene 28/11, 4e tour) : icônes en haut à droite des cartes Discord et affiliation, carte Discord plus
+   complète, logos des partenaires en grand à la place de la pilule ; rayons imbriqués : carte var(--x-r), tuiles des
+   logos = rayon de la carte moins l'écart qui les sépare du bord */
+.x-tc{position:relative}
+.x-tc .v7-ic-tr{position:absolute;right:clamp(calc(22 * var(--u)),2.2vw,calc(34 * var(--u)));top:clamp(calc(22 * var(--u)),2.2vw,calc(34 * var(--u)));min-width:0;width:calc(64 * var(--u));height:calc(64 * var(--u));padding:0;border-radius:50%}
+.x-tc .v7-ic-tr svg{width:calc(32 * var(--u));height:calc(32 * var(--u))}
+.x-tc.js-discord h3,#affiliate h3{padding-right:calc(76 * var(--u))}
+.v7-dl{display:flex;flex-direction:column;gap:calc(10 * var(--u));margin-top:calc(4 * var(--u))}
+.v7-dl li{display:grid;grid-template-columns:calc(22 * var(--u)) minmax(0,1fr);gap:calc(12 * var(--u));align-items:start;font-size:calc(15.5 * var(--u));line-height:1.45}
+.v7-dl svg{width:calc(20 * var(--u));height:calc(20 * var(--u));margin-top:calc(1 * var(--u));--pf:var(--bg);--pb:var(--red)}
+.v7-dl b{font-weight:700}
+.v7-plogos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:calc(12 * var(--u))}
+.v7-plogos img{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:cover;border-radius:max(calc(10 * var(--u)),calc(var(--x-r) - calc(12 * var(--u))));box-shadow:0 calc(14 * var(--u)) calc(30 * var(--u)) calc(-14 * var(--u)) rgba(0,0,0,.45)}
 /* benchmark « Measured, not promised. » (chiffres provisoires, voir le commentaire dans la section) */
 .v7-bench{width:100%;margin:clamp(calc(30 * var(--u)),4vw,calc(56 * var(--u))) 0 0;border-radius:var(--x-r,calc(22 * var(--u)));background:var(--bg-2);box-shadow:inset 0 0 0 1px var(--line-2);overflow:hidden}
 .v7-bench table{width:100%;border-collapse:collapse}
@@ -1219,20 +1232,25 @@ details.s-q p{padding:0 0 calc(24 * var(--u));font-size:calc(15.5 * var(--u));li
     <div class="x-team-c" data-x-own>
       <!-- Discord: shown once CONFIG.discord is set (the build bakes the link for visitors without JavaScript) -->
       <article class="x-tc js-discord" hidden>
-        <div class="top"><h3><span>Join the</span> Rago Discord.</h3><div class="shape s1" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-discord"/></svg></div>
-          <ul class="tg"><li>#support</li><li>#presets</li><li>#updates</li><li>#premium</li></ul></div>
-        <div class="bot"><p>Support tickets answered by our staff, the Premium channel after purchase, and update notes as soon as a version ships.</p>
+        <div class="top"><h3><span>Join the</span> Rago Discord.</h3><div class="shape s1 v7-ic-tr" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#i-discord"/></svg></div>
+          <ul class="v7-dl">
+            <li><svg class="i" aria-hidden="true"><use href="#i-chat"/></svg><span><b>Support</b> tickets answered by our staff</span></li>
+            <li><svg class="i" aria-hidden="true"><use href="#i-rotate"/></svg><span><b>Announcements</b> and update notes as soon as a version ships</span></li>
+            <li><svg class="i" aria-hidden="true"><use href="#i-gift"/></svg><span><b>Discord rewards</b>, giveaways and the Premium role</span></li>
+            <li><svg class="i" aria-hidden="true"><use href="#i-sliders"/></svg><span><b>Players</b> sharing presets, setups and tips</span></li>
+          </ul></div>
+        <div class="bot"><p>The place to get help, follow every new version and play with the community. Free to join, with a Premium channel after purchase.</p>
           <a class="x-btn ink sm js-discord" href="#discord" hidden><span class="x-fl"></span><svg class="i" aria-hidden="true"><use href="#i-chat"/></svg><span class="x-bl">Join our Discord</span><span class="sr-only"> (opens in a new tab)</span></a></div>
       </article>
       <article class="x-tc" id="affiliate">
-        <div class="top"><h3><span>Bring 3 players.</span> Get 6 months.</h3><div class="shape s2" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-gift"/></svg></div>
+        <div class="top"><h3><span>Bring 3 players.</span> Get 6 months.</h3><div class="shape s2 v7-ic-tr" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-gift"/></svg></div>
           <ul class="tg"><li>Your own code</li><li>5% off for friends</li><li>6 months of Premium</li></ul></div>
         <div class="bot"><p>Get your own code and share it. Your friends get 5% off their first Premium payment with it. 3 friends who activate the app give you 6 months of Premium.</p>
           <div class="fr" id="affvis" aria-hidden="true"><div class="s-seg"><i class="f"></i><i class="f"></i><i class="f"></i></div><span id="c3">0 / 3 friends</span><span class="unlock" id="unlock"><svg class="i" aria-hidden="true"><use href="#i-gift"/></svg>6 months of Premium</span></div>
           <a class="x-btn ink sm js-affiliate" href="/affiliate"><span class="x-fl"></span><span class="x-bl">Join the affiliate program</span></a></div>
       </article>
       <article class="x-tc" id="partners">
-        <div class="top"><h3><span>Our partner</span> servers.</h3><div class="shape s3" aria-hidden="true">
+        <div class="top"><h3><span>Our partner</span> servers.</h3><div class="v7-plogos" aria-hidden="true">
           <!-- partners:homecard -->
           <img src="img/partners/pika-ranked-bedwars.webp" alt="" width="64" height="64" loading="lazy" decoding="async">
           <img src="img/partners/ranked-bedwars.webp" alt="" width="64" height="64" loading="lazy" decoding="async">
