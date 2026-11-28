@@ -46,6 +46,7 @@ Les joueurs ont la **[[Version 1.3.0]]** depuis le 22/11 vers 02:20 (heure de Pa
 Ne rien fusionner ni fermer sans le mot de Sofiene. Toutes les PR, une par ligne : [[Pull requests]].
 
 ## Dernières PR fusionnées
+- 28/11 : **#174** dans `staging` (site + serveur, décisions q75, q77, q79, q82, q83, q84 : « 68 free tweaks » partout, étoiles Google, protection d'avant lancement retirée, fichiers inutiles supprimés, textes à jour, e-mail d'achat « Link your Discord ») et **#173** dans la prod (seulement l'e-mail d'achat « Link your Discord » et `FREE_TWEAKS` = 68 par défaut). Le reste part en prod avec la refonte du site.
 - 28/11 dans `staging` : **#172** (app, décisions du 28/11 : q73 réglages de carte graphique grisés, q74 avis de licence de NVIDIA Profile Inspector, q75 « 68 » réglages gratuits, q85 jeux retirés réaffichables, q82 et q83 ménage), `972cb52` ; pas en prod ([[Version 1.4.1]]).
 - 28/11 dans `staging` : **#155** (correctif du stream Discord : le jeu en « Supérieure à la normale », [[Bugs et incidents]]), sur le go de Sofiene (« oui fusionne la 155 ») ; test Windows à faire.
 - 28/11 dans `staging` : **#165** (page compte : « Discord reward » / « Affiliate reward » selon l'origine, formule gratuite pour un Premium terminé ou impayé, phrase propre à l'achat de test ; q113 à q115). Pas en prod.

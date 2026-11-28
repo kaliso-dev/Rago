@@ -1,7 +1,7 @@
 ---
 type: procédure
 tags: [technique, développement, tests]
-maj: 2026-11-14
+maj: 2026-11-28
 ---
 # Développer et tester
 

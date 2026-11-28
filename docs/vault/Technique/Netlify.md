@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, netlify, site, déploiement]
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # Netlify
 

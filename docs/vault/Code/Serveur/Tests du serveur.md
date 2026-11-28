@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, tests]
 fichier: licensing/test/
 lignes: 4179
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # Tests du serveur
 

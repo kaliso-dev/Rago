@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, javascript, développement]
 fichier: licensing/scripts/local.js
 lignes: 34
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # local.js
 

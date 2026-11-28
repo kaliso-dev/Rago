@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, documentation, configuration]
 fichier: licensing/README.md, licensing/CLAUDE.md, licensing/docs/API.md, licensing/docs/MISE-EN-LIGNE.md, licensing/.env.example, licensing/Dockerfile, licensing/package.json
 lignes: 63 + 9 + 266 + 517 + 92 + 11 + 29
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # Documentation et configuration du serveur
 

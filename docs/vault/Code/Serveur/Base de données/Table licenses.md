@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, base-de-données]
 fichier: licensing/supabase/schema.sql
 lignes: 20-48, 123
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # Table licenses
 

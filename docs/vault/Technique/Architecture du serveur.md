@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, serveur, architecture]
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # Architecture du serveur
 

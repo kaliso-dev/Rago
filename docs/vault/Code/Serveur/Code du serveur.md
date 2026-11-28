@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, carte]
 fichier: licensing/
 lignes: 8534 (src) + 755 (scripts et JS du navigateur) + 1085 (CSS) + 342 (schema)
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # Code du serveur
 
