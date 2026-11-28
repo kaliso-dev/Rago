@@ -54,7 +54,7 @@
     clearTimeout(flushT); flushT = setTimeout(flush, 16);
   }), { rootMargin: "0px 0px -7% 0px" });
   const prep = el => {
-    if (seen.has(el) || el.closest("[hidden], .dlg, .menu, .sheet, #toast, .s-toast, .toast, dialog")) return;
+    if (seen.has(el) || el.closest("[hidden], .dlg, .menu, .sheet, #toast, .toast, dialog")) return;
     if (el.parentElement && el.parentElement.closest(".s-card, .pt-c, .sm-rv, .pc, .r5-f, .r5-t, .r5-g")) return; // the card moves, not its parts
     seen.add(el);
     if (el.matches(".rv")) { el.classList.remove("pre"); if (el.querySelector(ITEMS + "," + HEADS)) return; } // its parts move instead
@@ -154,7 +154,9 @@
   const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const fine = matchMedia("(hover: hover) and (pointer: fine)").matches;
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
-  const X = window.X = { reduce, fine, clamp, $, $$ };
+  // site v7 (28/11/2026): <main class="x" data-calm> keeps the browser's own scrolling (no wheel smoothing, no rail on the right edge)
+  const calm = main.hasAttribute("data-calm");
+  const X = window.X = { reduce, fine, clamp, $, $$, calm };
   doc.classList.add("x-on");
   if (reduce) doc.classList.add("x-still");
 
@@ -284,7 +286,7 @@
     }
     return false;
   };
-  if (!reduce && fine) {
+  if (!reduce && fine && !calm) {
     doc.classList.add("x-smooth");
     addEventListener("wheel", e => {
       if (e.ctrlKey || e.defaultPrevented || Math.abs(e.deltaX) > Math.abs(e.deltaY) || doc.classList.contains("x-lock") || scrollable(e.target)) return;
@@ -362,7 +364,11 @@
     cur = document.createElement("span"); cur.className = "x-cur"; cur.setAttribute("aria-hidden", "true"); document.body.appendChild(cur);
     const show = (el, x, y) => {
       if (!curOn) { bx = x; by = y; }
-      curEl = el; curOn = true; cur.textContent = el.dataset.cur; cur.dataset.face = el.dataset.face || ""; cur.classList.add("x-in");
+      curEl = el; curOn = true; cur.dataset.face = el.dataset.face || "";
+      const ic = el.dataset.curI; cur.textContent = "";
+      if (ic) { const NS = "http://www.w3.org/2000/svg", s = document.createElementNS(NS, "svg"), u = document.createElementNS(NS, "use"); s.setAttribute("class", "i"); s.setAttribute("aria-hidden", "true"); u.setAttribute("href", "#" + ic); s.appendChild(u); cur.appendChild(s); }
+      else cur.textContent = el.dataset.cur;
+      cur.toggleAttribute("data-icon", !!ic); cur.classList.add("x-in");
     };
     const hide = () => { curEl = null; curOn = false; cur.classList.remove("x-in"); };
     addEventListener("pointermove", e => { cx = e.clientX; cy = e.clientY; const el = e.target.closest && e.target.closest("[data-cur]"); if (el && el !== curEl) show(el, cx, cy); else if (!el && curEl) hide(); }, { passive: true });
@@ -374,7 +380,7 @@
 
   /* ---------- 9. Scroll rail on the right edge, shown while the page moves, can be dragged ---------- */
   let rail = null, thumb = null, railT = 0, thumbH = 48;
-  if (fine) {
+  if (fine && !calm) {
     rail = document.createElement("div"); rail.className = "x-rail"; rail.setAttribute("aria-hidden", "true");
     rail.innerHTML = '<i class="x-rail-t"></i><i class="x-rail-h"></i>'; document.body.appendChild(rail); thumb = rail.lastChild;
     let drag = false, off = 0;
@@ -477,9 +483,10 @@
     set(0);
     const word = () => { requestAnimationFrame(() => requestAnimationFrame(() => doc.classList.add("x-ld-ready"))); setTimeout(() => { t0 = performance.now(); requestAnimationFrame(count); }, 420); };
     if (shots.length) {
+      const k = (shots[0].getBoundingClientRect().width || 230) / 230;   // the deck leans the same way whatever the cover's size
       shots.forEach((s, i) => {
         const a = (i % 2 ? 1 : -1);
-        s.style.setProperty("--x", (a * (6 + Math.random() * 14)).toFixed(0) + "px"); s.style.setProperty("--y", ((Math.random() * 2 - 1) * 14).toFixed(0) + "px");
+        s.style.setProperty("--x", (a * k * (6 + Math.random() * 14)).toFixed(0) + "px"); s.style.setProperty("--y", (k * (Math.random() * 2 - 1) * 14).toFixed(0) + "px");
         s.style.setProperty("--r", ((Math.random() * 2 - 1) * 7).toFixed(1) + "deg"); s.style.setProperty("--or", (a * (8 + Math.random() * 6)).toFixed(1) + "deg");
         s.style.zIndex = i + 1; setTimeout(() => s.classList.add("x-in"), 150 * i);
       });

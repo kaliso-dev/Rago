@@ -27,9 +27,24 @@ def sec_name(sec):
 def tally(mid):  # the count shown on the card: its tweaks, or what the section is for when it has none (Restore)
     n = count(mid)
     return f'<b>{n}</b>tweak{"" if n == 1 else "s"}' if n else '<b>Undo</b>every tweak'
-# site v6 (23/11/2026): one card per section of the app, stacked while you scroll (number, name, tagline, its parts, count, icon)
+FREE_IDS = set(json.load(open(os.path.join(APP, 'data', 'free.json')))['tweaks'])
+def tweaks_of(mid):
+    return [t for sec in MOD[mid]['sections'] for t in sec['tweaks'] if 'ref' not in t and t['kind'] == 'tweak']
+def extra(mid):  # middle of the card: how many are open in Free, then the real tweak names of the section, in columns
+    ts = tweaks_of(mid)
+    if not ts: return ''
+    names = []
+    for t in ts:
+        n = t['name']['en']
+        if n not in names: names.append(n)
+        if len(names) == 8: break
+    n_free = sum(1 for t in ts if t['id'] in FREE_IDS)
+    head = f'<b>{n_free}</b> of them open in Free, the rest with Premium.' if n_free else 'All of them with Premium.'
+    items = ''.join(f'<li>{esc(n)}</li>' for n in names)
+    return f'<div class="x-cap-x"><p>{head}</p><ul>{items}</ul></div>'
+# site v6 (23/11/2026): one card per section of the app, stacked while you scroll (number, name, tagline, what is inside, its parts, count, icon)
 rows = ''.join(f'<article class="x-cap"><span class="x-cap-n" aria-hidden="true">{i:02d}</span><h3>{esc(m["name"]["en"])}</h3>'
-               f'<p>{esc(m["tagline"]["en"])}</p><ul>{"".join(f"<li>{esc(sec_name(sec))}</li>" for sec in m["sections"] if sec_name(sec))}</ul>'
+               f'<p>{esc(m["tagline"]["en"])}</p>{extra(m["id"])}<ul>{"".join(f"<li>{esc(sec_name(sec))}</li>" for sec in m["sections"] if sec_name(sec))}</ul>'
                f'<span class="x-cap-i" aria-hidden="true"><svg class="i"><use href="#i-{ICON.get(m["id"], "settings")}"/></svg></span>'
                f'<span class="x-cap-c">{tally(m["id"])}</span></article>\n' for i, m in enumerate(cat['modules'], 1))
 a, b = s.index('<!-- mods -->') + len('<!-- mods -->'), s.index('<!-- /mods -->')

@@ -39,7 +39,7 @@ Un script sans fonction publique. Repères :
 ### 2. Accueil (`src/page.html` → `index.html`)
 1. Feuille partagée : `css(s, 'page.html')`. Plus de bloc Google Fonts ni de Geist depuis le 22/11 : les polices Barlow sont déclarées dans `v5.css`.
 2. Liens sans JavaScript : `href="/login"`, `/signup`, `/affiliate`, `/download`, `/buy?interval=year`, `/buy/route` deviennent absolus vers `BASE`.
-3. Prix sans JavaScript (formule annuelle par défaut) : `<b id="p-amt">` ← 2,50 $ ; `<p class="bil" id="p-note">` ← « Billed $29.99 yearly. 6 months free. » ; `<em id="save">` ← « 6 months free » (`hidden` si `FREE` < 1) ; `<b id="l-amt">` ← prix Lifetime. Chaque remplacement a son `assert`.
+3. Prix sans JavaScript (formule annuelle par défaut) : `<b id="p-amt">` ← 2,50 $ ; `<p class="bil" id="p-note">` ← « Billed $29.99 yearly. 6 months free. » ; `<b id="l-amt">` ← prix Lifetime. Chaque remplacement a son `assert`.
 4. Contrôles de prix : `priceLifetime` = `LIFETIME_PRICE` de `licensing/src/billing.js`, `priceRoute` = `ROUTE_PRICE` et `priceRouteYear` = `ROUTE_PRICE_YEARLY` de `licensing/src/route-addon.js` (arrêt avec « … differ: change both »).
 5. FAQ sans JavaScript : le tableau `  const F = [` … `\n  ];` est exécuté par `node -e`, puis écrit dans un `<noscript>` sous `<div class="faq" id="faqs"></div>` (Site v6, 23/11 ; ce conteneur doit apparaître une seule fois, `assert`), au format v5 (`<details class="s-q"><summary class="qh"><span>Question</span><span class="pm"></span></summary><p>Réponse</p></details>`) ; les questions Lifetime (`life`) sont laissées de côté ; le nombre de questions est écrit dans `<span id="faq-n">`.
 6. Discord : `href="#discord"` devient l'invitation (nouvel onglet) et les éléments `js-discord … hidden` sont rendus visibles.
