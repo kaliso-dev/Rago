@@ -3672,3 +3672,18 @@ test('catch-up of unpaid subscriptions: dry-run lists and changes nothing, apply
   // Run again: nothing left to do.
   assert.deepEqual((await catchUpUnpaid(t.db, t.stripe)).map((r) => r.email), ['young@rago.gg']);
 });
+
+// ---------- purchase email: the Discord Pro role (q84, 2026-11-28) ----------
+test('purchase email: with the role bot, link Discord from the account page; without it, a ticket', async () => {
+  const sent = [];
+  const fetchImpl = async (url, init) => { sent.push(JSON.parse(init.body)); return new Response('{}', { status: 200 }); };
+  const env = { RESEND_API_KEY: 're_real', MAIL_FROM: 'Rago Optimizer <noreply@rago.test>', SITE_URL: 'https://rago.test', PUBLIC_URL: 'https://account.rago.test', SUPPORT_URL: 'https://discord.gg/rago' };
+  await createMailer(loadConfig({ ...env, ...DISCORD }), { fetchImpl }).purchase('player@example.org', null, { plan: 'month' });
+  assert.match(sent[0].html, /Link your Discord from your account page/);
+  assert.match(sent[0].html, /<a href="https:\/\/account\.rago\.test\/account"[^>]*>Link your Discord<\/a>/);
+  assert.match(sent[0].text, /Link your Discord: https:\/\/account\.rago\.test\/account/);
+  assert.doesNotMatch(sent[0].html + sent[0].text, /open a ticket/);
+  await createMailer(loadConfig(env), { fetchImpl }).purchase('player@example.org', null, { plan: 'month' });
+  assert.match(sent[1].html, /open a ticket/);
+  assert.match(sent[1].text, /Join the Discord: https:\/\/discord\.gg\/rago/);
+});
