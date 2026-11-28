@@ -3,13 +3,13 @@ type: code
 tags: [code, serveur, javascript, admin, vault, navigateur]
 fichier: licensing/public/cerveau-fichiers.js
 lignes: 326
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # cerveau-fichiers.js
 
 L'**explorateur de fichiers** du [[Cerveau du vault]] dans le navigateur (cerveau **Rago Design**, 27/11) : arborescence à gauche, galerie du dossier ouvert, visionneuse d'un fichier. Sans bibliothèque, CSP stricte (aucun style ni script en ligne, tout texte échappé). Fiche parente : [[Code du serveur]]. Serveur : [[brain-files.js]] ; page : [[brain-views.js]] (`explorerPage`) ; styles : [[cerveau.css]] (classes `dx-`).
 
-(27/11 : PR #167 vers `staging`, pas fusionnée)
+(PR #167, dans `staging` depuis le 28/11, et en prod par la PR #168 le 28/11)
 
 ## Fonctionnement détaillé
 - **Données** : `#dx` porte `data-tree` (`/admin/cerveau/arbre.json?c=<id>`), `data-raw` (`/admin/cerveau/brut?c=<id>`), `data-repo`, `data-branch`, `data-name`. L'arborescence est lue au chargement (avec `If-None-Match`) et par le bouton ↻ (`frais=1`). Pied : branche, commit, nombre de fichiers, taille totale, heure de lecture, avertissement si GitHub a tronqué la liste, raison en jaune si la dernière lecture a échoué. Si rien n'a pu être lu : le message du serveur (ex. « Ajoute rago-design au jeton CERVEAU_GITHUB_TOKEN … ») et « Réessayer ».

@@ -3,13 +3,13 @@ type: code
 tags: [code, serveur, javascript, admin, vault]
 fichier: licensing/src/brain-files.js
 lignes: 187
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # brain-files.js
 
 Le côté serveur des **cerveaux « explorateur de fichiers »** du [[Cerveau du vault]] (`kind: 'files'`), créé le 27/11 pour **Rago Design** (dépôt privé `kaliso-dev/rago-design` : maquettes v5, kit de marque, scripts du CSS). Contrairement à [[brain.js]], il ne télécharge **jamais l'archive du dépôt** : il lit l'arborescence par l'API GitHub et chaque fichier seulement quand la page le demande. Fiche parente : [[Code du serveur]]. Navigateur : [[cerveau-fichiers.js]] ; page : [[brain-views.js]] (`explorerPage`).
 
-(27/11 : PR #167 vers `staging`, pas fusionnée)
+(PR #167, dans `staging` depuis le 28/11, et en prod par la PR #168 le 28/11)
 
 ## Ce que le fichier expose
 | Nom | Rôle |

@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, serveur, api]
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # API du serveur
 
@@ -41,7 +41,7 @@ Les routes marquées **(staging)** n'existent que sur `staging`, pas encore sur 
 | `POST /admin/test-licenses` | Arrête les licences de test, puis renvoie vers `/admin/services` (PR #83, `staging`) |
 | `GET /admin/reseau`, `GET /admin/reseau.csv` | Résumé et export des tests réseau ([[Proxy]]) |
 | `GET /admin/cerveau`, `GET /admin/cerveau/donnees.json` (`?frais=1`), `GET /admin/cerveau/fichier?chemin=` (toutes avec `?c=<cerveau>`, 12/11) | [[Cerveau du vault]] : la page, le vault en graphe (gzip, `ETag`), un fichier du dépôt ; PR #85 du Cerveau (`staging`, 10/11), en prod par la PR #87 (10/11) |
-| `GET /admin/cerveau/arbre.json`, `GET /admin/cerveau/brut?chemin=&v=` (avec `?c=rago-design`, 27/11) | Explorateur Rago Design du [[Cerveau du vault]] : l'arborescence du dépôt `kaliso-dev/rago-design` (API GitHub, sans contenu), puis un fichier à la fois, en flux (25 Mo au plus, 413 au-delà ; cache d'un an dans le navigateur) ([[brain-files.js]]) ; PR vers `staging`, pas fusionnée |
+| `GET /admin/cerveau/arbre.json`, `GET /admin/cerveau/brut?chemin=&v=` (avec `?c=rago-design`, 27/11) | Explorateur Rago Design du [[Cerveau du vault]] : l'arborescence du dépôt `kaliso-dev/rago-design` (API GitHub, sans contenu), puis un fichier à la fois, en flux (25 Mo au plus, 413 au-delà ; cache d'un an dans le navigateur) ([[brain-files.js]]) ; PR #167 (`staging`) et #168 (prod), 28/11 |
 | `POST /webhooks/stripe` | Webhook Stripe (signature vérifiée, idempotent par `stripe_events`) |
 | `GET /` | Redirige vers `SITE_URL` (le site est sur Netlify) |
 | `GET /buy/route`, `GET /checkout/route` | session du site | Option Rago Route (13/11) : Checkout Stripe de l'abonnement à 3 $/mois ou 17,99 $/an (`?interval=month|year` ; sans, comme le Premium du compte) pour un compte Premium connecté, puis page de retour qui l'enregistre ([[route-addon.js]]) |
