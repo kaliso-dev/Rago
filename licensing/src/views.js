@@ -94,7 +94,7 @@ export function page({ title, body, user, cfg, bodyClass = '', nav = '', cta = {
 <link rel="preload" href="/assets/fonts/BarlowCondensed-900-italic.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/assets/fonts/Barlow-400.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/assets/tokens.css?v=5">
-<link rel="stylesheet" href="/assets/account.css?v=7">
+<link rel="stylesheet" href="/assets/account.css?v=8">
 <script src="/assets/account.js?v=5" defer></script>
 </head>
 <body class="${escape(bodyClass)}">
