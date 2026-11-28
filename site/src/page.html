@@ -1143,9 +1143,10 @@ details.s-q p{padding:0 0 calc(24 * var(--u));font-size:calc(15.5 * var(--u));li
 
 <!-- 11. Every game: the numbers, then the games with a preset (v7: plain list, no banners) -->
 <section class="x-games" id="games">
-  <div class="x-wrap x-games-hd">
-    <h2 class="x-h x-sh" data-x="chars">The right tweaks <span class="r">for every game.</span></h2>
-  </div>
+  <!-- bannière qui défile, reprise telle quelle de la #136 (Sofiene, 28/11 : le titre « The right tweaks for every game. »
+       devient cette bannière) ; data-boost : elle accélère avec le défilement de la page -->
+  <h2 class="sr-only">The right tweaks for every game.</h2>
+  <div class="x-tick sm" aria-hidden="true"><div class="x-mq" data-speed="32" data-boost="1.2"><div class="x-mq-in"><span>Different games.</span><span>Different servers.</span><span>One tuned PC.</span><span class="r">Every millisecond counts.</span><span>Different games.</span><span>Different servers.</span><span>One tuned PC.</span><span class="r">Every millisecond counts.</span></div></div></div>
   <div class="x-wrap">
     <div class="x-stats-hd"><span class="x-logo" aria-hidden="true"><img src="img/v5/rago-icon.svg" alt="" width="38" height="38">rago<i>.</i></span>
       <h2 class="x-h x-sh" data-x="chars">Measured, <span class="r">not promised.</span></h2>
