@@ -16,9 +16,6 @@ Mode d'emploi :
 
 ## En attente de réponse
 
-Posées le 23/11, pendant la refonte de l'app sur les maquettes v5 (fil « refonte stricte ») :
-- q115 : texte propre à l'achat de test au lieu de « This license was revoked. » (page compte, [[views.js]]). **Enquête du 27/11** (Sofiene ne savait pas d'où viennent ces licences) : une licence « achat de test » (`status_reason = 'test_mode'`) n'est créée **que** par le bouton « Arrêter les licences de test » de `/admin/services` (`POST /admin/test-licenses` → `endTestLicenses` de [[billing.js]], PR #14 du 09/10). Ce bouton n'agit que sur un serveur en clé Stripe **live** et coupe les licences encore actives achetées avec une carte de test (session `cs_test_…`), c'est-à-dire les achats d'essai faits par l'équipe avant le passage en live du 09-10/10. Aucun webhook, remboursement ni joueur n'en crée : un remboursement donne `refunded`, et un serveur live ignore les événements du mode test. Nombre en prod : À VÉRIFIER (pas d'accès à la base de prod ; `SELECT COUNT(*) FROM licenses WHERE status_reason = 'test_mode'`, ou la fiche joueur de `/admin`) ; probablement 0 ou quelques comptes de l'équipe ; en staging il ne peut y en avoir aucune (clé test). Deux options proposées à Sofiene : (1) un texte propre, « This was a test purchase made before launch. Nothing was paid, so it doesn't unlock Premium. » ; (2) ne rien changer (« This license was revoked. » suffit, cas qui ne touche pas de vrais joueurs).
-
 Posée le 25/11, après le test Windows de Sofiene (PR #139) :
 - q121 : la barre en jeu sort-elle encore du jeu (autre page, jeu réduit) une fois la 1.2.1 quittée ? ([[Barre en jeu]])
 
