@@ -3,7 +3,7 @@ type: code
 tags: [code, site, python, juridique]
 fichier: site/tools/make_legal.py
 lignes: 280
-maj: 2026-11-22
+maj: 2026-11-28
 ---
 # make_legal.py
 
@@ -20,7 +20,7 @@ Tout ce qui suit est CONFIRMÉ (branche du site v5, PR #109, 22/11). Commande : 
 ## Ce que le fichier expose
 | Nom | Rôle |
 |---|---|
-| `UPD` | date « Last updated » de chaque page : terms « November 13, 2026 », privacy « November 10, 2026 » |
+| `UPD` | date « Last updated » de chaque page : terms « November 13, 2026 », privacy « November 28, 2026 » |
 | `SITE`, `ACC`, `DISCORD`, `MAIL` | adresses du site, du serveur de comptes, de l'invitation Discord et lien `mailto:` du support |
 | `CSSV`, `JSV`, `OGV`, `KJS` | empreintes de `v5.css`, [[v5.js]] et `og-image.png`, calculées comme [[build.py]] (adresses `?v=`) ; `KJS` : le petit script qui pose `--k` avant le premier affichage, comme [[build.py]] |
 | `CSS` | le style des pages légales et de la 404 (maquettes « site-terms », « site-privacy », « site-404 »), en plus de `v5.css` |
@@ -47,11 +47,11 @@ Encadrés : free trial 3 days (section 4), per license 1 PC (5), cancel anytime 
 9. **Reviews** : un avis par compte, affiché avec le nom public et la photo, jamais masqué parce qu'il est négatif.
 10. **Liability**, 11. **Suspension** (fraude, litige, partage), 12. **Changes and law** (droit français, sans retirer la protection du pays du consommateur).
 
-### `privacy.html` : « Privacy Policy » (mise à jour « November 10, 2026 »)
+### `privacy.html` : « Privacy Policy » (mise à jour « November 28, 2026 »)
 Encadrés : cookies 0 ads, your card Stripe only, network test no IP kept, delete 30 days.
 - **Who is responsible** : l'équipe Rago Optimizer, en France.
 - **What we collect, and why** : un tableau à deux colonnes (donnée, raison) : compte et sessions (hachés), code à 6 chiffres de l'inscription (supprimé dans la journée), identifiants Google ou Discord, références de paiement Stripe, identifiants hachés du PC (machine ID Windows, UUID matériel, numéro de série de la carte mère), nom du PC, versions, dernière IP, code d'affilié, nom public / photo (256 × 256, métadonnées retirées) / avis, liaison Discord, données d'essai (e-mail, abonnement, empreinte de carte), membres du serveur Discord (invitations, rôles VIP et MVP), journal de licence, IP gardée brièvement en mémoire, résultats du test réseau (ping, gigue, pertes par serveur, version, ID anonyme du PC, ville / région / pays / fournisseur déduits de l'IP par la base DB-IP **locale**, IP non gardée). Voir [[Test réseau]].
-- **Legal basis** ; **Cookies and local storage** : `rg_session`, `rg_claim` (2 jours), `rg_signup` (24 h), `rg_oauth` (10 min), `rg_discord` (10 min), `rago_preview` et `rago_admin` (équipe), `rg_ref` (cookie du serveur de comptes) et `rago_ref` (stockage du site), 30 jours ; `rago_promo_seen`, `rago_promo_seen_code`, `rago_promo_claimed` (stockage du site, 30 jours). Phrase : « We don't use advertising or analytics cookies, and the site loads no third-party fonts or trackers » (c'est pourquoi [[build.py]] remplace Google Fonts par des polices locales).
+- **Legal basis** ; **Cookies and local storage** : `rg_session`, `rg_claim` (2 jours), `rg_signup` (24 h), `rg_oauth` (10 min), `rg_discord` (10 min), `rago_admin` (équipe ; la ligne `rago_preview` est retirée le 28/11, q79), `rg_ref` (cookie du serveur de comptes) et `rago_ref` (stockage du site), 30 jours ; `rago_promo_seen`, `rago_promo_seen_code`, `rago_promo_claimed` (stockage du site, 30 jours). Phrase : « We don't use advertising or analytics cookies, and the site loads no third-party fonts or trackers » (c'est pourquoi [[build.py]] remplace Google Fonts par des polices locales).
 - **Who processes it for us** : Stripe, Supabase, Railway, Netlify, Resend, OVHcloud, Discord, Google.
 - **How long we keep it** : compte : jusqu'à 30 jours après la demande de suppression ; facturation : 10 ans ; journal de sécurité : 12 mois ; essais : 2 ans ; Discord : 12 mois après le départ ; codes d'inscription : 1 jour ; tests réseau : 12 mois.
 - **Your rights** (CNIL) et **Changes**.
@@ -75,4 +75,4 @@ Lit `site/src/legal/terms.html`, `site/src/legal/privacy.html`, `site/v5.css`, `
 - Changer la date « Last updated » à chaque modification de fond (`UPD` en tête du script).
 - Les encadrés « en bref » reprennent des faits du texte (3 jours, 1 PC, pas de remboursement…) : les changer avec le texte.
 - Toute nouvelle donnée collectée, tout nouveau cookie ou sous-traitant doit être ajouté ici (règle de conformité).
-- La phrase « no third-party fonts or trackers » engage le site : ne pas ajouter d'outil d'analyse ou de police externe sans changer cette page (voir aussi [[recherche-conversion (site)]] qui proposait une analyse d'audience, jamais faite).
+- La phrase « no third-party fonts or trackers » engage le site : ne pas ajouter d'outil d'analyse ou de police externe sans changer cette page.

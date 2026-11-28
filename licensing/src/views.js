@@ -230,7 +230,7 @@ export function loginPage(cfg, { email = '', error, notice, purchased = false, n
     : String(next || '').startsWith('/buy/route') && !purchased
       ? html`<p class="overline rise">Rago Route</p>
         <h1 class="display rise d1">Welcome back.</h1>
-        <p class="lede rise d2">Sign in with your Premium account to add Rago Route. You pay on Stripe next, then turn it on from the Rago Route tab of the app.</p>`
+        <p class="lede rise d2">Sign in with your Premium or Lifetime account to add Rago Route. You pay on Stripe next, then turn it on from the Rago Route tab of the app.</p>`
     : html`<p class="overline rise">${purchased ? 'Rago Optimizer Premium' : 'Rago Optimizer account'}</p>
       <h1 class="display rise d1">${purchased ? 'Payment confirmed.' : 'Welcome back.'}</h1>
       <p class="lede rise d2">${purchased ? 'Sign in and we add the license to your account.' : 'Sign in to get your license key and download Rago Optimizer.'}</p>`;
@@ -247,6 +247,41 @@ export function loginPage(cfg, { email = '', error, notice, purchased = false, n
     </form>
     <p class="muted small"><a href="/forgot">Forgot your password?</a> · No account? <a href="/signup${qs(next)}">Create account</a></p>`;
   return page({ title: 'Sign in', cfg, buy: !purchased, bodyClass: purchased ? 'is-purchase' : '', cta: { href: `/signup${qs(next)}`, label: 'Create account' }, body: split({ step: purchased ? 1 : null, aside, form }) });
+}
+
+/**
+ * Before Checkout, signed out (2026-11-27, q103): the buyer's email, so an email that already has Premium is sent to
+ * sign in instead of paying twice. The link's options (interval, trial, Rago Route, codes) ride along in hidden fields.
+ */
+export function buyEmailPage(cfg, { action, keep = {}, lifetime = false, trial = false, email = '', error } = {}) {
+  const aside = html`<p class="overline rise">Checkout</p>
+    <h1 class="display rise d1">${lifetime ? 'Premium for life.' : trial ? 'Start your free trial.' : 'Get Premium.'}</h1>
+    <p class="lede rise d2">Your email first: we check it doesn't have Premium already, then you pay on Stripe and create your account right after.</p>`;
+  const form = html`
+    <h2 class="h2">Your email</h2>
+    ${alertBox(error)}
+    <form method="post" action="${action}" class="form" data-busy="Opening checkout…">
+      ${field({ label: 'Email', name: 'email', type: 'email', value: email, autocomplete: 'email' })}
+      ${Object.entries(keep).map(([k, v]) => hidden(k, v))}
+      <button class="btn btn-primary btn-block" type="submit">Continue to payment</button>
+    </form>
+    <p class="muted small">Already have an account? <a href="/login">Sign in</a></p>`;
+  return page({ title: 'Checkout', cfg, body: split({ aside, form }) });
+}
+
+/** One free trial per network (2026-11-27, q104): this network had one in the last 6 months. Pay without it, or not. */
+export function trialUsedPage(cfg, { user, keep = {} } = {}) {
+  const aside = html`<p class="overline rise">Checkout</p>
+    <h1 class="display rise d1">Free trial already used on this network.</h1>
+    <p class="lede rise d2">There's one free trial per person, card and network. You can still get Premium now, without the trial: cancel anytime from your account or the app.</p>`;
+  const form = html`
+    <h2 class="h2">Get Premium now</h2>
+    <form method="post" action="/buy" class="form" data-busy="Opening checkout…">
+      ${Object.entries(keep).map(([k, v]) => hidden(k, v))}
+      <button class="btn btn-primary btn-block" type="submit">Pay without the trial</button>
+    </form>
+    <p class="muted small"><a href="${cfg.siteUrl}/#pricing">See the plans</a></p>`;
+  return page({ title: 'Free trial already used', cfg, user, body: split({ aside, form }) });
 }
 
 export function forgotPage(cfg, { sent = false, email = '' } = {}) {
@@ -340,8 +375,11 @@ function ago(ms, now = Date.now()) {
 }
 
 const PLAN = { month: 'Monthly', year: 'Yearly', lifetime: 'Lifetime', reward: 'Affiliate reward' };
-// Months given by the team (admin grant-months) are a 'reward' license too, but not earned as an affiliate.
-const planName = (license) => (license.plan === 'reward' && license.source === 'grant' ? 'Gift' : PLAN[license.plan] || 'Lifetime');
+// A 'reward' license says where it comes from (licenses.source, set when it's created, 2026-11-27, q113): months given by
+// the team (admin grant-months) are a Gift, Premium earned on Discord (community bot: invites, boosts) a Discord reward,
+// the affiliate program's free months an Affiliate reward.
+const REWARD = { grant: 'Gift', discord: 'Discord reward', affiliate: 'Affiliate reward' };
+const planName = (license) => (license.plan === 'reward' ? REWARD[license.source] || PLAN.reward : PLAN[license.plan] || 'Lifetime');
 const pricingUrl = (cfg) => (cfg.subscriptions ? `${cfg.siteUrl}/#pricing` : '/buy');
 
 /**
@@ -384,7 +422,8 @@ function affiliateLine(a) {
 export function dashboardPage(cfg, { user, license, device, notice, error, canReset, nextResetAt, affiliate, discordLink, discordRewards = [], inviteRewards = [], review = null, lifetime = false, noPassword = false, trial = false, routeOption = null, routeOnSale = false, routeYearly = false }) {
   const active = license?.status === 'active';
   const reason = license?.status_reason;
-  const ended = !active && reason === 'subscription_ended';
+  // Premium that stopped by itself: the period ended (canceled, reward over) or a renewal was never paid (2026-11-27).
+  const ended = !active && (reason === 'subscription_ended' || reason === 'payment_failed');
   const subscription = license && (license.plan === 'month' || license.plan === 'year');
   const canceling = active && subscription && license.cancel_at_period_end;
   // The 4 steps only make sense for a working license; a free or ended account gets no stepper.
@@ -395,6 +434,8 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
 
   const portalButton = (label, cls = 'btn-ghost') => (license?.stripe_customer_id && license.stripe_subscription_id
     ? html`<form method="post" action="/account/billing" class="inline" data-busy="Opening…"><button class="btn ${cls} btn-sm" type="submit">${ICON.card}<span>${label}</span></button></form>` : '');
+  // Cancel or resume right here (2026-11-27, q102): a confirmation first, then the end of the period, never now.
+  const changeButton = (action, label, cls = 'btn-ghost', confirm = null) => html`<form method="post" action="${action}" class="inline" data-busy="Saving…"${confirm ? html` data-confirm="${confirm}"` : ''}><button class="btn ${cls} btn-sm" type="submit"><span>${label}</span></button></form>`;
 
   const howto = html`<ol class="howto">
         <li><span class="howto-n mono">1</span><span>Run the installer. Windows SmartScreen may ask you to confirm: click <strong>More info</strong>, then <strong>Run anyway</strong>.</span></li>
@@ -526,8 +567,11 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
         <a class="btn btn-ghost btn-lg" href="/account/download" data-download>${ICON.download}<span>Download the free version</span></a></div>
       <p class="muted small">${cfg.subscriptions ? (lifetime ? 'Monthly or yearly, cancel anytime, or Lifetime in one payment. Secure checkout with Stripe.' : 'Monthly or yearly. Secure checkout with Stripe. Cancel anytime.') : 'Secure checkout with Stripe.'} Already paid? Sign in with the email you paid with${cfg.mailEnabled ? ', or open the link in your purchase email' : ''}. Still not here? ${supportLink(cfg, 'Ask on Discord')} with your payment email and we'll add it to this account.</p>`, howto);
 
-  const OFF = { subscription_ended: 'Ended', refunded: 'Refunded', disputed: 'Disputed', test_mode: 'Test purchase' };
+  const OFF = { subscription_ended: 'Ended', payment_failed: 'Payment failed', refunded: 'Refunded', disputed: 'Disputed', test_mode: 'Test purchase' };
   const offBadge = () => OFF[reason] || 'Revoked';
+  // A test purchase stopped by the admin when Stripe went live (q115, 2026-11-28: « a) »): its own sentence, not "revoked".
+  const TEST_LINE = 'Test purchase made before launch. Not an active license.';
+  const revokedLine = (rest = '') => (reason === 'test_mode' ? TEST_LINE : `This license was revoked.${rest}`);
   const licenseSect = () => sect('sect-license', html`<p class="overline">License key</p>
       ${active ? html`<span class="badge badge-ok"><i></i>Active</span>` : html`<span class="badge badge-off"><i></i>${offBadge()}</span>`}`,
     html`<div class="key">
@@ -568,23 +612,30 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
   const planSect = () => {
     const end = license.current_period_end;
     const row = (...items) => (items.some(Boolean) ? html`<div class="row">${items}</div>` : '');
+    // Premium over by itself (subscription canceled or unpaid, reward or gift over): the plan is simply Free again,
+    // no "Ended" badge (2026-11-27, q114: « tu laisses juste formule gratuite »).
+    if (ended) {
+      return sect('sect-plan', html`<p class="overline">Plan</p><span class="badge badge-off"><i></i>Free</span>`,
+        html`<div class="plan-line"><span class="plan-icon">${ICON.pc}</span><div><strong>Rago Optimizer · Free</strong>
+          <p class="muted small">${cfg.freeTweaks} tweaks unlocked. ${unlocks.split('. ')[0]}.</p></div></div>`,
+        row(html`<a class="btn btn-primary btn-sm" href="${buyUrl}">Get Premium</a>`, portalButton('Invoices and billing')));
+    }
     if (license.plan === 'reward' && license.source === 'grant') {
       return sect('sect-plan', html`<p class="overline">Plan</p>${active ? html`<span class="badge badge-red"><i></i>Until ${fmtDate(end)}</span>` : html`<span class="badge badge-off"><i></i>${offBadge()}</span>`}`,
         html`<div class="plan-line"><span class="plan-icon">${ICON.clock}</span><div><strong>Rago Optimizer Premium · Gift</strong>
           <p class="muted small">${active
             ? `Offered by the Rago team. Premium until ${fmtDate(end)}, nothing to pay.`
-            : ended ? `Your free Premium ended on ${fmtDate(end)}. Get Premium to keep every tweak unlocked.` : 'This license was revoked.'}</p></div></div>`,
-        active ? row(html`<a class="btn btn-ghost btn-sm" href="${buyUrl}">Subscribe now, first payment on ${fmtDate(end)}</a>`)
-          : ended ? row(html`<a class="btn btn-primary btn-sm" href="${buyUrl}">Get Premium</a>`) : '');
+            : revokedLine()}</p></div></div>`,
+        active ? row(html`<a class="btn btn-ghost btn-sm" href="${buyUrl}">Subscribe now, first payment on ${fmtDate(end)}</a>`) : '');
     }
     if (license.plan === 'reward') {
       const fromDiscord = license.source === 'discord';
       return sect('sect-plan', html`<p class="overline">Plan</p>${active ? html`<span class="badge badge-red"><i></i>Until ${fmtDate(end)}</span>` : html`<span class="badge badge-off"><i></i>${offBadge()}</span>`}`,
-        html`<div class="plan-line"><span class="plan-icon">${ICON.users}</span><div><strong>Rago Optimizer Premium · ${fromDiscord ? 'Discord reward' : 'Affiliate reward'}</strong>
+        html`<div class="plan-line"><span class="plan-icon">${ICON.users}</span><div><strong>Rago Optimizer Premium · ${planName(license)}</strong>
           <p class="muted small">${active
-            ? fromDiscord ? `Earned by inviting players to the Rago Discord. Premium until ${fmtDate(end)}, nothing to pay.`
+            ? fromDiscord ? `Earned on the Rago Discord. Premium until ${fmtDate(end)}, nothing to pay.`
               : `Earned with the affiliate program. Premium until ${fmtDate(end)}, nothing to pay.${cfg.affiliateRewardMax === 1 ? '' : ` Bring ${cfg.affiliateGoal} more players to add ${cfg.affiliateRewardMonths} months.`}`
-            : ended ? `Your ${fromDiscord ? 'Discord' : 'affiliate'} reward ended on ${fmtDate(end)}. Get Premium to keep every tweak unlocked.` : 'This license was revoked.'}</p></div></div>`,
+            : revokedLine()}</p></div></div>`,
         row(active ? html`<a class="btn btn-ghost btn-sm" href="${buyUrl}">Subscribe now, first payment on ${fmtDate(end)}</a>` : '', html`<a class="link-arrow" href="/affiliate">Open affiliate program ${ICON.arrow}</a>`));
     }
     if (license.plan === 'lifetime' || !subscription) {
@@ -592,30 +643,28 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
         html`<div class="plan-line"><span class="plan-icon">${ICON.infinity}</span><div><strong>Rago Optimizer Premium for life</strong>
           <p class="muted small">${active
             ? `${license.source === 'affiliate' ? 'Earned with the affiliate program. ' : ''}No renewals, nothing to pay.`
-            : reason === 'refunded' ? 'Refunded. This license no longer works.' : reason === 'disputed' ? 'The payment was disputed. This license no longer works.' : 'This license was revoked.'}</p></div></div>`,
-        row(portalButton(active ? 'Cancel or manage subscription' : 'Invoices and billing')));
+            : reason === 'refunded' ? 'Refunded. This license no longer works.' : reason === 'disputed' ? 'The payment was disputed. This license no longer works.' : revokedLine()}</p></div></div>`,
+        row(portalButton('Invoices and billing')));
     }
     let line;
     let badge = html`<span class="chip mono">${PLAN[license.plan]}</span>`;
-    let actions = portalButton('Cancel or manage subscription');
-    if (ended) {
-      line = html`Your subscription ended${end ? ` on ${fmtDate(end)}` : ''}. Renew it to unlock Premium again.`;
-      actions = html`<a class="btn btn-primary btn-sm" href="${buyUrl}">Renew Premium</a>${portalButton('Invoices and billing')}`;
-    } else if (!active) {
+    const until = end ? fmtDate(end) : 'the end of the period';
+    let actions = html`${changeButton('/account/subscription/cancel', 'Cancel subscription', 'btn-ghost', `Cancel your subscription? Premium keeps working until ${until}, then Rago Optimizer goes back to the free version and puts back its tweaks. Nothing more is charged. You can keep Premium until that date.`)}${portalButton('Invoices and billing')}`;
+    if (!active) {
       line = reason === 'refunded' ? 'Refunded. This subscription is stopped and won’t renew.'
         : reason === 'disputed' ? 'The payment was disputed. This subscription is stopped and won’t renew.'
-          : 'This license was revoked. The subscription won’t renew.';
+          : revokedLine(' The subscription won’t renew.');
       badge = html`<span class="badge badge-off"><i></i>${offBadge()}</span>`;
       actions = portalButton('Invoices and billing');
     } else if (canceling) {
       line = `Canceled. Premium keeps working until ${end ? fmtDate(end) : 'the end of the period'}, then Rago Optimizer goes back to the free version and puts back its tweaks.`;
       badge = html`<span class="badge badge-wait"><i></i>Ends ${end ? fmtDate(end) : 'soon'}</span>`;
-      actions = html`${portalButton('Keep Premium', 'btn-primary')}`;
+      actions = html`${changeButton('/account/subscription/resume', 'Keep Premium', 'btn-primary')}${portalButton('Invoices and billing')}`;
     } else if (trial) {
       // Free trial (2026-11-04): the first payment and how to avoid it, in plain words
       line = `Free trial. Your card is charged on ${end ? fmtDate(end) : 'the last day'}, unless you cancel before. Cancel anytime: you pay nothing.`;
       badge = html`<span class="badge badge-wait"><i></i>Trial until ${end ? fmtDate(end) : 'soon'}</span>`;
-      actions = portalButton('Cancel trial or manage');
+      actions = html`${changeButton('/account/subscription/cancel', 'Cancel free trial', 'btn-ghost', `Cancel your free trial? Premium keeps working until ${until}, and your card is never charged.${routeOption ? ' Rago Route stops with it.' : ''} You can keep Premium until that date.`)}${portalButton('Billing details')}`;
     } else {
       line = end ? `Renews on ${fmtDate(end)}. Cancel anytime.` : 'Renews automatically. Cancel anytime.';
     }
@@ -628,17 +677,21 @@ export function dashboardPage(cfg, { user, license, device, notice, error, canRe
   };
 
   // Rago Route option (2026-11-13): $3 a month or $17.99 a year on top of Premium, its own subscription, managed in the same portal.
+  // A paid Lifetime takes it too, as its own subscription (2026-11-27). A granted license keeps the Premium wording.
+  const lifetimePlan = license?.plan === 'lifetime' && (license.source ?? 'stripe') === 'stripe';
   const routeSect = () => {
     if (!active || (!routeOption && !routeOnSale)) return '';
     const end = routeOption && Number(routeOption.current_period_end);
     if (routeOption) {
       const stops = routeOption.cancel_at_period_end;
       return sect('sect-route', html`<p class="overline">Rago Route</p><span class="badge ${stops ? 'badge-off' : 'badge-ok'}"><i></i>${stops ? `Stops ${end ? fmtDate(end) : 'soon'}` : 'Active'}</span>`,
-        html`<p class="muted small">The anti-lag tunnel for Minecraft, ${routeOption.billing_interval === 'year' ? '$17.99 a year' : '$3 a month'} on top of your Premium.${end ? ` ${stops ? 'It stops on' : 'Next payment on'} ${fmtDate(end)}.` : ''} It stops with your Premium.</p>`,
-        html`<form method="post" action="/account/billing" class="inline" data-busy="Opening…"><button class="btn btn-ghost btn-sm" type="submit">${ICON.card}<span>Manage or cancel</span></button></form>`);
+        html`<p class="muted small">The anti-lag tunnel for Minecraft, ${routeOption.billing_interval === 'year' ? '$17.99 a year' : '$3 a month'} on top of your ${lifetimePlan ? 'Lifetime' : 'Premium'}.${end ? ` ${stops ? 'It stops on' : 'Next payment on'} ${fmtDate(end)}.` : ''}${lifetimePlan ? ' Cancel anytime: your Lifetime stays.' : ' It stops with your Premium.'}</p>`,
+        html`${stops
+          ? changeButton('/account/route/resume', 'Keep Rago Route', 'btn-primary')
+          : changeButton('/account/route/cancel', 'Cancel Rago Route', 'btn-ghost', `Cancel Rago Route? It keeps working until ${end ? fmtDate(end) : 'the end of the period'}, then nothing more is charged for it. Your Premium doesn't change.`)}<form method="post" action="/account/billing" class="inline" data-busy="Opening…"><button class="btn btn-ghost btn-sm" type="submit">${ICON.card}<span>Billing details</span></button></form>`);
     }
     return sect('sect-route', html`<p class="overline">Rago Route</p><span class="badge badge-off"><i></i>Option</span>`,
-      html`<p class="muted small">The anti-lag tunnel for Minecraft (beta): your game goes through the Rago servers by several paths at once, and lost packets are sent again right away. ${routeYearly ? '$3 a month or $17.99 a year (6 months free)' : '$3 a month'} on top of your Premium, cancel anytime.</p>`,
+      html`<p class="muted small">The anti-lag tunnel for Minecraft (beta): your game goes through the Rago servers by several paths at once, and lost packets are sent again right away. ${lifetimePlan ? 'Rago Route is a separate subscription, also for Lifetime: ' : ''}${routeYearly ? '$3 a month or $17.99 a year (6 months free)' : '$3 a month'} on top of your ${lifetimePlan ? 'Lifetime' : 'Premium'}, cancel anytime.</p>`,
       routeYearly
         ? html`<a class="btn btn-primary btn-sm" href="/buy/route?interval=year">Add Rago Route · $17.99/year</a> <a class="btn btn-ghost btn-sm" href="/buy/route?interval=month">$3/month</a>`
         : html`<a class="btn btn-primary btn-sm" href="/buy/route?interval=month">Add Rago Route · $3/month</a>`);

@@ -1070,6 +1070,8 @@ pub struct Library {
     art_dir: PathBuf,
     saved: Mutex<Saved>,
     games: Mutex<Option<Vec<Game>>>,
+    /// jeux détectés mais retirés par le joueur (liste « Hidden games » de la bibliothèque, q85)
+    hidden_found: Mutex<Vec<Game>>,
     running: Mutex<HashSet<String>>,
     launchers: Mutex<Option<Vec<Launcher>>>,
     /// jeux des presets déjà cherchés depuis le lancement de l'app (preset_icons)
@@ -1089,6 +1091,7 @@ impl Library {
             art_dir: data_dir.join("art"),
             saved: Mutex::new(saved),
             games: Mutex::new(None),
+            hidden_found: Mutex::new(Vec::new()),
             running: Mutex::new(HashSet::new()),
             launchers: Mutex::new(None),
             presets_scanned: AtomicBool::new(false),
@@ -1119,8 +1122,9 @@ impl Library {
                 g.art.push(Art::SteamSearch(m.name.clone()));
                 found.push(g);
             }
-            found.retain(|g| !saved.hidden.contains(&g.id));
-            *games = Some(found);
+            let (hidden, shown): (Vec<Game>, Vec<Game>) = found.into_iter().partition(|g| saved.hidden.contains(&g.id));
+            *self.hidden_found.lock().unwrap() = hidden;
+            *games = Some(shown);
         }
         let saved = self.saved.lock().unwrap();
         let running = self.running.lock().unwrap();
@@ -1270,8 +1274,31 @@ impl Library {
             }
         }
         if let Some(games) = self.games.lock().unwrap().as_mut() {
-            games.retain(|g| g.id != id);
+            let hidden = self.saved.lock().unwrap().hidden.iter().any(|h| h == id);
+            if let Some(i) = games.iter().position(|g| g.id == id) {
+                let g = games.remove(i);
+                if hidden {
+                    self.hidden_found.lock().unwrap().push(g);
+                }
+            }
         }
+    }
+
+    /// Jeux retirés de la bibliothèque et toujours installés, par nom (Sofiene, 28/11, q85 : les réafficher).
+    pub fn hidden(&self) -> Vec<Game> {
+        self.list(false);
+        let mut out = self.hidden_found.lock().unwrap().clone();
+        out.sort_by_key(|g| g.name.to_lowercase());
+        out
+    }
+
+    /// Réaffiche un seul jeu retiré.
+    pub fn unhide(&self, id: &str) {
+        let mut saved = self.saved.lock().unwrap();
+        saved.hidden.retain(|h| h != id);
+        self.save(&saved);
+        drop(saved);
+        self.list(true);
     }
 
     /// Jeux retirés de la bibliothèque à nouveau affichés.
@@ -1891,6 +1918,24 @@ mod tests {
         assert!(listed[0].last_played.is_some() && !listed[0].running);
         // gardée sur disque
         assert!(Library::new(&dir).saved.lock().unwrap().played.contains_key("steam:730"));
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn removed_games_can_be_shown_again() {
+        let dir = std::env::temp_dir().join(format!("rago-games-hidden-{}", std::process::id()));
+        let _ = fs::create_dir_all(&dir);
+        let lib = Library::new(&dir);
+        let g = Game::new("steam:730".into(), "Counter-Strike 2".into(), "steam", Launch::Url("steam://rungameid/730".into()));
+        *lib.games.lock().unwrap() = Some(vec![g]);
+        lib.remove("steam:730");
+        assert!(lib.list(false).is_empty());
+        let hidden = lib.hidden();
+        assert_eq!(hidden.len(), 1);
+        assert_eq!(hidden[0].name, "Counter-Strike 2");
+        lib.unhide("steam:730");
+        assert!(lib.saved.lock().unwrap().hidden.is_empty());
+        assert!(Library::new(&dir).saved.lock().unwrap().hidden.is_empty());
         let _ = fs::remove_dir_all(&dir);
     }
 

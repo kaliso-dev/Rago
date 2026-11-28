@@ -1,7 +1,7 @@
 ---
 type: référence
 tags: [sources]
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # Sources
 
@@ -21,7 +21,6 @@ Liste complète au **10/11/2026**, dossier par dossier, plus `rago-route-page/` 
 | `admin-refonte/` | captures de la refonte du tableau de bord admin (10/11) : vue d'ensemble, ventes, fiche joueur, téléphone ; `v2/` (fiche joueur, services, site et promos, ventes) | [[Tableau de bord admin]] |
 | `etude-marche-2026-11/` | `LISEZMOI.txt` et les 7 études de marché du 03/11 (423 Ko) | [[Étude de marché de novembre 2026]] |
 | `linkedin/` | posts LinkedIn automatiques de Sofiene (règles, `posts/` du 06 au 08/11) : **arrêté le 10/11** (voir [[Décisions]]) | aucune |
-| `marketing/logo-creation-adam/` | vidéo 4K de 10 s du logo dans « La Création d'Adam » (02/11), aperçu, sources | [[Logo création d'Adam]] |
 | `marketing/plan-visibilite-gratuite.md` | plan de visibilité du 17/10 : **abandonné le 01/11** (voir [[Décisions]]) | aucune |
 | `marketing/videos-milli/` | série de vidéos courtes « Milli » (183 Mo) : **abandonnée le 01/11** (voir [[Décisions]]). Les chiffres utiles sont dans [[Vidéos YouTube]] | aucune |
 | `marketing/videos-youtube/` | étude de style (18/10), épisode 001 « Rago tour » en 3 versions, film de lancement 4K (preuve en 720p), sources | [[Vidéos YouTube]] |
@@ -49,7 +48,8 @@ Supprimés le 10/11 à la demande de Sofiene (q58) :
 - les anciens patchs `vault/maj-*`, sauf `maj-2026-11-10-point/`, qui est encore là.
 
 ## Ailleurs
-- Dossier partagé du projet Claude « [[New Brand Rago]] » : `rago-redesign/` (maquettes v5 `rendus-v5/`, kit `marque/`, scripts `outils/`, captures `app-strict/`, `images/` et `sources.md`). Pas visible depuis ce projet.
+- Mac de Sofiene, `/Users/kaliso/Desktop/Rago data /charte-2.2/` : copie de la charte graphique 2.2 (branche `claude/project-thread-8teqin`, PR #69 fermée, supprimée le 28/11) : `site/`, patch du commit `a4ec5ab`, `LISEZMOI.txt` ; ouvrir `site/index.html` pour l'aperçu ([[Charte graphique]], [[Branches du dépôt]]).
+- Dossier du projet Claude « [[New Brand Rago]] » : `rago-redesign/` (maquettes v5 `rendus-v5/`, kit `marque/`, scripts `outils/`, captures `app-strict/`, `images/` et `sources.md`), sur GitHub dans le dépôt privé [`kaliso-dev/rago-design`](https://github.com/kaliso-dev/rago-design) depuis le 28/11 (dans `design/rago-redesign/` de `rago` du 27 au 28/11, retiré car l'archive de `staging` dépassait la limite de 120 Mo du [[Cerveau du vault]]).
 - Passage sur un nouveau compte Claude (25/11) : ce qu'il faut emporter, [[Reprendre sur un nouveau compte Claude]].
 - Artefacts GitHub Actions (exe) : expirent après 90 jours ; ceux de la 1.1.10 le 08/01/2027.
 - Docs Claude : script YouTube « What's new » ([[Vidéos YouTube]]).

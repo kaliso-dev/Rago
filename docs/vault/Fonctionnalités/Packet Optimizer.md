@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, réseau, premium, 1.2]
 version_app: 1.2.1
-maj: 2026-11-25
+maj: 2026-11-27
 ---
 # Packet Optimizer
 
@@ -24,6 +24,7 @@ Onglet « Packet Optimizer » de la page Réseau (page « Optimiseur réseau » 
 ## Réglages
 - **Mise en tampon des paquets** (curseur 0-100 : de « aucun tampon » à Windows, N tampons coupés sur 6) ; **Renvoi des paquets perdus** (Prudent → Rapide : délai du 1er renvoi, SystemResponsiveness) ; **Regroupement des petits paquets** (ACK, minuteur, Nagle).
 - Fenêtre de réception TCP (Auto, Normal, Restreint, Très restreint, Fixe 64 Ko, Expérimental, Ne pas changer) ; type de connexion (Fibre/Ethernet, Câble, VDSL, ADSL, Wi-Fi, 4G/5G, Satellite) avec détection ; **Priorité au trafic du jeu (QoS, DSCP)** ; **Tolérance aux pertes** ; **Performances de Windows pour le jeu** (plan Performances élevées, Mode jeu, Game DVR coupé, priorité CPU aux jeux ; ne remplace pas un plan perso comme Rago Low Latency ni sur un Ryzen X3D 2 CCD) ; **MTU** (Automatique recommandé, valeur, laisser tel quel) ; niveau DSCP ; contrôle de congestion ; économie d'énergie réseau ; Stabilisateur Wi-Fi ; garde du trafic de fond.
+- **Priorité processeur de Minecraft** (`priorityMode`, cochée dans 5 profils sur 6 : Hitreg, Knockback, Wi-Fi, Pertes de paquets, Old-school ; libellé « Minecraft en priorité processeur supérieure à la normale ») : `javaw.exe`, `java.exe` et `Minecraft.Windows.exe` démarrent en priorité « Supérieure à la normale », et un Minecraft déjà lancé y passe tout de suite. C'était « Haute » jusqu'au 13/11, ce qui faisait saccader le stream Discord ; changé sur le choix de Sofiene du 13/11, confirmé le 27/11 (dans `staging` par la PR #155 (fusionnée dans `staging` le 28/11), pas encore en prod, jamais testé sur Windows), et les PC déjà en Haute sont ramenés au lancement de l'app ([[Réparations au lancement]], [[Historique des problèmes]]).
 - **Réglages experts** : chaque valeur en Auto ou Manuel ; choisir un profil remet tout en Auto.
 
 ## Analyser mon PC
@@ -33,7 +34,7 @@ Trois étapes : carte réseau (câble/Wi-Fi), processeur et Windows (threads), q
 - Dans la 1.2.1 (en ligne) : **Appliquer = Premium** ; l'analyse, les presets, **Restaurer** et les 4 outils (stabilité, bufferbloat, MTU, état actuel) sont gratuits.
 - **Dans la [[Version 1.3.0]] (PR #76, en prod depuis le 22/11)** : **entièrement Premium** (Sofiene, 10/11, q41 : « mets le en premium dans la prochaine version de prod »). En gratuit, l'onglet montrait jusqu'au 23/11 seulement « The Packet Optimizer is part of Premium », ce qu'il fait (3 lignes) et « Get Premium » (remplacé par l'écran verrouillé de la refonte v5, plus bas) ; **Restaurer reste gratuit** quand une application faite en Premium est encore là, pour remettre la connexion comme avant (`NetOpt.tsx`). Le moteur refusait déjà Appliquer sans Premium (`premium_required:netopt`, `lib.rs`). Les outils restent gratuits (voir la refonte v5 plus bas). Jamais testé sur Windows.
 - **Refonte v5 (23/11, PR #123, fusionnée dans `staging`, jamais testée sur Windows)** : l'onglet suit la maquette `app-network-packet-pi.html` : 6 cartes de presets, « find my preset » (l'analyse), une console de trois curseurs (buffering, re-send, batching) avec le tableau avant/après des vraies valeurs calculées, les interrupteurs, le type de connexion, les blocs « advanced » et « expert », la rangée **« tools »** (stabilité, bufferbloat, MTU, état actuel) et une barre « apply » à elle en bas de la fenêtre (restore, journal, restart). Détail : [[NetOpt.tsx]].
-  - **Gratuit, depuis cette refonte** : le vrai écran s'affiche, verrouillé (un clic ouvre l'offre Premium) au lieu de l'écran « part of Premium » ; **les 4 outils et « restore » restent gratuits**. Les outils viennent de l'ancien « Diagnostic avancé » du [[Test réseau]], retiré de la maquette ; « État actuel » devient donc gratuit aussi. **À VÉRIFIER** : choix fait pour la refonte, question q117 posée à Sofiene le 23/11 ([[Questions ouvertes]]).
+  - **Gratuit, depuis cette refonte** : le vrai écran s'affiche, verrouillé (un clic ouvre l'offre Premium) au lieu de l'écran « part of Premium » ; **les 4 outils et « restore » restent gratuits**. Les outils viennent de l'ancien « Diagnostic avancé » du [[Test réseau]], retiré de la maquette ; « État actuel » devient donc gratuit aussi. **DÉCIDÉ** par Sofiene le 27/11 (q117, « je suis d'accord va pour A ») : on garde cet écran, un clic sur un preset ou un curseur ouvre l'offre Premium ([[Décisions]]).
 - La connexion coupe quelques secondes à l'application.
 - Valeurs d'avant gardées à la première application (`snapshot.json`) ; **Restaurer** propose cette sauvegarde ou les valeurs de Windows. Désinstallation et fin de Premium remettent la sauvegarde, ou à défaut les valeurs de Windows (`put_back`, sans licence). Pas dans « Tout annuler » (bouton à part).
 - Pas repris du .bat : la « Wi-Fi game session » (Windows ne se reconnecterait plus seul).

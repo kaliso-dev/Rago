@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, javascript, stripe]
 fichier: licensing/src/billing.js
 lignes: 586
-maj: 2026-11-14
+maj: 2026-11-27
 ---
 # billing.js
 
@@ -23,7 +23,8 @@ Tout ce qui parle à Stripe : création du paiement Checkout (abonnement, essai 
 | `stripeMode(cfg)` | `'live'` (clé `sk_live_`/`rk_live_`), `'test'` ou `null`. Prix, codes et clients n'existent que dans un mode. |
 | `priceFor(cfg, interval)` | `{price, interval, plan?}` : `lifetime` → `STRIPE_PRICE_LIFETIME` ; sinon `year`/`month` ; sans choix, **annuel** (le plan mis en avant par le site). `null` si rien n'est vendable. |
 | `createCheckout(stripe, cfg, user, opts, log)` | Crée la session Checkout avec 3 replis (voir plus bas). |
-| `settleTrial(db, stripe, session, sub, license, log)` | Applique la règle « un essai par personne ». Renvoie `'trial'`, `'charged_now'` ou `null`. |
+| `settleTrial(db, stripe, session, sub, license, log)` | Applique la règle « un essai par personne » (e-mail, carte, et depuis le 27/11 le réseau : métadonnée `trial_ip`, [[Table trial_ips]]). Renvoie `'trial'`, `'charged_now'` ou `null`. |
+| `trialIpHash(cfg, ip)`, `trialIpUsed(db, hash)`, `TRIAL_IP_DAYS` (27/11, q104) | Empreinte HMAC-SHA256 de l'IP avec `TRIAL_IP_SALT` (null sans sel ou sans IP) ; réseau déjà utilisé pour un essai dans les 183 derniers jours. |
 | `withTrial(license, session, sub, result)` | Ajoute `trial: {days, amount, currency}` à la licence pour l'e-mail d'achat. |
 | `ensureCoupon(stripe, id, percent, duration, name)` | Crée le coupon `id` une seule fois par mode. |
 | `findPromotionCode(stripe, code)` | Code promo actif (regex `^[A-Za-z0-9-]{2,40}$`), `null` s'il est épuisé ou inconnu. |
@@ -38,7 +39,7 @@ Tout ce qui parle à Stripe : création du paiement Checkout (abonnement, essai 
 | `stopReplacedSubscriptions(db, stripe, userId, log, lifetimeId)` | Annule chez Stripe les abonnements remplacés par un Lifetime. |
 | `stopAllReplacedSubscriptions(db, stripe, log)` | Même chose pour tous les comptes (balayage horaire). |
 | `handleStripeEvent(db, event, {stripe, onLicense, log})` | Traite un événement webhook vérifié ; renvoie un libellé pour les logs. |
-| `WEBHOOK_EVENTS` | Les 10 événements attendus (liste ci-dessous). |
+| `WEBHOOK_EVENTS` | Les 11 événements attendus (liste ci-dessous ; `invoice.payment_failed` ajouté le 27/11, q110, traité par [[dunning.js]]). |
 | `activeTestLicenses(db)` | Licences actives dont la session commence par `cs_test_`. |
 | `endTestLicenses(db, cfg)` | En mode live seulement : révoque ces licences (raison `test_mode`) et annule leurs parrainages. |
 | `stripeChecks(stripe, cfg, {db, webhook})` | Liste de contrôles `{label, level: ok|warn|error, text}` en français. |
@@ -46,6 +47,7 @@ Tout ce qui parle à Stripe : création du paiement Checkout (abonnement, essai 
 ## Fonctionnement détaillé
 
 ### Création du paiement (`createCheckout` → `buildCheckout`)
+Depuis le 27/11 : options `email` (e-mail vérifié par `/buy` sans compte connecté, mis en `customer_email`, q103) et `trialIp` (métadonnée `trial_ip`) ; le Checkout d'un essai a `payment_method_types: ['card']` (q104). Au webhook, `flagChangedEmail` signale un paiement fait avec un autre e-mail qui a déjà Premium (journal `purchase.email_changed_has_premium`, aucun remboursement).
 Paramètres : `interval` (`month`, `year`, `lifetime`), `customerId` (client Stripe d'une licence précédente), `ref` (code d'affilié), `promotionCode`, `trialEnd` (récompense encore en cours), `replaces` (abonné qui passe à Lifetime), `trial`, `withRoute` (case Rago Route, 13/11, sur `staging` depuis le 13/11 au soir : abonnements seulement et avec `STRIPE_PRICE_ROUTE`, métadonnée `route: '1'` et une phrase sur l'option dans le texte au-dessus du bouton, `routeText(fin d'essai, rythme)` : « … then $3 a month… » pendant l'essai, sinon « $3 a month… every month » ou « $17.99 a year… every year »).
 
 - **Commun** : `line_items` = 1 prix ; `success_url` = `<PUBLIC_URL>/checkout/success?session_id={CHECKOUT_SESSION_ID}` ; `cancel_url` = `CHECKOUT_CANCEL_URL` ; `customer` (client connu) sinon `customer_email` ; `client_reference_id` = id du compte connecté ; `discounts: [{promotion_code}]` si un code est appliqué, sinon `allow_promotion_codes: true` (le joueur peut taper un code) ; `metadata` = `{product: 'rago-hub-premium', interval?, plan?, ref?, trial?}` ; case des CGV obligatoire (`consent_collection.terms_of_service: 'required'`) avec le texte `termsText` : accès immédiat, perte du droit de rétractation de 14 jours, « payments aren't refunded » (droit européen).
@@ -74,7 +76,7 @@ Appelé par le webhook et par la page de succès (les deux peuvent arriver ensem
 1. Événement déjà dans [[Table stripe_events]] → `duplicate`.
 2. `checkout.session.completed` / `checkout.session.async_payment_succeeded` : ignoré si ce n'est pas une session Rago (`not_rago` : autres produits ou liens de paiement du compte) ; relit l'abonnement ; `fulfillCheckoutSession` ; `settleTrial` ; `addRouteWithPremium` (case Rago Route cochée, [[route-addon.js]]) ; si la licence vient d'être créée, `onLicense(licence avec essai, claimToken)` (e-mail d'achat, dans [[app.js]]) ; Lifetime actif rattaché → `stopReplacedSubscriptions`. Libellés `license_created`, `license_exists`, `unpaid`.
 3. `customer.subscription.created|updated|deleted|paused|resumed` et `invoice.paid` : l'abonnement est **relu chez Stripe** (des événements dans le désordre ne ramènent pas un vieil état), puis `syncSubscription` et `followPremium` (l'option Rago Route suit l'arrêt ou la reprise du Premium). Libellé `subscription:<ended|resumed|updated|lifetime|unknown>`. Un abonnement de l'option (métadonnée `product: rago-route`) va dans `syncRouteSubscription` (libellé `route:<statut>`), de même qu'un Checkout de l'option (13/11).
-4. `charge.refunded` (seulement si **totalement** remboursé) et `charge.dispute.created` : client retrouvé (via la charge pour un litige), `revokeForCharge` (raison `refunded`/`disputed`), `voidReferrals`, annulation des abonnements. Libellé `revoked:<n>`.
+4. `charge.refunded` (seulement si **totalement** remboursé) et `charge.dispute.created` : d'abord `routeOfCharge` (27/11) : si la charge payait une option Rago Route, seule l'option est annulée (`stopRouteForCharge`, libellé `route:canceled`) et rien d'autre ; sinon client retrouvé (via la charge pour un litige), `revokeForCharge` (raison `refunded`/`disputed`), `voidReferrals`, annulation des abonnements, puis `stopOrphanRoutes` si une licence a été révoquée (option Rago Route d'un Lifetime remboursé arrêtée tout de suite). Libellé `revoked:<n>`.
 5. L'événement est inscrit **après** le traitement avec `livemode` : si le traitement plante, Stripe réessaie et on retraite.
 
 `WEBHOOK_EVENTS` : `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `customer.subscription.paused`, `customer.subscription.resumed`, `invoice.paid`, `charge.refunded`, `charge.dispute.created`.
@@ -85,7 +87,7 @@ Messages en français (seul Sofiene les lit). Libellés et règles :
 - **Compte** (live) : `charges_enabled`, libellé du relevé bancaire.
 - **Prix mensuel / Prix annuel** : existe dans ce mode (sinon « c'est un prix du mode test/live »), actif, récurrent avec le bon intervalle et `interval_count` 1 ; **Devise** : les deux dans la même devise.
 - **Prix Lifetime** : vide (attention, « Coming soon »), sinon actif, paiement unique, USD, 59,99 $.
-- **Webhook** : une destination activée vers `/webhooks/stripe` avec les 10 événements ; plusieurs destinations = attention (Railway n'a qu'un secret).
+- **Webhook** : une destination activée vers `/webhooks/stripe` avec les 11 événements ; **Portail client** : avertit aussi si « Changer de formule » laisse changer la quantité (`adjustable_quantity`, q111, 27/11) ; plusieurs destinations = attention (Railway n'a qu'un secret).
 - **Secret du webhook** : déduit de ce que le serveur a reçu (`webhook.refusedAt`, `webhook.otherModeAt` fournis par [[app.js]], dernier événement du mode dans `stripe_events`).
 - **Portail client** : configuration par défaut active, résiliation proposée, liens CGV et confidentialité.
 - **Lien « Cancel subscription »** : `STRIPE_PORTAL_LOGIN_URL` présent et pas le lien `/login/test_` en live.

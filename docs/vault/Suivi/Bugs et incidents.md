@@ -1,7 +1,7 @@
 ---
 type: registre
 tags: [bug, suivi]
-maj: 2026-11-25
+maj: 2026-11-28
 ---
 # Bugs et incidents
 
@@ -10,7 +10,7 @@ Registre des bugs de l'app et des incidents. Les retours de joueurs au cas par c
 ## Ouverts ou à surveiller (10/11)
 | Bug | Version | État |
 |---|---|---|
-| **Stream Discord qui saccade et PC qui rame** chez des joueurs qui utilisent l'optimiseur (Sofiene, 13/11 : « leur stream discord bug et sacade et leur pc bug ») ; cause probable : le jeu mis en priorité « Haute » (priorité par jeu, presets, [[Packet Optimizer]], « Jeu en priorité » de [[Pendant la partie]]) | 1.2.1 et 1.3.0 | correctif prêt le 13/11 (« Supérieure à la normale » partout, PC déjà réglés ramenés au lancement, 206 tests Rust passés, rien essayé sur Windows) mais **jamais poussé** sur la demande de Sofiene (« Ne push rien trouve juste le probleme ») ; il n'existe que dans `stream-discord/stream-discord-correctif-complet.patch` du dossier partagé ; la 1.3.0 et la 1.4.1 mettent toujours le jeu en Haute (`session.rs`, CONFIRMÉ le 25/11) ; q109 |
+| **Stream Discord qui saccade et PC qui rame** chez des joueurs qui utilisent l'optimiseur (Sofiene, 13/11 : « leur stream discord bug et sacade et leur pc bug ») ; ils avaient l'exe public de prod (q109, 27/11) ; cause probable : le jeu mis en priorité « Haute » (priorité par jeu `pri_game`, presets par jeu, [[Packet Optimizer]], « Jeu en priorité » de [[Pendant la partie]]) | 1.2.1 et 1.3.0 (prod) | corrigé dans `staging` : **PR #155 fusionnée dans `staging` le 28/11** (« oui fusionne la 155 »). Le patch du 13/11 appliqué à la 1.4.1 : jeu en « Supérieure à la normale » (6) partout, jamais « Haute » ; au lancement, l'app ramène à 6 les « Haute » (3) qu'elle avait écrites ([[Réparations au lancement]]). Tests Rust et `npm run build` OK sur Mac ; **pas encore testé sur Windows** (exe de test `staging` de la CI, Sofiene le teste quand il est prêt) ; pas encore en prod : la 1.3.0 publique met toujours le jeu en Haute |
 | **Débit bridé par le profil hitreg** : « Better hitreg » (variante par défaut de `ping_hitreg`) met l'auto-tuning TCP en `HighlyRestricted` ; avec « Packet optimization » Hitreg, Steam tombe à 15 Mbit/s | 1.2.1 et 1.3.0 | vu le 10/11 ([[Problèmes joueurs]]) ; « Best hitreg » par défaut dans `staging` depuis le 11/11 (PR #86, fusionnée par la PR #92, version test) ; les joueurs qui ont déjà « Better hitreg » le gardent |
 | **Tweaks d'une autre marque appliqués** : `availability()` (`app/src/lib/catalog.ts`) dit « ok » tant que les infos du PC ne sont pas chargées (`if (!sys) return { ok: true }`), et le moteur Rust ne revérifie pas. Un preset choisi trop tôt applique `cpu_amd`/`gpu_amd` sur un PC Intel/NVIDIA et la variante par défaut (`sys_ram:16` sur 8 Go) | 1.2.1, toujours sur `staging` le 10/11 | vu le 02/11 dans les logs d'un joueur RBW (crashs et ping, [[Historique des problèmes]]) ; pas de ticket ni de correctif |
 | Curseur perdu en plein écran / borderless après « Optimize and play » (suspect : `win_fullscreen` dans le preset Minecraft PvP) | 1.2.1 | contournement donné le 29/10 ; `win_fullscreen` retiré du preset dans la PR #70 (1.2.2 fondue dans la [[Version 1.3.0]], `staging`, pas en prod) (RAG-87) ; cause pas confirmée sur Windows ([[Presets]]) |
@@ -20,7 +20,7 @@ Registre des bugs de l'app et des incidents. Les retours de joueurs au cas par c
 | **Smart App Control** (Windows 11) bloque l'app au lancement : « could not verify its publisher » (exe non signé). Pas de contournement par app : le joueur doit désactiver Smart App Control | toutes | un joueur le 19/10, plus de nouvelles, suivi arrêté le 01/11 (RAG-84 annulé) ; vraie solution : signer l'exe (RAG-83, quand il y aura le budget) |
 | Priorité par jeu (`pri_game`) : mauvais noms d'exe et 105 valeurs sans effet (1.1.14) | 1.1.14 | **corrigé dans la 1.2** (vérifié le 01/11, RAG-85) ; reste à tester sur un vrai PC |
 | Erreur WebView2 chez une cliente (16/10) | 1.1.14 | solution donnée sans modifier l'app (compte Windows non administrateur) |
-| Code de la pop-up promo créé seulement dans le mode test de Stripe (243 erreurs vues le 17/10) : la pop-up ne marchait pas en prod | site, serveur | commande `npm run admin -- popup <CODE> 50` donnée pour la recréer en live ; fait ou non : À VÉRIFIER |
+| Code de la pop-up promo créé seulement dans le mode test de Stripe (243 erreurs vues le 17/10) : la pop-up ne marchait pas en prod | site, serveur | réglé autrement : la pop-up est éteinte en prod, RAGO50 ne marche plus en live ; Sofiene la relance depuis `/admin` > « Site et promos », qui crée le code dans Stripe live (28/11, q87) |
 | Commande admin `discord` qui ne montre pas une récompense donnée au même compte Discord sur un autre compte Rago | serveur | vu le 03/11 ([[Historique des problèmes]]) ; pas de correctif |
 | Partage de connexion de l'iPhone en USB pas vu par Windows (Rago Route) | exe de test `staging` | 09/11 ; diagnostic en 5 étapes ajouté le 10/11, à tester par Sofiene ([[Proxy]]) |
 
@@ -42,7 +42,7 @@ Voir [[Version 1.1.14]].
 - **Noms des modes d'alimentation abîmés** (« RECOMMAND� PAR�HP ») : la sortie de `powercfg` était lue en UTF-8 au lieu de la page de code de la console ([[shell.rs]], [[tools.rs]]). Un mode sans nom affiché par son identifiant devient « Unnamed plan (F31FECF6) ».
 
 ## Incidents historiques
-- **GitHub Pages** a publié le dépôt privé du 04/10 au 07/10 00:48 (`.bat` Premium, scripts, code serveur). Coupé ; `_config.yml` neutralise une partie du dépôt. **Toujours actif le 10/11** (OBSERVÉ) : Pages publie à chaque push de la branche de prod, et comme `docs/` n'est pas exclu, le vault y est lisible en pages web. À couper dans les réglages de GitHub (q80, [[Fichiers de la racine du dépôt]]).
+- **GitHub Pages** a publié le dépôt privé du 04/10 au 07/10 00:48 (`.bat` Premium, scripts, code serveur). Coupé ; `_config.yml` neutralise une partie du dépôt. Pages a ensuite publié le vault de la branche de prod (OBSERVÉ le 10/11). **Coupé par Sofiene le 28/11** (q80) : plus aucune page publiée (404 vérifié le 28/11) ; une configuration Pages reste visible dans l'API GitHub, À VÉRIFIER ([[Fichiers de la racine du dépôt]]).
 - Secrets collés dans le chat le 04/10 : régénération demandée ([[Clés et secrets]]).
 - Netlify ne publiait plus (appli Netlify désinstallée de GitHub, 10-11/10) : résolu.
 - 14/10 : Claude a affirmé à tort que la 1.1.12 contenait « tout le travail » → règle « jamais sans preuve » ([[Règles de travail]]).

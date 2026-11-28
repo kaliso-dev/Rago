@@ -1,11 +1,11 @@
 ---
 type: registre
 tags: [support, suivi]
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # Problèmes joueurs
 
-Retours de joueurs, du plus récent au plus ancien. Règle du 13/10 : un seul fil pour tous les problèmes joueurs, et tout noter dans [[Linear]]. Voir [[Bugs et incidents]].
+Retours de joueurs, du plus récent au plus ancien. Règle du 13/10 : un seul fil pour tous les problèmes joueurs, et tout noter dans le vault (Linear abandonné le 28/11, [[Linear]]). Voir [[Bugs et incidents]].
 
 Pour diagnostiquer : demander les logs `%APPDATA%\gg.rago.optimizer\logs` ([[App Windows]]) : `run-<ms>.log` (un par lot de réglages, [[runner.rs]]), `reset-<ms>.log` (remise à zéro, [[reset.rs]]) et `repairs.log` (réparations au lancement, [[repair.rs]]). Le plus simple : le rapport de support de l'app, données personnelles masquées ([[Partage et support]], [[report.rs]]). Les réponses au joueur se rédigent en anglais familier, avec la traduction pour Sofiene.
 

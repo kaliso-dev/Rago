@@ -1,7 +1,7 @@
 ---
 type: carte
 tags: [marketing]
-maj: 2026-11-11
+maj: 2026-11-28
 ---
 # Marketing
 
@@ -15,7 +15,7 @@ Carte des sujets marketing. Retour à [[Projet]].
 ## Sujets
 - [[Offres et prix]] · [[Promotions et affiliation]]
 - [[Discord]] · [[Partenaires et créateurs]]
-- Contenus : [[Vidéos YouTube]] · [[Logo création d'Adam]]
-- Concurrence et conversion : [[Étude de marché de novembre 2026]] (7 études du 03/11) · [[Page de vente Rago Route]] (ExitLag et les vendeurs de routes, 11/11)
+- Contenus : [[Vidéos YouTube]]
+- Concurrence et conversion : [[Étude de marché de novembre 2026]] (7 études du 03/11) · [[Page de vente Rago Route]] (ExitLag et les vendeurs de routes, 11/11 ; Rago Route sorti et annoncé sur Discord le 22/11)
 - Projet lié : [[Client Minecraft Rago]]
 - [[Site]] (tunnel d'achat)

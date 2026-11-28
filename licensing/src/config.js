@@ -13,12 +13,6 @@ function readPem(value) {
   return Buffer.from(v, 'base64').toString('utf8');
 }
 
-export const DEFAULT_LAUNCH = '2026-10-10T13:00:00Z';
-function launchTime(value, prod) {
-  const t = Date.parse((value || '').trim() || (prod ? DEFAULT_LAUNCH : ''));
-  return Number.isNaN(t) ? (prod ? Date.parse(DEFAULT_LAUNCH) : 0) : t;
-}
-
 /** A whole number from 1 up, or the default (DISCORD_VIP_INVITES=abc keeps 10). */
 const whole = (value, dflt) => {
   const n = Number(String(value ?? '').trim());
@@ -66,6 +60,9 @@ export function loadConfig(env = process.env) {
     // Free trial (Sofiene, 2026-11-04): days free before the first payment, card asked at checkout, charged at the end
     // unless canceled. One per person (card or email). 0 = no trial anywhere.
     trialDays: (() => { const n = Number(String(env.TRIAL_DAYS ?? '3').trim() || '3'); return Number.isInteger(n) && n >= 0 && n <= 30 ? n : 3; })(),
+    // One free trial per network (2026-11-27, q104): the secret salt of the IP fingerprint (HMAC-SHA256). Empty: the
+    // network isn't checked, only the email and the card (a warning at startup in production).
+    trialIpSalt: (env.TRIAL_IP_SALT || '').trim(),
     stripePriceYearly: (env.STRIPE_PRICE_YEARLY || '').trim(),
     stripePriceId: (env.STRIPE_PRICE_ID || '').trim(),
     // Lifetime (2026-10-16): its own one-time price, Premium for life in one payment. Never one of the prices above.
@@ -93,8 +90,9 @@ export function loadConfig(env = process.env) {
     portalLoginUrl: (env.STRIPE_PORTAL_LOGIN_URL || '').trim(),
     // Price shown on the free dashboard: "$5.99 a month or $29.99 a year" (same amounts as Stripe and the site). Empty = no price shown.
     priceLabel: env.PRICE_LABEL || '',
-    freeTweaks: Number(env.FREE_TWEAKS || 11),
-    premiumTweaks: Number(env.PREMIUM_TWEAKS || 198),
+    // Counts shown on the account page: "68 free tweaks" everywhere (Sofiene, q75, 28/11/2026), 218 with Premium (app catalog).
+    freeTweaks: Number(env.FREE_TWEAKS || 68),
+    premiumTweaks: Number(env.PREMIUM_TWEAKS || 218),
 
     cancelUrl: env.CHECKOUT_CANCEL_URL || `${asUrl(env.SITE_URL) || publicUrl}/#pricing`,
     selfServiceResetDays: Number(env.SELF_SERVICE_RESET_DAYS || 0), // 0 = support only
@@ -139,12 +137,6 @@ export function loadConfig(env = process.env) {
     affiliateDiscountPercent: Number(env.AFFILIATE_DISCOUNT_PERCENT || 5),
     affiliateDiscountDuration: env.AFFILIATE_DISCOUNT_DURATION === 'forever' ? 'forever' : 'once',
 
-    // Before the launch, /signup, /buy, /download and /affiliate send visitors to the site's countdown.
-    // LAUNCH_AT (ISO date) moves it; production defaults to Saturday, October 10, 2026, 3 PM Paris time.
-    launchAt: launchTime(env.LAUNCH_AT, prod),
-    // The team gets through with the link /acces/<PREVIEW_KEY> or the site's cookie (same value as on Netlify).
-    // Shorter than 16 characters: ignored.
-    previewKey: (env.PREVIEW_KEY || '').trim(),
     // Opens /admin (the site's discount pop-up). Shorter than 16 characters: /admin stays closed.
     adminKey: (env.ADMIN_KEY || '').trim(),
     // The brain (/admin/cerveau, brain.js, 2026-11-10): the vault docs/vault read from GitHub, branch staging by
@@ -214,6 +206,7 @@ export function loadConfig(env = process.env) {
   cfg.warnings = [];
   const placeholder = (v) => /\.\.\.|abcd|a_remplir|xxxx/i.test(v || '');
   if (prod && !cfg.scriptsSecret) cfg.warnings.push('SCRIPTS_SECRET is not set: Rago Optimizer 1.1.6 and later can\'t unlock the Premium tweaks ("Premium scripts unavailable"). Use the same value as the GitHub secret RAGO_SCRIPTS_SECRET.');
+  if (prod && cfg.trialDays > 0 && !cfg.trialIpSalt) cfg.warnings.push('TRIAL_IP_SALT is not set: one free trial per network is not checked, only the email and the card. Set a long random value (never change it afterwards, or every network gets a new trial).');
   if (!env.SITE_URL) cfg.warnings.push('SITE_URL is not set: links to the site (pricing, terms) point to this server and open a 404. Set it to the Netlify address.');
   else if (/ragohub\.com|example\.com/i.test(cfg.siteUrl)) cfg.warnings.push(`SITE_URL is still the example (${cfg.siteUrl}): use the real site address.`);
   if (prod && (!cfg.supabaseUrl || !cfg.supabaseServiceKey)) cfg.warnings.push('SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not set: profile photos are kept in memory and lost at each restart.');
@@ -245,8 +238,6 @@ export function loadConfig(env = process.env) {
       cfg[k] = '';
     }
   }
-  if (env.LAUNCH_AT && Number.isNaN(Date.parse(env.LAUNCH_AT.trim()))) cfg.warnings.push(`LAUNCH_AT is not a date (${env.LAUNCH_AT}): use for example 2026-10-10T13:00:00Z.`);
-  if (cfg.launchAt > Date.now() && cfg.previewKey.length < 16) cfg.warnings.push('PREVIEW_KEY is not set (16 characters at least): until the launch, nobody can open /signup, /buy, /download and /affiliate, the team included. Use the same value as the Netlify variable.');
   if (prod && cfg.adminKey.length < 16) cfg.warnings.push('ADMIN_KEY is not set (16 characters at least): /admin, where the site\'s discount pop-up is changed, stays closed. npm run admin -- popup still works.');
   if (discordMissing.length && discordMissing.length < 5) cfg.warnings.push(`${discordMissing.join(', ')} not set: the Discord Pro role stays manual until the five DISCORD_ variables are in.`);
   for (const k of ['DISCORD_CLIENT_ID', 'DISCORD_GUILD_ID', 'DISCORD_ROLE_ID']) {

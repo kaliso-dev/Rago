@@ -2,7 +2,7 @@
 type: fonctionnalité
 tags: [fonctionnalité, app, tweaks]
 version_app: 1.3.0
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # Catalogue des tweaks
 
@@ -12,7 +12,7 @@ Chiffres CONFIRMÉS sur le code de `staging` (10/11, app 1.3.0).
 
 ## Chiffres de la 1.3.0
 - 231 entrées (214 tweaks + 17 actions ponctuelles), **218 tweaks distincts** (les jumeaux, même script sous deux noms, comptent une fois : 24 entrées en 11 groupes), 196 sûrs et 35 avancés, 20 presets (dont 15 par jeu), 17 tweaks retirés. Le site dit « Nearly 220 ».
-- **Plan gratuit** ([[free.json]], décision de Sofiene du 04/11) : **73 entrées gratuites** (59 tweaks + 14 actions, 70 distincts) : tout le module Windows (57), le stockage du module Latence (9), les 4 outils de Restaurer, et 3 réglages de pilotes (`nv_telemetry`, `nv_debloat`, `amd_logging`). Au plus **30 réglages gratuits** (pas les actions) appliqués en même temps sans licence (`slots`). Ping, Hitreg, latence, processeur, mémoire, alimentation, Minecraft, RBW Mod, mode jeu, Expert, presets et Packet Optimizer restent Premium ; le retour arrière de RBW Mod et du mode jeu reste ouvert (`reverts`). Voir [[Version 1.3.0]].
+- **Plan gratuit** ([[free.json]], décision de Sofiene du 04/11) : **73 entrées gratuites** (59 tweaks + 14 actions, 70 distincts), **annoncées « 68 free tweaks »** partout (décision de Sofiene du 28/11, q75 : compté comme le total de 218, une fiche par jumeau, la première dans l'ordre du catalogue ; `FREE_COUNT` de [[store.tsx]] dans l'app depuis la PR #172, `n_free` de [[sync_tweaks.py]] sur le site ; `free.json` et les 30 places ne changent pas) : tout le module Windows (57), le stockage du module Latence (9), les 4 outils de Restaurer, et 3 réglages de pilotes (`nv_telemetry`, `nv_debloat`, `amd_logging`). Au plus **30 réglages gratuits** (pas les actions) appliqués en même temps sans licence (`slots`). Ping, Hitreg, latence, processeur, mémoire, alimentation, Minecraft, RBW Mod, mode jeu, Expert, presets et Packet Optimizer restent Premium ; le retour arrière de RBW Mod et du mode jeu reste ouvert (`reverts`). Voir [[Version 1.3.0]].
 
 ## Modules (ordre de la barre latérale)
 | Groupe | Module | Entrées | Note |

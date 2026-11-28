@@ -425,6 +425,10 @@ pub struct Saved {
     pub ok: u32,
     pub warn: u32,
     pub fail: u32,
+    /// Minecraft en priorité « Supérieure à la normale » (6) : posée par ce moteur, ou ramenée de « Haute » (3), que
+    /// le moteur écrivait jusqu'au 2026-11-13, au lancement de l'app (repair.rs). Absent des fichiers d'avant.
+    #[serde(default)]
+    pub above_normal: bool,
 }
 
 fn saved_path(data_dir: &Path) -> PathBuf {
@@ -440,8 +444,26 @@ pub fn applied(data_dir: &Path) -> bool {
     saved_path(data_dir).exists()
 }
 
+/// Application d'avant le 2026-11-13 avec l'option de priorité : le moteur avait mis Minecraft en priorité « Haute »
+/// (3). repair.rs la ramène à « Supérieure à la normale » (6), puis `set_above_normal`.
+pub fn wrote_high(data_dir: &Path) -> bool {
+    saved(data_dir).is_some_and(|s| s.options.priority_mode && !s.above_normal)
+}
+
+pub fn set_above_normal(data_dir: &Path) -> bool {
+    let Some(mut s) = saved(data_dir) else { return false };
+    s.above_normal = true;
+    serde_json::to_vec_pretty(&s).is_ok_and(|bytes| fs::write(saved_path(data_dir), bytes).is_ok())
+}
+
+/// Sauvegarde prise au premier « Appliquer » (écrite par le moteur, UTF-8 avec BOM) : la remise et l'application
+/// sans une option y reprennent les valeurs d'avant.
+pub fn snapshot_path(data_dir: &Path) -> PathBuf {
+    dir(data_dir).join("snapshot.json")
+}
+
 fn has_backup(data_dir: &Path) -> bool {
-    dir(data_dir).join("snapshot.json").exists()
+    snapshot_path(data_dir).exists()
 }
 
 /// État pour la page.
@@ -502,7 +524,14 @@ pub fn run(
     let out = out?;
     match action {
         Action::Apply if out.code == 0 => {
-            let s = Saved { options: options.clone(), at: crate::history::now_ms(), ok: out.ok, warn: out.warn, fail: out.fail };
+            let s = Saved {
+                options: options.clone(),
+                at: crate::history::now_ms(),
+                ok: out.ok,
+                warn: out.warn,
+                fail: out.fail,
+                above_normal: true,
+            };
             if let Ok(bytes) = serde_json::to_vec_pretty(&s) {
                 let _ = fs::write(saved_path(data_dir), bytes);
             }
@@ -712,6 +741,35 @@ mod tests {
             read += 1;
         }
         assert!(read > 30);
+    }
+
+    /// Application d'avant le 2026-11-13 (sans `aboveNormal`) avec l'option de priorité : Minecraft était mis en
+    /// « Haute ». La réparation du lancement le ramène (repair.rs), puis la marque pour ne plus y revenir.
+    #[test]
+    fn old_apply_with_priority_wrote_high() {
+        let data = std::env::temp_dir().join(format!("rago-netopt-high-{}", std::process::id()));
+        fs::create_dir_all(dir(&data)).unwrap();
+        let applied = |priority_mode: bool| Saved {
+            options: Options { priority_mode, ..Options::default() },
+            at: 1,
+            ok: 1,
+            warn: 0,
+            fail: 0,
+            above_normal: false,
+        };
+        let mut old = serde_json::to_value(applied(true)).unwrap();
+        assert!(old.as_object_mut().unwrap().remove("aboveNormal").is_some());
+        fs::write(saved_path(&data), serde_json::to_vec(&old).unwrap()).unwrap();
+        assert!(wrote_high(&data));
+        assert!(set_above_normal(&data));
+        assert!(!wrote_high(&data));
+        assert!(saved(&data).unwrap().above_normal);
+        assert_eq!(saved(&data).unwrap().options, applied(true).options, "le reste ne bouge pas");
+        // sans l'option de priorité : rien à ramener
+        fs::write(saved_path(&data), serde_json::to_vec(&applied(false)).unwrap()).unwrap();
+        assert!(!wrote_high(&data));
+        let _ = fs::remove_dir_all(&data);
+        assert!(!wrote_high(&data) && !set_above_normal(&data), "jamais appliqué");
     }
 
     /// Moteur en ASCII (lu par PowerShell 5.1), et aucune commande du .bat qui ouvrirait une fenêtre ou attendrait.

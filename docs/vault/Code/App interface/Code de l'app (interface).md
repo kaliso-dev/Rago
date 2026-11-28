@@ -3,7 +3,7 @@ type: code
 tags: [code, app, react, carte]
 fichier: app/src/
 lignes: 36779
-maj: 2026-11-24
+maj: 2026-11-27
 ---
 # Code de l'app (interface)
 

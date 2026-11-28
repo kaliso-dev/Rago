@@ -7,7 +7,7 @@ import { useEffect, useState, type CSSProperties, type KeyboardEvent } from "rea
 import { formatPrice } from "../lib/accountApi";
 import { api, isTauri } from "../lib/api";
 import { totalTweaks } from "../lib/catalog";
-import { FREE, useStore } from "../lib/store";
+import { FREE_COUNT, useStore } from "../lib/store";
 import { ACCOUNT_URL, SITE_URL, SUPPORT_URL } from "../components/LicenseGate";
 import { Modal } from "../components/Modal";
 import { ProfileSection } from "../components/ProfileCard";
@@ -21,8 +21,10 @@ import { dayMonth } from "../s5/text";
 /** Exe de test (serveur staging) : Paramètres montre la dernière recherche de mise à jour, et son erreur. */
 const STAGING = import.meta.env.VITE_RAGO_SERVER === "staging";
 
+// Avis complets des programmes livrés dans resources\ : THIRD_PARTY_NOTICES.txt et PresentMon-LICENSE.txt (q74, 28/11).
+// Profile Inspector livré = version « Modified by DeadManWalking » 3.5.0.0 (MIT, fork d'Orbmu2k, MIT aussi).
 const LICENCES = [
-  { name: "NVIDIA Profile Inspector", licence: "MIT", url: "https://github.com/Orbmu2k/nvidiaProfileInspector" },
+  { name: "NVIDIA Profile Inspector (DeadManWalking mod)", licence: "MIT", url: "https://github.com/DeadManWalkingTO/NVidiaProfileInspectorDmW" },
   { name: "PresentMon (Intel)", licence: "MIT", url: "https://github.com/GameTechDev/PresentMon" },
   { name: "Barlow, Barlow Condensed", licence: "SIL OFL 1.1", url: "https://github.com/jpt/barlow" },
   { name: "Tauri", licence: "MIT / Apache 2.0", url: "https://tauri.app" },
@@ -88,7 +90,7 @@ export function Settings() {
 
   // en-tête : l'offre, et le prochain paiement ou la fin (gratuit : réglages ouverts)
   let planName = t("s5.st.free");
-  let planLines: [string, string] = [t("s5.st.freeCnt", { n: FREE.size, total: totalTweaks }), t("s5.st.freeRest")];
+  let planLines: [string, string] = [t("s5.st.freeCnt", { n: FREE_COUNT, total: totalTweaks }), t("s5.st.freeRest")];
   if (licensed) {
     planName = license.plan === "premium" || !license.plan ? "premium" : license.plan;
     if (license.state === "expired") planLines = [t("s5.st.pending"), t("account.pending")];
@@ -186,13 +188,13 @@ export function Settings() {
               <div className="panel sp">
                 <div className="frp">
                   <b>
-                    {FREE.size}
+                    {FREE_COUNT}
                     <small>/ {totalTweaks}</small>
                   </b>
                   <div className="l">
-                    <p>{t("account.free", { n: FREE.size, total: totalTweaks })}</p>
+                    <p>{t("account.free", { n: FREE_COUNT, total: totalTweaks })}</p>
                     <div className="fm">
-                      <i style={{ "--w": `${((FREE.size / totalTweaks) * 100).toFixed(1)}%` } as CSSProperties} />
+                      <i style={{ "--w": `${((FREE_COUNT / totalTweaks) * 100).toFixed(1)}%` } as CSSProperties} />
                     </div>
                   </div>
                 </div>

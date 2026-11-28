@@ -24,7 +24,8 @@ const VAULT = 'docs/vault/'; // the Rago vault; other brains have their own fold
 // sélectionner le cerveau et il charge »): the Rago vault, and the vault of the new RAGO-OS project, kept in its own
 // repository (kaliso-dev/RAGO-OS-, created by Sofiene on 12/11). Without a repository, a brain is read from
 // CERVEAU_REPO / CERVEAU_BRANCH (and from the working copy when the server runs from one).
-// CERVEAUX replaces this list: "id|Nom|dossier|dépôt|branche;…" (dépôt and branche optional).
+// CERVEAUX replaces this list: "id|Nom|dossier|dépôt|branche|fichiers;…" (dépôt and branche optional; "fichiers" as
+// 6th field makes a file explorer of the folder, "/" = the whole repository).
 export const DEFAULT_BRAINS = [
   { id: 'rago', name: 'Rago Optimizer', dir: 'docs/vault/' },
   { id: 'rago-os', name: 'RAGO-OS', dir: 'docs/vault/', repo: 'kaliso-dev/RAGO-OS-', branch: 'main' },
@@ -32,15 +33,23 @@ export const DEFAULT_BRAINS = [
   // Rago projects, each in its own repository, read from its default branch (no branch given).
   { id: 'rago-client', name: 'Rago Client', dir: 'docs/vault/', repo: 'kaliso-dev/Rago-Client' },
   { id: 'rago-minecraft', name: 'Serveur Minecraft Rago', dir: 'docs/vault/', repo: 'kaliso-dev/network-server-rago' },
+  // 27/11 : the v5 mock-ups, brand kit and CSS scripts, moved to their own private repository. Not a vault: a file
+  // explorer (kind 'files', brain-files.js) that lists the tree and loads each file only when it is opened.
+  { id: 'rago-design', name: 'Rago Design', dir: '', repo: 'kaliso-dev/rago-design', branch: 'main', kind: 'files' },
 ];
 export function parseBrains(text) {
   const out = [];
   for (const part of String(text || '').split(/[;\n]/)) {
-    const [id, name, dir, repo, branch] = part.split('|').map((x) => (x || '').trim());
+    const [id, name, dir, repo, branch, kind] = part.split('|').map((x) => (x || '').trim());
     if (!/^[a-z0-9-]{1,40}$/.test(id || '') || !name || !dir || dir.includes('..')) continue;
     if (repo && !/^[\w.-]+\/[\w.-]+$/.test(repo)) continue;
     if (branch && !/^[\w./-]{1,100}$/.test(branch)) continue;
-    if (!out.some((b) => b.id === id)) out.push({ id, name, dir: `${dir.replace(/^\/+|\/+$/g, '')}/`, ...(repo ? { repo } : {}), ...(branch ? { branch } : {}) });
+    const files = kind === 'fichiers' || kind === 'files';
+    const folder = dir.replace(/^\/+|\/+$/g, '');
+    if (!files && !folder) continue;
+    if (!out.some((b) => b.id === id)) {
+      out.push({ id, name, dir: folder ? `${folder}/` : '', ...(repo ? { repo } : {}), ...(branch ? { branch } : {}), ...(files ? { kind: 'files' } : {}) });
+    }
   }
   return out.length ? out : DEFAULT_BRAINS.map((b) => ({ ...b }));
 }
@@ -572,12 +581,14 @@ export function createBrain(cfg, { fetchImpl = fetch, log = console } = {}) {
     const branch = b.branch || (b.repo && b.repo.toLowerCase() !== mainRepo.toLowerCase() ? '' : mainBranch);
     return { ...b, repo, branch, key: `${repo.toLowerCase()}@${branch || 'HEAD'}`, local: !b.repo || repo.toLowerCase() === mainRepo.toLowerCase() };
   });
-  const list = brains.map(({ id, name, repo }) => ({ id, name, repo }));
+  const list = brains.map(({ id, name, repo, kind }) => ({ id, name, repo, ...(kind ? { kind } : {}) }));
   const pick = (id) => brains.find((b) => b.id === id) || brains[0];
   const sources = new Map();
-  for (const b of brains) {
+  // File explorers (kind 'files', brain-files.js) are never downloaded as a whole: no source for them here.
+  const graphs = brains.filter((b) => b.kind !== 'files');
+  for (const b of graphs) {
     if (!sources.has(b.key)) {
-      const dirs = brains.filter((x) => x.key === b.key).map((x) => x.dir);
+      const dirs = graphs.filter((x) => x.key === b.key).map((x) => x.dir);
       sources.set(b.key, makeSource({ repo: b.repo, branch: b.branch, root: b.local && b.branch === mainBranch ? root : null, dirs }));
     }
   }
@@ -700,9 +711,10 @@ export function createBrain(cfg, { fetchImpl = fetch, log = console } = {}) {
     return state;
   }
 
-  const main = sources.get(brains[0].key);
+  const main = graphs.length ? sources.get(graphs[0].key) : null;
+  const notGraph = (b) => new BrainError(`« ${b.name} » est un explorateur de fichiers, pas un vault.`);
   return {
-    source: main.disk ? 'disk' : 'github',
+    source: main?.disk ? 'disk' : 'github',
     repo: brains[0].repo,
     branch: brains[0].branch,
     brains: list,
@@ -710,6 +722,7 @@ export function createBrain(cfg, { fetchImpl = fetch, log = console } = {}) {
     /** The current build of a brain (the first one when id is unknown). */
     async read({ fresh = false, id } = {}) {
       const b = pick(id);
+      if (b.kind === 'files') throw notGraph(b);
       const s = await sources.get(b.key).get(fresh);
       const state = build(b, s);
       if (!state.data.notes.length) {
@@ -718,10 +731,11 @@ export function createBrain(cfg, { fetchImpl = fetch, log = console } = {}) {
       return state;
     },
     /** Why the last reading of this brain's repository failed (the last build stays shown), or null. */
-    error: (id) => sources.get(pick(id).key).lastError,
+    error: (id) => sources.get(pick(id).key)?.lastError || null,
     /** One file of the brain's repository, for the reader. Only paths of the file list: nothing else on disk is reachable. */
     async file(path, id) {
       const b = pick(id);
+      if (b.kind === 'files') throw notGraph(b);
       const src = sources.get(b.key);
       const s = await src.get(false);
       const f = s.files.get(path);

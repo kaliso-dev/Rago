@@ -1,11 +1,11 @@
 ---
 type: technique
 tags: [technique, rago-route, proxy, serveurs]
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # Infrastructure Rago Route
 
-Partie technique de Rago Route (tunnel anti-lag pour Minecraft Java), état de `staging` au 10/11. Historique, mesures et décisions : [[Proxy]]. Rago Route est **en bêta**, réservé au Premium : sur `staging`, l'onglet est dans **tous les exe** depuis la PR #76 (sortie 1.3.0) ; pas encore en prod (l'app 1.3.0 n'est pas sortie et le serveur de prod n'a pas encore la route du jeton).
+Partie technique de Rago Route (tunnel anti-lag pour Minecraft Java), état de `staging` au 10/11. Historique, mesures et décisions : [[Proxy]]. Rago Route est **en bêta**, réservé au Premium : l'onglet est dans **tous les exe** depuis la PR #76 ; **en prod depuis le 22/11** (app et serveur de la 1.3.0), sorti et annoncé sur Discord ce jour-là.
 
 ## Les pièces
 | Pièce | Où | Rôle |
@@ -36,6 +36,7 @@ Cloud Compute Regular Performance (1 vCPU, 1 Go), Ubuntu 24.04, 5 $ par mois cha
 - Côté Rust : un fil moteur (décisions toutes les 5 ms), un fil par trajet UDP, par port local et par connexion du jeu, reliés par un canal (pas de verrou). Tampons UDP d'1 Mo, minuterie Windows à 1 ms. `pick_exit` choisit la sortie la plus rapide quand il y en a plusieurs.
 
 ## Ajouter une sortie ou un relais
+Pas prévu pour l'instant : **Paris reste la seule sortie** tant que les abonnés ne financent pas d'autres serveurs (Sofiene, 27/11, q97, [[Décisions]]). Le jour venu :
 1. Sofiene commande le VPS et lance `install.sh`.
 2. Ajouter l'adresse dans `EXITS` ou `RELAYS` de `route.rs`, **et** dans `SORTIES_RAGO` de `rago-route.py` pour une sortie ; régénérer `install.sh` (`python3 proxy/fabriquer-install.py`) et le relancer sur **tous** les relais.
 3. Nouvelle version de l'app (exe de test d'abord, puis prod) : les adresses sont compilées dans l'app, un changement d'adresse demande une nouvelle version.

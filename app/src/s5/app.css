@@ -80,6 +80,18 @@ svg.spin{animation:spin 1s linear infinite}
 .pg-games .hero .r1 .del{display:inline-flex;align-items:center;gap:8px;height:24px;padding:0 4px;background:none;font-size:12.5px}
 .pg-games .hero .r1 .del:hover,.pg-games .hero .r1 .del.ask{color:var(--red)}
 .pg-games .gname.long{font-size:70px}
+/* jeux retirés, réaffichables (q85, 28/11) : lien discret sous la bibliothèque, liste en panneau */
+.pg-games .hidg{margin-top:26px}
+.pg-games .hidg .tg{display:inline-flex;align-items:center;gap:8px;height:28px;padding:0 4px;background:none;font-family:var(--cond);font-weight:700;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.pg-games .hidg .tg svg{width:14px;height:14px}
+.pg-games .hidg .tg:hover,.pg-games .hidg.open .tg{color:var(--red)}
+.pg-games .hidg .hl{margin-top:10px}
+.pg-games .hidg .hr{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 18px}
+.pg-games .hidg .hr + .hr{border-top:1px solid var(--line)}
+.pg-games .hidg .hr b{display:block;font-family:var(--cond);font-weight:800;font-style:italic;font-size:19px;text-transform:uppercase}
+.pg-games .hidg .hr .sub{display:block;margin-top:2px}
+.pg-games .hidg .btn.sm{height:32px;padding:0 15px;font-size:13.5px;gap:8px}
+.pg-games .hidg .btn.sm svg{width:13px;height:13px}
 .pg-games .go .sub.bad{color:var(--red)}
 .pg-games .hero .art.fit::before,.pg-games .cv.fit::before{content:"";position:absolute;inset:-20px;background:inherit;background-size:cover;filter:blur(18px) saturate(1.2);opacity:.85}
 .pg-games .hero .art.fit img{position:absolute;z-index:0;left:50%;top:50%;max-width:100%;max-height:100%;transform:translate(-50%,-50%);box-shadow:0 0 30px rgba(0,0,0,.5)}

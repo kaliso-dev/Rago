@@ -2,8 +2,8 @@
 type: code
 tags: [code, serveur, javascript]
 fichier: licensing/src/mailer.js
-lignes: 140
-maj: 2026-11-22
+lignes: 169
+maj: 2026-11-28
 ---
 # mailer.js
 
@@ -18,7 +18,7 @@ Envoie les 4 e-mails du serveur par l'API Resend (achat, code d'inscription, ré
 ## Ce que le fichier expose
 
 - `orderLines(license)` : lignes du récapitulatif de commande `[[libellé, valeur]…]`.
-- `createMailer(cfg, {log, fetchImpl})` → `{send, purchase, signupCode, subscriptionCanceled, passwordReset}`.
+- `createMailer(cfg, {log, fetchImpl})` → `{send, purchase, signupCode, subscriptionCanceled, paymentFailed, trialPaymentFailed, premiumEndedUnpaid, passwordReset}`.
 
 ## Fonctionnement détaillé
 
@@ -33,9 +33,12 @@ Envoie les 4 e-mails du serveur par l'API Resend (achat, code d'inscription, ré
 
 | E-mail | Fonction | Sujet | Contenu |
 |---|---|---|---|
-| Achat | `purchase(to, claimUrl, license)` | « Your Rago Optimizer Premium license », ou « Your N-day free trial of Rago Optimizer Premium » | Titre « Payment confirmed » / « Free trial started ». Récapitulatif. Bouton « Create your account » (lien de rattachement `claimUrl`, « Keep it private ») ou « Open your account » (`/account`) si l'achat a été fait connecté. Renonciation au droit de rétractation de 14 jours + « Payments aren't refunded. ». Pour un abonnement : comment résilier (portail, et `STRIPE_PORTAL_LOGIN_URL` s'il est réglé). Paragraphe Discord si `SUPPORT_URL`. |
+| Achat | `purchase(to, claimUrl, license)` | « Your Rago Optimizer Premium license », ou « Your N-day free trial of Rago Optimizer Premium » | Titre « Payment confirmed » / « Free trial started ». Récapitulatif. Bouton « Create your account » (lien de rattachement `claimUrl`, « Keep it private ») ou « Open your account » (`/account`) si l'achat a été fait connecté. Renonciation au droit de rétractation de 14 jours + « Payments aren't refunded. ». Pour un abonnement : comment résilier (portail, et `STRIPE_PORTAL_LOGIN_URL` s'il est réglé). Paragraphe Discord (q84, 28/11) : avec le bot du rôle Pro (`cfg.discord`, les 5 variables `DISCORD_`), « Premium players get the Premium role on our Discord. Link your Discord from your account page: the role is added automatically. » et le lien « Link your Discord » vers `<PUBLIC_URL>/account` ; sans le bot mais avec `SUPPORT_URL`, l'ancien texte du ticket (« open a ticket and give the email… ») et « Join the Discord ». |
 | Code d'inscription | `signupCode(to, code)` | « `<code>` is your Rago Optimizer code » | Titre « Confirm your email », code à 6 chiffres, un chiffre par case (64 × 76, fond `#17171A`, Barlow Condensed 900 italique), valable 15 minutes. |
 | Résiliation | `subscriptionCanceled(to, sub)` | « Your subscription is canceled: Rago Optimizer Premium » ou « Your free trial is canceled: … » | Premium reste actif jusqu'à la date de fin, plus aucun prélèvement ; à la fin, l'app remet les réglages modifiés et repasse en gratuit ; « Resume » possible depuis l'app ou le compte. Envoyé seulement quand la résiliation est faite **depuis l'app** (1.3.0). |
+| Paiement refusé (27/11, q110, textes à valider par Sofiene) | `paymentFailed(to, {deadline, reminder})` | « Payment failed: update your card to keep Premium », rappel « Reminder: update your card before <date> to keep Premium » | Titre « Payment failed » / « Your Premium ends soon » ; date limite (3 jours après l'échec), bouton « Update your card » vers `/account` |
+| Essai raté (27/11) | `trialPaymentFailed(to)` | « Your free trial ended and the payment failed: you're back on the free plan » | Titre « Back on the free plan » ; rien n'a été débité, bouton « Open your account » |
+| Fin pour impayé (27/11) | `premiumEndedUnpaid(to)` | « Your Rago Optimizer Premium ended: payment failed » | Titre « Premium ended » ; 3 jours sans paiement, retour au gratuit |
 | Mot de passe | `passwordReset(to, url)` | « Reset your Rago Optimizer password » | Lien valable 1 heure, bouton « Choose a new password ». |
 
 L'e-mail d'achat sert aussi de **support durable** pour la renonciation au droit de rétractation (obligation légale, voir [[Conformité juridique]]).
@@ -46,7 +49,7 @@ Réseau (Resend). Aucune table.
 
 ## Erreurs et cas limites
 
-- Le paragraphe Discord de l'e-mail d'achat dit toujours « open a ticket and give the email of your Rago Optimizer account. Staff check your license and add the role », **même quand le bot du rôle Pro est configuré** (alors que la page compte propose « Link Discord »). À VÉRIFIER avec Sofiene : texte à mettre à jour ?
+- Paragraphe Discord de l'e-mail d'achat : « Link your Discord » quand le bot est configuré, décision de Sofiene du 28/11 (q84) ; dans `staging` et en prod (PR de prod du 28/11, voir [[Pull requests]]). Test : « purchase email: with the role bot, link Discord from the account page; without it, a ticket » ([[Tests du serveur]]).
 - [[app.js]] n'envoie pas d'e-mail d'achat pour un achat en double (licence déjà active).
 
 ## Liens avec le reste

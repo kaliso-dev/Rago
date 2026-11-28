@@ -2,8 +2,8 @@
 type: code
 tags: [code, serveur, javascript, configuration]
 fichier: licensing/src/config.js
-lignes: 290
-maj: 2026-11-14
+lignes: 281
+maj: 2026-11-28
 ---
 # config.js
 
@@ -17,14 +17,12 @@ Un seul export utile : `loadConfig(env = process.env)` → objet `cfg`, passé �
 
 ## Ce que le fichier expose
 
-- `DEFAULT_LAUNCH` = `'2026-10-10T13:00:00Z'` (samedi 10 octobre 2026, 15 h à Paris).
 - `loadConfig(env)` → `cfg` (voir le tableau).
 
 ## Aides internes
 
 - `asUrl(s)` : ajoute `https://` s'il manque et retire les `/` finaux (`rago.up.railway.app` est accepté).
 - `readPem(v)` : accepte un PEM (les `\n` littéraux sont remplacés par de vrais sauts de ligne) ou le **base64 d'un PEM** (plus facile à coller dans Railway).
-- `launchTime(v, prod)` : date de `LAUNCH_AT` ; vide ou invalide → `DEFAULT_LAUNCH` en prod, `0` (déjà lancé) ailleurs.
 - `whole(v, défaut)` : entier ≥ 1, sinon le défaut. `percent(v, défaut)` : nombre borné entre 0 et 100, sinon le défaut.
 - `STAGING_NAME` = `/stag|test|preview|^dev$|pr-\d/` : un nom d'environnement qui y correspond fait de ce serveur un **serveur de test**.
 
@@ -58,8 +56,8 @@ Un seul export utile : `loadConfig(env = process.env)` → objet `cfg`, passé �
 | `SUPPORT_URL` | `supportUrl` | lien Discord du support. |
 | `STRIPE_PORTAL_LOGIN_URL` | `portalLoginUrl` | lien de connexion au portail client Stripe (« Cancel subscription » sans compte Rago). |
 | `PRICE_LABEL` | `priceLabel` | texte du prix montré aux comptes gratuits ; vide = pas de prix. |
-| `FREE_TWEAKS` | `freeTweaks` | **11**. |
-| `PREMIUM_TWEAKS` | `premiumTweaks` | **198**. |
+| `FREE_TWEAKS` | `freeTweaks` | **68** (depuis le 28/11, q75 ; 11 avant). |
+| `PREMIUM_TWEAKS` | `premiumTweaks` | **218** (depuis le 28/11 ; 198 avant). |
 | `CHECKOUT_CANCEL_URL` | `cancelUrl` | `<SITE_URL ou PUBLIC_URL>/#pricing`. |
 | `SELF_SERVICE_RESET_DAYS` | `selfServiceResetDays` | 0 = changement de PC par le support seulement. |
 | `SITE_DIR` | `siteDir` | dossier du site servi par ce serveur (local). |
@@ -83,8 +81,6 @@ Un seul export utile : `loadConfig(env = process.env)` → objet `cfg`, passé �
 | `AFFILIATE_MAX_REFERRALS` | `affiliateMaxReferrals` | `AFFILIATE_GOAL`, sinon 3. |
 | `AFFILIATE_DISCOUNT_PERCENT` | `affiliateDiscountPercent` | 5. |
 | `AFFILIATE_DISCOUNT_DURATION` | `affiliateDiscountDuration` | `once` ; `forever` seulement si écrit tel quel. |
-| `LAUNCH_AT` | `launchAt` | voir `launchTime`. |
-| `PREVIEW_KEY` | `previewKey` | ignorée sous 16 caractères. |
 | `ADMIN_KEY` | `adminKey` | `/admin` fermé sous 16 caractères. |
 | `CERVEAU_REPO`, `CERVEAU_BRANCH`, `CERVEAU_GITHUB_TOKEN`, `CERVEAU_DIR`, `CERVEAU_SOURCE` | `brainRepo` (`kaliso-dev/rago`), `brainBranch` (`staging`), `brainToken`, `brainDir`, `brainSource` (en minuscules) | le [[Cerveau du vault]] ([[brain.js]]) ; jeton nécessaire quand le dépôt est privé (PR #85 du Cerveau). |
 | `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `DISCORD_GUILD_ID`, `DISCORD_ROLE_ID` | `discordClientId`… | les 5 variables du rôle Pro (avec le token). |
@@ -126,7 +122,6 @@ Une valeur « d'exemple » correspond à `/\.\.\.|abcd|a_remplir|xxxx/i`.
 - `STRIPE_PRICE_LIFETIME` encore l'exemple, ou égal à un autre prix : **vidé** (Lifetime pas vendu).
 - `RESEND_API_KEY` encore l'exemple (**vidée**) ou absente ; `MAIL_FROM` encore l'exemple alors que Resend est réglé.
 - `SUPPORT_URL` ou `STRIPE_PORTAL_LOGIN_URL` encore l'exemple : **vidés** (lien caché).
-- `LAUNCH_AT` qui n'est pas une date ; `PREVIEW_KEY` trop courte alors que le lancement est dans le futur.
 - `ADMIN_KEY` trop courte en prod.
 - Variables Discord partielles (1 à 4 sur 5).
 - `DISCORD_CLIENT_ID`, `DISCORD_GUILD_ID` ou `DISCORD_ROLE_ID` qui n'ont pas 17 à 20 chiffres : `cfg.discord = false`.
@@ -145,5 +140,5 @@ Utilisé par tous les modules ; appelé par [[server.js]], [[admin.js (script se
 
 ## À savoir avant de modifier
 
-- `FREE_TWEAKS` = 11 par défaut alors que le plan gratuit décidé le 04/11/2026 compte 73 réglages (commit `e146ca2`, app seulement). La page compte affiche ces chiffres ([[views.js]]). Valeur réglée sur Railway : À VÉRIFIER.
+- `FREE_TWEAKS` = 68 et `PREMIUM_TWEAKS` = 218 par défaut (28/11, q75 : « 68 free tweaks » partout, comme le site) ; la page compte affiche ces chiffres ([[views.js]]). La prod garde 11 et 198 jusqu'à la mise en prod de `staging`. `LAUNCH_AT` et `PREVIEW_KEY` ne sont plus lues depuis le 28/11 (q79).
 - Ne jamais mettre de vraie valeur dans `.env.example` ni dans le vault : seulement des noms ([[Clés et secrets]]).

@@ -2,8 +2,8 @@
 type: code
 tags: [code, serveur, css, admin, vault]
 fichier: licensing/public/cerveau.css
-lignes: 333
-maj: 2026-11-22
+lignes: 400
+maj: 2026-11-27
 ---
 # cerveau.css
 
@@ -24,3 +24,6 @@ Les styles du [[Cerveau du vault]] : mise en page plein écran, colonne de l'exp
 ## À savoir avant de modifier
 - Changer `ASSETS` dans [[brain-views.js]] après chaque modification.
 - Pas de style en ligne possible (CSP de l'admin) : tout passe par des classes et des variables CSS.
+
+## Explorateur de fichiers (27/11)
+Classes `dx-` en fin de fichier, pour [[cerveau-fichiers.js]] (cerveau Rago Design) : barre `.dx-bar` (fil d'Ariane `.dx-crumbs`, groupe `.dx-seg` Vignettes / Liste), galerie `.dx-grid` (colonnes de 190 px au moins, 140 px sur téléphone) de tuiles `.dx-tile` (vignette `.dx-thumb` en 4:3 sur damier, image en `object-fit: contain`, légende `.dx-cap` nom + taille en `--mono`), liste `.dx-table`, visionneuse `.dx-file` (barre `.dx-fbar`, image `.dx-img` ajustée, `.real` = taille réelle, texte `.dx-code`), messages `.dx-msg` et boutons `.dx-btn`. Mêmes jetons v5 que le reste (`--card`, `--line`, `--red`, `--t1`…).

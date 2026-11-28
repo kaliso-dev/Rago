@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, carte]
 fichier: licensing/
 lignes: 8534 (src) + 755 (scripts et JS du navigateur) + 1085 (CSS) + 342 (schema)
-maj: 2026-11-14
+maj: 2026-11-28
 ---
 # Code du serveur
 
@@ -26,17 +26,19 @@ La carte du code du **serveur de comptes et licences** (`licensing/`, Node ≥ 2
 ### Routes et pages
 | Fichier | Lignes | Rôle |
 |---|---|---|
-| [[app.js]] | 1686 | Toutes les routes : site de compte, webhook Stripe, API `/api/v1` ; middlewares de sécurité. |
+| [[app.js]] | 1845 | Toutes les routes : site de compte, webhook Stripe, API `/api/v1` ; middlewares de sécurité. |
 | [[views.js]] | 888 | Pages HTML du site de compte. |
-| [[admin.js (serveur)]] | 723 | Routes et actions de `/admin` (dont celles du Cerveau). |
+| [[admin.js (serveur)]] | 788 | Routes et actions de `/admin` (dont celles du Cerveau). |
 | [[admin-views.js]] | 914 | Pages HTML de `/admin`. |
-| [[brain.js]] | 698 | [[Cerveau du vault]] : lecture du dépôt (GitHub ou disque), markdown du vault, graphe. |
-| [[brain-views.js]] | 101 | Page HTML du Cerveau (`/admin/cerveau`). |
+| [[brain.js]] | 790 | [[Cerveau du vault]] : lecture du dépôt (GitHub ou disque), markdown du vault, graphe. |
+| [[brain-views.js]] | 174 | Pages HTML du Cerveau (`/admin/cerveau`) : graphe, et explorateur de fichiers (27/11). |
+| [[brain-files.js]] | 187 | Explorateur de fichiers du Cerveau (Rago Design, 27/11) : arborescence par l'API GitHub, fichiers à la demande en flux, cache borné. |
 
 ### Logique métier
 | Fichier | Lignes | Rôle |
 |---|---|---|
 | [[licensing.js]] | 584 | Comptes, sessions, inscription par code, Google/Discord, licences, PC, bannissement, temps offert. |
+| [[dunning.js]] | 190 | Paiements refusés (27/11, q110) : fin immédiate après un essai, 3 jours de grâce sinon, rappel, rattrapage des comptes actuels, [[Table payment_failures]]. |
 | [[route-addon.js]] | 199 | Option Rago Route (13/11) : Checkout de l'abonnement à 3 $/mois ou 17,99 $/an, option prise au paiement du Premium, arrêt avec le Premium, [[Table route_subscriptions]]. |
 | [[billing.js]] | 560 | Stripe : Checkout, webhooks, abonnements, essai, Lifetime, codes promo, contrôles de mise en ligne. |
 | [[affiliates.js]] | 237 | Programme d'affiliation : filleuls, comptage, récompenses. |
@@ -60,7 +62,7 @@ La carte du code du **serveur de comptes et licences** (`licensing/`, Node ≥ 2
 | [[network.js]] | 123 | Rapports des tests réseau de l'app. |
 
 ### Autres fichiers
-- Navigateur : [[account.js]], [[admin.js (page admin)]], [[cerveau.js]] (graphe et lecteur du Cerveau) ; styles : [[Styles du serveur (CSS)]], [[cerveau.css]].
+- Navigateur : [[account.js]], [[admin.js (page admin)]], [[cerveau.js]] (graphe et lecteur du Cerveau), [[cerveau-fichiers.js]] (explorateur Rago Design) ; styles : [[Styles du serveur (CSS)]], [[cerveau.css]].
 - Scripts : [[admin.js (script serveur)]] (`npm run admin`), [[local.js]] (`npm run local`), [[keys.js]] (à ne jamais lancer).
 - Base : [[schema.sql]] ; tests : [[Tests du serveur]] ; documentation, `.env.example`, Docker, npm : [[Documentation et configuration du serveur]].
 
@@ -88,12 +90,12 @@ Détail complet dans [[app.js]] :
 1. **En-têtes** : CSP stricte (`'self'` partout, formulaires vers Stripe seulement, pas de cadre) sur les pages du serveur ; `CORP cross-origin` pour les images des e-mails et `/avatars/` ; pas de CSP sur le site servi par `SITE_DIR` (local seulement).
 2. **Contrôle d'origine** : un `POST` de formulaire venant d'un autre hôte → 403 (l'API et le webhook en sont exemptés).
 3. **Taille des corps** : 64 Ko (1 Mo pour le webhook, 5 Mo + 64 Ko pour une photo).
-4. **Fichiers** `/assets/*` ; **verrou d'avant lancement** (`LAUNCH_AT`, passage `rago_preview`).
+4. **Fichiers** `/assets/*` (plus de verrou d'avant lancement depuis le 28/11, q79).
 5. **Route** : page (session `rg_session`), API (jeton `Bearer`), admin (cookie `rago_admin`), webhook (signature Stripe).
 6. **Limites de débit** en mémoire par IP, e-mail, compte ou licence (connexion : 10 / 15 min par IP + e-mail ; API compte : 300 / h ; mises à jour : 120 / h…).
 7. **Erreurs** : JSON `{error:{code, message}}` sous `/api/`, page HTML ailleurs.
 
-**Cookies** : `rg_session` (30 j), `rg_claim` (2 j), `rg_ref` (30 j), `rg_signup` (24 h), `rg_oauth` (10 min), `rg_discord` (10 min), `rago_preview` (30 j), `rago_admin` (7 j, `SameSite=Strict`). Tous `HttpOnly`, `Secure` en prod ; valeurs signées par HMAC avec `SESSION_SECRET` quand elles portent un identifiant.
+**Cookies** : `rg_session` (30 j), `rg_claim` (2 j), `rg_ref` (30 j), `rg_signup` (24 h), `rg_oauth` (10 min), `rg_discord` (10 min), `rago_admin` (7 j, `SameSite=Strict`). Tous `HttpOnly`, `Secure` en prod ; valeurs signées par HMAC avec `SESSION_SECRET` quand elles portent un identifiant.
 
 ## Tâches de fond (dans le processus web)
 
@@ -124,7 +126,7 @@ Caches en mémoire : ventes 5 min, services 1 min, avis 30 s, pop-up 30 s, prix 
 
 26 tables, définies dans [[schema.sql]] (une note par table) :
 - **Comptes** : [[Table users]], [[Table web_sessions]], [[Table api_sessions]], [[Table password_resets]], [[Table signup_codes]], [[Table oauth_identities]].
-- **Licences et paiements** : [[Table licenses]], [[Table devices]], [[Table stripe_events]], [[Table trials]], [[Table route_subscriptions]].
+- **Licences et paiements** : [[Table licenses]], [[Table devices]], [[Table stripe_events]], [[Table trials]], [[Table trial_ips]], [[Table payment_failures]], [[Table route_subscriptions]].
 - **Affiliation** : [[Table affiliates]], [[Table referrals]], [[Table account_devices]].
 - **Profil et site** : [[Table reviews]], [[Table site_settings]].
 - **Discord** : [[Table discord_links]], [[Table discord_rewards]], [[Table discord_joins]], [[Table discord_invite_links]], [[Table discord_invite_bonus]], [[Table discord_invite_roles]].

@@ -1,7 +1,7 @@
 ---
 type: pilotage
 tags: [pilotage, à-décider, à-vérifier]
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # Questions ouvertes
 
@@ -15,69 +15,31 @@ Mode d'emploi :
 - Les 61 questions ouvertes au 25/11 sont aussi exportées en entier dans `docs/questions/questions-ouvertes-2026-11-25.md` (archive de l'ancienne page).
 
 ## En attente de réponse
-Posées le 13/11 (option Rago Route à 3 $/mois, [[Offres et prix]]) :
-- q108 : le Lifetime paie-t-il aussi l'option ?
-
-Posées le 14/11 ([[Paiements Stripe]]) :
-- q110 : ce que Stripe fait d'un abonnement après le dernier essai de paiement raté.
-- q111 : couper le changement de quantité dans le portail client live.
-
-Posées le 23/11, pendant la refonte de l'app sur les maquettes v5 (fil « refonte stricte ») :
-- q112 : garder la fenêtre Premium « This tweak is part of Premium » quand le serveur refuse d'appliquer le Packet Optimizer ([[NetOpt.tsx]]).
-- q113 : « Affiliate reward » ou « Discord reward » pour une licence gagnée sur Discord (page compte).
-- q114 : badge « Ended » dans la carte Formule d'un abonnement terminé (page compte).
-- q115 : texte propre à l'achat de test au lieu de « This license was revoked. » (page compte).
-- q116 : échec du nettoyage de la RAM écrit en vert dans la barre en jeu ([[Overlay.tsx]]).
-- q117 : le Packet Optimizer en gratuit montre l'écran verrouillé avec les 4 outils gratuits, au lieu de l'écran « part of Premium » ([[Packet Optimizer]], [[NetOpt.tsx]]).
 
 Posée le 25/11, après le test Windows de Sofiene (PR #139) :
 - q121 : la barre en jeu sort-elle encore du jeu (autre page, jeu réduit) une fois la 1.2.1 quittée ? ([[Barre en jeu]])
 
-Posée le 13/11 (fil « Corriger les saccades du stream Discord ») :
-- q109 : les joueurs dont le stream Discord saccade ont-ils la version publique ou l'exe de test ? Le correctif (jeu en « Supérieure à la normale ») attend aussi la décision de Sofiene ([[Bugs et incidents]]).
+Posées le 24/11 sur l'accueil v6 (PR #136, [[New Brand Rago]]) :
+- q118 : que devient la section « Three ways in » une fois les cartes Rago Route passées au-dessus du globe ?
+- q119 : les flux d'Asie s'arrêtent à la Sibérie (Tokyo, Pékin et Séoul sont de l'autre côté du globe) : on garde ?
+- q120 : la capture du dashboard sur l'accueil date du site v5 (« 212 tweaks ») : capture à jour à envoyer.
 
 Posées le 25/11 par les fils des autres projets (serveur Minecraft, voir leur vault) : q122 à q127.
 
-Posées le 25/11, passage sur le nouveau compte Claude ([[Reprendre sur un nouveau compte Claude]]) :
-- q128 : le dossier `rago-redesign/` du projet [[New Brand Rago]] (maquettes, kit, scripts qui génèrent le CSS de l'app) est téléchargé avec le reste dans `/Users/kaliso/Desktop/Rago data ` (27/11) : faut-il aussi le mettre dans le dépôt ?
-
 Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, q46 le 10/11 à 15 h, voir [[Décisions]]) :
 
-Posées le 10/11 au soir (q70 à q93), après la relecture complète du code pour le vault détaillé (dossier `Code/`) :
-- q73 : 4 réglages de carte graphique jamais grisés ([[meta.py]]).
-- q74 : provenance et licence de NVIDIA Profile Inspector ([[Configuration Tauri]]).
-- q75 : 73 ou 68 réglages gratuits affichés ; `FREE_TWEAKS` sur Railway ([[sync_tweaks.py]], [[config.js]]).
+Posées le 10/11 au soir (q70 à q93 ; q87 à q93 traitées le 28/11 ; q73, q74, q75, q77, q79, q82, q83, q84 et q85 décidées le 28/11, voir [[Décisions]]), après la relecture complète du code pour le vault détaillé (dossier `Code/`) :
 - q76 : réglée le 22/11 sans réponse nécessaire : la nouvelle image de partage v5 dit « 218 tweaks » (PR #109, [[Kit de marque (brand)]]).
-- q77 : étoiles Google des avis perdues (RAG-33, [[page.html]]).
-- q79 : retirer la protection d'avant lancement ([[launch-gate.js]]).
-- q80 : GitHub Pages publie le vault ([[Fichiers de la racine du dépôt]]).
-- q81 : supprimer les branches `claude/project-thread-tzbch5` et `trailer-4k-footage` ([[Branches du dépôt]]).
-- q82 : supprimer les fichiers qui ne servent plus ([[recherche-conversion (site)]], [[fix_free_bat.py]]…). Pour [[LicenseGate.tsx]], le mode plein écran jamais monté est retiré le 24/11 avec la refonte des fenêtres sur les maquettes v5 (PR #131).
-- q83 : textes en retard dans le code (README, `FREE_TWEAKS`, commentaires).
-- q84 : l'e-mail d'achat renvoie vers un ticket Discord même avec le bot ([[mailer.js]]).
-- q85 : un jeu retiré de la bibliothèque ne peut plus être réaffiché ([[Games.tsx]]).
-- q87 : code de la pop-up promo recréé en live ? ([[Promotions et affiliation]]).
-- q88 : à quoi sert la vidéo [[Logo création d'Adam]].
-- q89 : copie des exe 1.1.10 avant le 08/01/2027 ([[Synthèse de reprise du 15-10]]).
-- q90 : phrase fausse dans les messages de démarchage ([[Partenaires et créateurs]]).
-- q91 : Cloudflare Web Analytics installé ? ([[Fils du projet]]).
-- q92 : une idée de l'[[Étude de marché de novembre 2026]] est-elle prévue ?
-- q93 : passer en « Canceled » les 5 tâches d'Abel dans [[Linear]] ?
 
 Posées le 11/11 (q78 traitée le même jour : Sofiene a demandé la page de vente, voir [[Page de vente Rago Route]]) :
-- q94 : [[Graphismes des jeux]] gratuits pour tous ou Premium ? (le code les laisse gratuits)
-- q96 : [[Page Souris]] gratuite pour tous ? (codée gratuite ; le réglage « Souris 1:1 » reste Premium)
-- q97 : d'autres sorties que Paris, pour que la page Rago Route les annonce ? ([[Page de vente Rago Route]], [[Infrastructure Rago Route]]).
-- q98 : `CERVEAU_GITHUB_TOKEN` mis dans Railway, et dans quels environnements ? (25/11 : la variable existe dans Railway ; reste à confirmer production et staging, et l'accès du jeton à Rago-Client) ([[Cerveau du vault]], [[Variables d'environnement]]).
-- q100 : à la sortie de la 1.3.0, le bouton « Get notified on Discord » de l'encart Rago Route de l'accueil devient « Try 3 days free », disparaît ou reste ? ([[page.html]])
-- q101 : Lifetime inclut-il Rago Route ? Le serveur le donne aujourd'hui à toute licence active ; la page cache « Lifetime includes Rago Route too » en attendant ([[route.html]], [[Paiements Stripe]]).
-- q102 : résilier l'essai depuis le site en 2 clics (lien direct vers la résiliation du portail Stripe, en fin de période), ou écrire « two clicks in the app, or anytime from your account » sur les deux pages ? ([[route.html]], [[page.html]], [[Abonnement dans l'app]])
-- q103 : un abonné Premium non connecté au site peut payer un 2e abonnement, essai compris : le bloquer côté serveur (même e-mail ou même carte), ou la ligne « Already Premium? » de la page suffit ? (lu dans le code, pas vérifié sur staging ; [[Paiements Stripe]])
-- q104 : « Card required » ou « Card or PayPal required » sous les boutons d'essai ? PayPal sur le paiement de l'essai pas encore vu ; avec PayPal, « un essai par personne » ne compare que l'e-mail ([[Paiements Stripe]], [[route.html]]).
-- q105 : garder le titre « Lose packets, not fights. » de la page Rago Route (il frôle la règle « jamais de hitreg promis »), ou prendre « Lost packets shouldn't freeze your game. » ? ([[route.html]], [[Page de vente Rago Route]])
+- q100 : le bouton « Get notified on Discord » de l'encart Rago Route de l'accueil devient « Try 3 days free », disparaît ou reste ? (dans le code de prod de la 1.3.0, il est caché par l'attribut `hidden` ; CONFIRMÉ, 27/11) ([[page.html]])
+
+Posée le 27/11 (fil HUB-d1451f, Rago Route pour les Lifetime, [[Paiements Stripe]]) :
+- q131 : la consigne disait que les 5 Lifetime vendus ont Rago Route gratuit en prod et le perdront à la mise en prod ; or le code de prod (1.3.0) demande déjà l'option à tout Lifetime. Un Lifetime a-t-il eu Rago Route sans payer ? Veux-tu les prévenir que l'option existe pour eux ? (À VÉRIFIER)
 
 ## À vérifier (sans Sofiene)
-- Rago Route : tous les joueurs sortent par la même adresse à Paris ; Hypixel coupe déjà les connexions venant de Frankfurt (09/11, sans effet tant que Frankfurt n'est qu'un relais). À surveiller dès les premiers joueurs ([[Proxy]], [[Page de vente Rago Route]]).
+- GitHub Pages (q80, coupé par Sofiene le 28/11) : plus aucune page servie sur `kaliso-dev.github.io/Rago` (404, vérifié le 28/11), mais l'API GitHub montre encore une configuration Pages (source : branche de prod) et le workflow « pages build and deployment » a encore tourné le 28/11 à 00:09 UTC ([[Fichiers de la racine du dépôt]]).
+- Rago Route (sorti et annoncé le 22/11) : tous les joueurs sortent par la même adresse à Paris ; Hypixel coupe déjà les connexions venant de Frankfurt (09/11, sans effet tant que Frankfurt n'est qu'un relais). Test P0-9 et message à Hypixel à faire au plus vite (q99) ; surveiller les retours des joueurs ([[Proxy]], [[Page de vente Rago Route]]).
 - Concurrents, lus le 11/11 sans navigateur : prix d'ExitLag sur son propre site (seuls ceux de l'App Store, États-Unis, ont été lus : 9,99 $ par mois, 75 $ par an) ; durée de l'essai (24 h ou 7 jours), prix et remboursement de NoPing (chiffres de tiers) ; durée de l'essai WTFast (3 jours dans l'aide, une semaine payante sur l'accueil). À revoir dans un navigateur avant d'en citer un ; la page ne nomme aucun concurrent ([[Page de vente Rago Route]], [[Étude - Outils réseau et ping]]).
 - [[Couleurs et résolution]] (11/11, jamais testé sur Windows) : saturation NVIDIA (NVAPI) et AMD (ADL), rampe gamma, retour des couleurs au Alt+Tab, résolution étirée (`DMDFO_STRETCH`) et retour à la fin de la partie, écriture des fichiers de Valorant, Fortnite et CS2 ; comportement avec le HDR de Windows.
 - Valorant en 4:3 étiré (1440×1080) : les sources lues le 11/11 ne confirment pas que le jeu remplit l'écran sans réglage de plus ; à vérifier en jeu ([[Couleurs et résolution]]).

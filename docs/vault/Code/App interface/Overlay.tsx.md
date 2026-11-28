@@ -3,7 +3,7 @@ type: code
 tags: [code, app, typescript, react, overlay]
 fichier: app/src/overlay/Overlay.tsx
 lignes: 344
-maj: 2026-11-24
+maj: 2026-11-27
 ---
 # Overlay.tsx
 
@@ -48,11 +48,11 @@ Logo rond (`rago-cap.svg`) + FPS + ping, rien d'autre (`aria-live="off"`, `.igpi
 ### Mode `panel` (barre ouverte)
 1. **En-tête** : logo (`rago-app-dark-64.svg`), « Barre en jeu », nom du jeu (sinon « Jeu »), trois boutons : épingler (garder FPS et ping à l'écran, `overlaySetPin`), « Ouvrir Rago Optimizer » (`overlayOpenApp()`), « Revenir au jeu » (`overlayClose()`).
 2. **Tuiles** : FPS (infobulle « Mesure des FPS indisponible dans cette version » si PresentMon n'est pas livré), Ping (infobulle « Aucun serveur de jeu repéré pour l'instant… » si pas de ping, ou l'explication du `≈`), CPU, GPU, RAM en %.
-3. Bouton **Nettoyer** : `cleanRam(readTrim())` ; pendant le nettoyage, icône qui tourne et « Nettoyage… » ; puis, sous les mesures, « {n} Go de cache vidés » si au moins **50 Mo** de cache vidé, sinon « Cache déjà vide », ou l'échec en rouge (clés `live.*`).
+3. Bouton **Nettoyer** : `cleanRam(readTrim())` ; pendant le nettoyage, icône qui tourne et « Nettoyage… » ; puis, sous les mesures, « {n} Go de cache vidés » si au moins **50 Mo** de cache vidé, sinon « Cache déjà vide » (icône coche verte, `--ok`), ou l'échec « Nettoyage impossible, réessaie » en rouge, texte et icône alerte au jeton `--red` de la [[Charte graphique]] (classes `ignote bad igcf`, règle dans `s5/overlay.css` ; décision de Sofiene du 27/11, q116) (clés `live.*`).
 4. **Pendant la partie** : `SessionChecks` de [[SessionCard.tsx]] (mode d'alimentation, conseils), si une session est en cours (`useSession`).
 5. **Réglages en pleine partie** : une ligne par réglage (bouton `role="switch"`, nom et interrupteur) ; en gratuit, liste grisée (`locked`, lignes désactivées) et badge « Premium » qui ferme la barre et ouvre l'offre dans l'app (`overlayOpenApp("premium")`, reçu comme `app:goto` → offre `plan`). Pendant qu'un réglage change : icône qui tourne sur sa ligne, les autres interrupteurs grisés.
    - Clic : rien si pas Premium ou si un réglage est déjà en cours ; sinon `isRunning()` (déjà un lot → erreur), puis `runTweaks` d'**un seul** élément : annulation (`undo: true` avec la variante appliquée) s'il est appliqué, sinon application.
-   - Erreurs affichées en rouge sous les deux colonnes : « Une optimisation est déjà en cours dans l'app. » ; refus `premium…` → texte `err.premium_scripts_unavailable` ; autre → « Le réglage n'a pas pu être changé. Ouvre l'app pour voir le détail. »
+   - Erreurs affichées en rouge sous les deux colonnes (classe `ignote bad` de la maquette : texte `#FF6B61`, icône `--red`) : « Une optimisation est déjà en cours dans l'app. » ; refus `premium…` → texte `err.premium_scripts_unavailable` ; autre → « Le réglage n'a pas pu être changé. Ouvre l'app pour voir le détail. »
 6. **Pied** : « Alt+X ou Échap pour revenir au jeu » (raccourci réel des préférences, `Alt+X` par défaut ; le raccourci et Échap sont dessinés en touches `<kbd>` par `Keys`) ; en mode `passive` (barre ouverte sans prendre le premier plan au jeu, Minecraft) : « Alt+X, Échap ou ✕ ferment la barre » ; puis « Ping du serveur où tu joues (Minecraft : mesuré comme dans le jeu) ».
 - **Échap** ou clic hors de la barre (dans la marge transparente de la fenêtre, `.ovw`) : `overlayClose()`.
 - Animation d'ouverture : fondu, glissement de 10 px et échelle 0,98 → 1 en 0,22 s.

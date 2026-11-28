@@ -9,9 +9,7 @@ exclude:
   - site
   - README.md
   - DEVELOPPEMENT.md
-  - Dockerfile
   - netlify.toml
   - _config.yml
   - .github
   - .gitignore
-  - .dockerignore

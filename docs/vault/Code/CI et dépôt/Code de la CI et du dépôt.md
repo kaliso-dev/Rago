@@ -1,7 +1,7 @@
 ---
 type: carte
 tags: [code, ci, github-actions, dépôt, carte]
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # Code de la CI et du dépôt
 
@@ -15,10 +15,10 @@ Tout est CONFIRMÉ d'après le code de `staging` (10/11), sauf les chiffres d'ex
 | [[app-windows.yml]] | tests Rust et fabrication de l'installateur Windows (exe de prod ou « Rago Optimizer Staging »), PresentMon, signature des mises à jour |
 | [[licensing-tests.yml]] | tests du serveur de comptes (PGlite puis vrai Postgres 16) et contrôle de l'image Docker de Railway (photos de profil) |
 | [[site-check.yml]] | reconstruit le site avec `build.py` et exige que les pages commitées soient à jour |
-| [[Fichiers de la racine du dépôt]] | `README.md`, `DEVELOPPEMENT.md`, `CLAUDE.md`, `Dockerfile` (inutilisé), `_config.yml` (GitHub Pages), `.gitignore`, `.dockerignore` |
+| [[Fichiers de la racine du dépôt]] | `README.md`, `DEVELOPPEMENT.md`, `CLAUDE.md`, `_config.yml` (GitHub Pages), `.gitignore` |
 | [[Branches du dépôt]] | les 55 branches GitHub : dernier commit, PR, ce qui n'est pas fusionné |
 
-Notes voisines : la configuration Netlify ([[netlify.toml]], [[preview.sh]], [[launch-gate.js]]) est rangée avec le site dans [[Code du site]].
+Notes voisines : la configuration Netlify ([[netlify.toml]], [[preview.sh]]) est rangée avec le site dans [[Code du site]].
 
 ## Qui se déclenche quand
 | Événement | `app-windows` | `licensing-tests` | `site-check` |
@@ -55,9 +55,7 @@ Le dépôt est public : ces minutes ne sont pas décomptées (voir [[CI GitHub A
 
 ## Problèmes relevés le 10/11
 - **`site-check` rouge sur la branche de prod** : la prod a encore `ubuntu-latest` (Ubuntu 26.04 depuis le 09/11), où Playwright 1.56.1 ne s'installe pas ; le correctif `98181fb` n'est que sur `staging`. Le push de la prod du 10/11 à 15:05 a échoué ([[site-check.yml]]).
-- **GitHub Pages actif** et qui publie le vault de la branche de prod ([[Fichiers de la racine du dépôt]], `_config.yml`).
-- Le test de la fonction edge `netlify/launch-gate.test.mjs` n'est lancé par aucun workflow et échoue depuis la date du lancement ([[launch-gate.js]]).
-- `app/ci/build-windows.yml` est une ancienne copie inactive du workflow Windows ([[app-windows.yml]]).
+- **GitHub Pages coupé par Sofiene le 28/11** (q80) : le vault n'est plus publié (404 vérifié le 28/11) ; une configuration Pages reste visible dans l'API, À VÉRIFIER ([[Fichiers de la racine du dépôt]], `_config.yml`).
 - Les guides de la racine sont en retard sur plusieurs points ([[Fichiers de la racine du dépôt]]).
 
 ## Secrets et variables (noms seulement)

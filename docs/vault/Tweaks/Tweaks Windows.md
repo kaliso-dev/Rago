@@ -2,13 +2,13 @@
 type: catalogue
 tags: [tweaks, catalogue, généré]
 généré: docs/tools/catalogue_vault.py
-version_app: 1.3.0
-maj: 2026-11-10
+version_app: 1.4.1
+maj: 2026-11-28
 ---
 
 # Tweaks Windows
 
-Module **Windows** (`windows`) de l'app 1.3.0 : Ce qui tourne pour rien en arrière-plan.
+Module **Windows** (`windows`) de l'app 1.4.1 : Ce qui tourne pour rien en arrière-plan.
 Note **générée** depuis `app/src/data/catalog.json` : ne pas l'éditer à la main, voir [[Catalogue des tweaks]].
 
 Légende : 🆓 gratuit · 🔒 Premium (voir [[Offres et prix]]) · ↩️ seul le retour arrière est gratuit · ⚠️ avancé · 🔁 redémarrage nécessaire · ⚙️ action ponctuelle. Comment un tweak est appliqué : [[Moteur des tweaks]].

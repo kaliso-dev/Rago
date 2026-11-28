@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, typescript, interface]
 fichier: app/src/lib/api.ts
-lignes: 1767
-maj: 2026-11-25
+lignes: 1787
+maj: 2026-11-28
 ---
 # api.ts
 
@@ -125,7 +125,8 @@ Chaque ligne : nom dans `api` → commande Rust (paramètres) → ce que fait le
 | `gameArt(id)` | `game_art { id }` → `data:` URL | `null` (tuiles au nom du jeu) |
 | `gameLaunch(id)` | `game_launch { id }` | 500 ms, met à jour `lastPlayed` |
 | `gameAdd(title)` | dialogue `open` (filtre « Program », `.exe`) puis `game_add { path }` → id | `null` |
-| `gameRemove(id)` / `gamesUnhide()` | `game_remove { id }` / `games_unhide` | retire / rien |
+| `gameRemove(id)` | `game_remove { id }` | retire ; un jeu détecté passe dans `mockHidden` |
+| `gamesHidden()` / `gameUnhide(id)` / `gamesUnhide()` | `games_hidden` → `Game[]` / `game_unhide { id }` / `games_unhide` (q85, 28/11) | liste, remet un jeu, remet tout (`mockHidden`) |
 | `launchersList(refresh)` | `launchers_list { refresh }` | 8 launchers (Steam lancé, Epic, Riot, Battle.net, Minecraft Launcher, Lunar, Badlion, Xbox) |
 | `launcherLaunch(id)` / `launcherIcon(id)` | `launcher_launch` / `launcher_icon` | marque lancé / lit `window.__launcherIcons[id]` (fourni par les scripts de captures), sinon `null` |
 | `presetIcons()` | `preset_icons` → logos par clé de jeu | `window.__presetIcons` ou `{}` |

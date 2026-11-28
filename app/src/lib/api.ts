@@ -236,7 +236,7 @@ export interface BackgroundPrefs {
   gameGpu: boolean;
   gamePower: boolean;
   gameChecks: boolean;
-  /** processus du jeu en priorité haute le temps de jouer */
+  /** processus du jeu en priorité supérieure à la normale le temps de jouer */
   gamePriority: boolean;
 }
 export interface BackgroundState {
@@ -308,7 +308,7 @@ export interface SessionState {
   playing: boolean;
   /** mode Performances élevées mis pour la partie */
   power: boolean;
-  /** processus du jeu passés en priorité haute pour la partie en cours */
+  /** processus du jeu passés en priorité supérieure à la normale pour la partie en cours */
   priority: number;
   /** jeux qui ont reçu la carte graphique performante */
   gpuGames: number;
@@ -631,6 +631,11 @@ export interface Api {
   gameAdd(title: string): Promise<string | null>;
   /** Retire un jeu de la bibliothèque (rien n'est désinstallé). */
   gameRemove(id: string): Promise<void>;
+  /** Jeux retirés de la bibliothèque (masqués) et toujours installés, triés par nom (q85, 28/11). */
+  gamesHidden(): Promise<Game[]>;
+  /** Réaffiche un jeu retiré. */
+  gameUnhide(id: string): Promise<void>;
+  /** Réaffiche tous les jeux retirés. */
   gamesUnhide(): Promise<void>;
   /** Jeux lancés en ce moment (id), à chaque changement. */
   onGamesRunning(cb: (ids: string[]) => void): Promise<UnlistenFn>;
@@ -779,6 +784,8 @@ const tauriApi: Api = {
     return typeof path === "string" ? invoke<string>("game_add", { path }) : null;
   },
   gameRemove: (id) => invoke("game_remove", { id }),
+  gamesHidden: () => invoke("games_hidden"),
+  gameUnhide: (id) => invoke("game_unhide", { id }),
   gamesUnhide: () => invoke("games_unhide"),
   onGamesRunning: (cb) => listen<string[]>("games:running", (e) => cb(e.payload)),
   updateReady: () => invoke("update_ready"),
@@ -951,6 +958,8 @@ let mockLaunchers: Launcher[] = [
   { id: "badlion", name: "Badlion Client", minecraft: true, running: false },
   { id: "xbox", name: "Xbox", minecraft: false, running: false },
 ];
+/** démo : jeux retirés de la bibliothèque, réaffichables (q85) */
+let mockHidden: Game[] = [];
 let mockGames: Game[] = [
   // la bibliothèque de la maquette v5 (app-games-pi) : 9 jeux sur 6 launchers
   { id: "riot:valorant", name: "VALORANT", launcher: "riot", client: null, kind: "shooter", installDir: null, lastPlayed: Date.now() - 2 * hour, running: false },
@@ -1020,7 +1029,7 @@ const MOCK_NET_LINES: Record<string, string[]> = {
   "Restarting the network card": ["Network card back online"],
   MTU: ["MTU 1500 on Ethernet, already right"],
   "Game traffic priority": ["Minecraft packets marked DSCP 48 (javaw, java, Minecraft.Windows)", "Big downloaders marked as background, CS1"],
-  "High CPU priority for Minecraft": ["Minecraft starts with High CPU priority"],
+  "Above normal CPU priority for Minecraft": ["Minecraft starts with Above normal CPU priority"],
   "Windows gaming performance": ["! No High performance plan on this PC (Modern Standby laptop?), current plan kept", "Game Mode on, Game DVR off, foreground boost, game task priority high"],
   "Windows Update sharing": ["Windows Update no longer uploads to other PCs"],
 };
@@ -1544,7 +1553,7 @@ const mockApi: Api = {
       emit<NetLine>("netopt:line", { action, tag, text, step, total });
     if (action === "apply" || action === "restore" || action === "defaults") {
       const titles = action === "apply"
-        ? ["TCP", "ACK timing and Nagle (every network interface)", "Packet buffering in Windows and the network card", "Power saving", "Wi-Fi at full power", "Restarting the network card", "MTU", "Game traffic priority", "High CPU priority for Minecraft", "Windows gaming performance", "Windows Update sharing"]
+        ? ["TCP", "ACK timing and Nagle (every network interface)", "Packet buffering in Windows and the network card", "Power saving", "Wi-Fi at full power", "Restarting the network card", "MTU", "Game traffic priority", "Above normal CPU priority for Minecraft", "Windows gaming performance", "Windows Update sharing"]
         : ["Restoring the settings saved before the first apply", "Registry values", "Network card", "MTU and power plan"];
       let ok = 0;
       for (let i = 0; i < titles.length; i++) {
@@ -1594,9 +1603,20 @@ const mockApi: Api = {
   onNetOptLine: (cb) => on("netopt:line", cb),
   gameAdd: async () => null,
   gameRemove: async (id) => {
-    mockGames = mockGames.filter((g) => g.id !== id);
+    const g = mockGames.find((x) => x.id === id);
+    mockGames = mockGames.filter((x) => x.id !== id);
+    if (g && g.launcher !== "manual") mockHidden.push(g);
   },
-  gamesUnhide: async () => {},
+  gamesHidden: async () => [...mockHidden].sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase())),
+  gameUnhide: async (id) => {
+    const g = mockHidden.find((x) => x.id === id);
+    mockHidden = mockHidden.filter((x) => x.id !== id);
+    if (g) mockGames.push(g);
+  },
+  gamesUnhide: async () => {
+    mockGames.push(...mockHidden);
+    mockHidden = [];
+  },
   onGamesRunning: (cb) => on("games:running", cb),
   // démo : une mise à jour attend avec ?update dans l'adresse
   updateReady: async () => (new URLSearchParams(location.search).has("update") ? { version: "1.2.1", notes: null } : null),

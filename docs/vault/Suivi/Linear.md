@@ -1,18 +1,11 @@
 ---
 type: outil
-tags: [outil, suivi]
-maj: 2026-11-11
+tags: [outil, suivi, abandonné]
+maj: 2026-11-28
 ---
 # Linear
 
-Espace `rago-optimizer`, équipe **RAG** (https://linear.app/rago-optimizer). Membres visibles : « Kaliso » (le compte de Sofiene) et « acerSHOCK », le compte d'**Abel** (Sofiene, 01/11 ; tâches marketing : GIVEAWAY, YOUTUBE, partner discord, Proxy). Voir [[Personnes et services]].
+**Abandonné le 28/11/2026** (Sofiene : « on ne prévoit plus de l'utiliser maintenant qu'on peut planifier des tâches ici dans Rago Hub »). Sofiene supprime lui-même les tâches restantes dans Linear (espace `rago-optimizer`, équipe RAG). Plus aucun Claude n'y crée ni n'y met à jour de ticket. Voir [[Décisions]] > « Abandonné ».
 
-- Projets : App Windows, Site et serveur de comptes, Support et opérations, Marketing et communauté, Lancement public.
-- Documents utiles : « Registre » des problèmes joueurs ; « Prochaine version : solutions prêtes (13/10) » (32 décisions).
-- Statut « In Review » = correctif préparé mais non publié (règle du 13/10).
-- Tickets cités dans ce vault : RAG-24 [[Mise à jour automatique]] · RAG-83 signature de code · RAG-33 note des avis dans Google · RAG-43 « Tout annuler » · RAG-44 / RAG-70 partage et rapport support · RAG-48 Clean RAM · RAG-50 [[Proxy]] · RAG-57 [[Bibliothèque de jeux]] · RAG-60, 67, 68, 69, 71, 72 bugs ([[Bugs et incidents]]) · RAG-81 [[Version 1.1.14]] · RAG-82 [[Barre en jeu]] · RAG-95 [[Couleurs et résolution]] (créé le 11/11, « In Review ») · RAG-93 [[Page Outils]] refaite (créé le 11/11, « In Review » : PR #90 dans `staging` par la PR #92, part avec la 1.3.0) · RAG-92 [[Graphismes des jeux]] (créé le 11/11, « In Review »).
-- **Remis à jour le 01/11** à partir du vault, à la demande de Sofiene (« Oui, fais-le ») : RAG-9, 24, 44, 48, 57, 59, 70, 82 et 85 passés en Done ; RAG-50 [[Proxy]] remis en Backlog ; nouveaux tickets RAG-86 (sortie de la 1.2), RAG-87 et RAG-88 (1.2.2), RAG-89 (e-mail tests réseau), RAG-90 (connexion Google ou Discord dans l'app), RAG-91 ([[Bot communauté Discord]]).
-- **À tenir à jour avec le vault** : Sofiene veut continuer à utiliser Linear (01/11). À la fin d'une tâche, mettre à jour le ticket du sujet (statut, commentaire court) et créer un ticket pour chaque nouvelle tâche décidée. Le vault et le code font foi en cas d'écart.
-- Réponses de Sofiene du 01/11 : RAG-16 (point après la première semaine de ventes) et RAG-21 (logo dans les e-mails) **annulés**, « On les abandonne » ; RAG-76 (crashs Lunar) et RAG-84 (joueur bloqué par Smart App Control) **annulés**, « Plus de nouvelles, on arrête » ([[Problèmes joueurs]]).
-- Tâches marketing d'Abel (RAG-35, 39, 51, 54, 56) : Sofiene, 10/11 : « il faut supprimer tout ça » (voir [[Décisions]] > Abandonné). Lu dans Linear le 10/11 au soir : RAG-35 et RAG-39 « In Progress », RAG-51, 54 et 56 « Todo », aucune touchée depuis le 11/10. Les passer en « Canceled » : À VÉRIFIER (q93, la réponse de Sofiene visait peut-être seulement les questions du vault).
-- RAG-94 [[Conseils au lancement du jeu]] (11/11, « In Review » : codé dans la PR #91, dans `staging` depuis le 11/11 par la PR #92), créé pour la feature 4 (« Tips ») de la liste de Sofiene du 11/11.
+- **Les tâches se planifient maintenant dans le [[Rago Hub]]** (chef et fils), et le vault reste la mémoire du projet ([[Prochaines étapes]], [[Questions ouvertes]]).
+- Les numéros **RAG-xx** encore cités dans le vault (ex. RAG-24 [[Mise à jour automatique]], RAG-33 note des avis, RAG-50 [[Proxy]], RAG-83 signature de code) sont de l'**historique** : ils disent d'où vient un sujet, ils ne servent plus de suivi.

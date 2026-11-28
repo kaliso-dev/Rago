@@ -1,7 +1,7 @@
 ---
 type: projet
 tags: [projet, design, marque, en-cours]
-maj: 2026-11-27
+maj: 2026-11-28
 version_app: 1.4.1
 ---
 # New Brand Rago
@@ -12,11 +12,11 @@ Statut : EN COURS. Rien n'est sorti pour les joueurs, sauf l'admin et les e-mail
 
 ## Où vit le projet
 - **Un projet Claude à part**, nommé « New Brand Rago », dans le compte de Sofiene, à côté du projet « Rago optimizer (suite) ». Ses fils travaillent dans **le même dépôt** `kaliso-dev/rago` et suivent ce vault ([[Règles de travail]]). Ce n'est ni un autre dépôt ni une branche à part : tout arrive dans `staging` par des PR, comme le reste ([[Branches et environnements]]).
-- **Son dossier partagé** (hors du dépôt) : `rago-redesign/`. Le vault y renvoie souvent :
+- **Son dossier `rago-redesign/`**, sauvegardé en entier sur GitHub dans le **dépôt privé [`kaliso-dev/rago-design`](https://github.com/kaliso-dev/rago-design)** (racine du dépôt = ancien dossier `rago-redesign/`, même arborescence, plus un `README.md` qui dit comment relancer les scripts). Historique : copié le 27/11 dans `design/rago-redesign/` du dépôt `rago` (PR #156, Sofiene : « oui bien sur sauvegarde tout sur le github »), puis sorti de `rago` le 28/11 vers ce dépôt privé, car l'archive de `staging` dépassait la limite de 120 Mo du [[Cerveau du vault]] (décision du 27/11, [[Décisions]]). Les chemins `rago-redesign/…` cités dans le vault se lisent donc comme des chemins du dépôt `kaliso-dev/rago-design`. Le vault y renvoie souvent :
   - `rago-redesign/rendus-v5/` : les 135 maquettes v5 (HTML dans `src/`), le kit de marque `marque/` (logo, `tokens/tokens.css` et `tokens.json` v2.0, charte en 10 chapitres `charte-1…5.jpg`, bannières Discord), et les **scripts qui génèrent le CSS de l'app** (`outils/port_mod.py`, `port_tools.py`, `port_pages.py`, `prep_art.py`, `shot-mouse.js`, `outils/marque/`, `gen_tokens.py`) ;
   - `rago-redesign/app-strict/` : captures app contre maquette de chaque étape (`1-…` à `32-…`) ;
   - `rago-redesign/images/` et son `sources.md` : images des 16 jeux et photos des 7 pros, avec leur provenance.
-  Ce dossier n'est pas visible depuis le projet « Rago optimizer (suite) » : son contenu exact n'a pas été relu par ce fil (À VÉRIFIER). **Il ne passe pas tout seul sur un nouveau compte Claude** : voir [[Reprendre sur un nouveau compte Claude]].
+  Contenu vérifié le 28/11 dans `kaliso-dev/rago-design` (identique, fichier par fichier, à `design/rago-redesign/` de `staging` au commit `05a8be9`) : 1 154 fichiers, 246 923 143 octets (238 Mo) (`rendus-v5/` 143 Mo, `images/` 27 Mo, `app-strict/` 13 Mo, `rendus-v1` à `v4`, `inspirations/`, `charte/`, `logo-actuel/`, planches 1 à 10), aucun fichier de plus de 50 Mo, aucun secret ; `.DS_Store` et `__pycache__` exclus. `rendus-v5/src/` contient 142 fichiers HTML. Une copie reste sur le Mac de Sofiene (« Rago data », sur le Bureau). **Droits** : `images/` (visuels des jeux et photos de pros) et `inspirations/` (planches d'autres studios) appartiennent à leurs auteurs, voir leurs `sources.md`. Voir aussi [[Reprendre sur un nouveau compte Claude]].
 - **Avant le projet** : le fil « Capturer toutes les pages pour la refonte » de « Rago optimizer (suite) » (14 au 21/11) a capturé chaque page et chaque état (site, compte, e-mails, admin, Cerveau, app) sur `staging` au commit `907c95e`, avec les inventaires et `constats-design.md` (381 défauts). Tout est dans `refonte-design/` du dossier de « Rago optimizer (suite) » ([[Sources]]), qui reste sur l'ancien compte : Sofiene ne l'emporte pas, la référence du design est désormais New Brand Rago (25/11). Le conseil donné le 21/11 : partir du code et du vault plutôt que de Figma (Sofiene : « je n'ai pas vraiment besoin de figma »).
 
 ## Les étapes
@@ -32,15 +32,32 @@ Statut : EN COURS. Rien n'est sorti pour les joueurs, sauf l'admin et les e-mail
 | 24/11 | Accueil v6 suite : globe dessiné en SVG, toute la démo Rago Route dans une section (PR #136) | **PR ouverte**, aperçu Netlify `deploy-preview-136--rago-optimiser.netlify.app` |
 | 25/11 | Détail des réglages au clic sur une icône info, grilles sans vide (PR #137) ; premier test Windows de Sofiene et ses retours corrigés (PR #139) | CONFIRMÉ (git), dans `staging` |
 
+| 28/11 | Site v7 « fonctionnel » (premier jet, voir plus bas) : PR #176 en brouillon, partie de la #136 | **PR brouillon**, à comparer avec la #136 ; rien de décidé |
 ## Où en est chaque brique (25/11)
 - **App** : [[Version 1.4.1]] dans `staging`, toutes les pages et fenêtres refaites sur les maquettes. Dernier exe de test : `rago-optimizer-setup-STAGING` du run `app-windows` 45641885291 (25/11, 16 h 17 à Paris). Un seul test Windows (25/11) ; pas publiée.
 - **Site** : pages v5 et accueil v6 dans `staging` ; l'accueil du 24/11 attend la PR #136 ; refaire les autres pages en v6 : À VÉRIFIER (rien de décidé au-delà de l'accueil). En prod, le site est encore celui de la 1.3.0 ([[Site]]).
 - **Pages compte et bot** : v5 dans `staging`, v1.2 en prod ([[Serveur de licences]], [[Bot communauté Discord]]).
 - **Admin, Cerveau, e-mails** : v5 en prod et dans `staging` ([[Tableau de bord admin]], [[Cerveau du vault]]).
 
+
+## Premier jet v7 « fonctionnel » (28/11, note de travail)
+Demande de Sofiene (28/11) : l'ancien site ressemblait à n'importe quel SaaS, et le nouveau est « trop trop décoratif et pas assez fonctionnel », avec une information qui ne passe que par des cartes. Il faut des sections plus classiques et épurées, moins d'animations, en gardant la charte v5. Rien n'est décidé tant que Sofiene n'a pas validé.
+- **PR #176** (brouillon, vers `staging`, branche `claude/rago-site-functional-clean-ug9dj8`, partie de la tête de la #136 `acecac5`). La #136 reste intacte pour comparer. Aperçu Netlify : `deploy-preview-176--rago-optimiser.netlify.app` (construit le 28/11, CONFIRMÉ par le statut Netlify de la PR).
+- **Gardé exactement** (consigne de Sofiene) : l'animation du R qui se dessine et se remplit ; le globe dessiné avec les flux vers Frankfurt et Paris ; le bloc « Four steps / Your next match / starts here. », avec toute son animation au défilement (précision de Sofiene du 28/11). Ce bloc est déplacé en fin de page et remplace la bannière « Tune your PC once ».
+- **Retiré** : le chargement (dix jaquettes), la roue « Every hit takes a trip », le paquet de cartes « Why your hits don't register », les bandeaux qui défilent, les pastilles du titre « What's new » et la bande des lanceurs, l'épinglage de la barre en jeu et de la liste des jeux, l'arc de la communauté, la bulle qui suit la souris, le défilement lissé à la molette et la barre de défilement maison. Ce dernier point passe par le mode `data-calm` de [[v5.js]].
+- **Nouveaux formats** :
+  - liste à icônes « What Rago does » ;
+  - les 10 sections de l'app en lignes, par le CSS seulement ([[sync_app.py]] n'a pas changé) ;
+  - blocs texte + écran de l'app alternés (les écrans dessinés de la v5) ;
+  - tableau Gratuit / Premium ouvert ;
+  - jeux en étiquettes.
+  Nouvel ordre : héros, ce que fait Rago, délai du coup, réglages, dans l'app, barre en jeu, tarifs, comparatif, Rago Route, jeux et chiffres, avis, communauté, FAQ, bloc final.
+- **Inchangées** : la page Rago Route, la page Tweaks, les avis, les partenaires et les pages légales, déjà en mise en page v5 classique sans les animations v6.
+- **À réconcilier** : la PR #174 (68 réglages gratuits, étoiles Google, retrait de `launch-gate`) est dans `staging`. Avant toute fusion, il faut fusionner `staging` dans la branche de la #176 puis relancer `sync_app.py` et `build.py`.
+
 ## Ce qui reste
 1. Sofiene teste l'exe de test sur Windows et répond à q121 (barre en jeu) ([[Questions ouvertes]]).
-2. Relire puis fusionner la PR #136 (accueil v6). q118 à q120 sont traitées le 27/11 dans la PR : « Three ways in » supprimée, flux d'Asie du globe gardés, capture du dashboard remplacée par la vraie app 1.4.1.
+2. Relire puis fusionner la PR #136 (accueil v6), et répondre à q118 à q120.
 3. Les illustrations sont encore celles d'avant (« en cours de refonte », [[Charte graphique]]).
 4. Droits d'utilisation des images des 16 jeux et des photos des 7 pros à vérifier avant la prod ([[Couleurs et résolution]]).
 5. La sortie : quand Sofiene valide, `staging` part en prod en une fois (app 1.4.x, site, pages compte, bot), comme la 1.3.0 ([[Publier une version]]). Rien n'est daté.

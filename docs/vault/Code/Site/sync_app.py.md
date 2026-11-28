@@ -2,8 +2,8 @@
 type: code
 tags: [code, site, python, catalogue]
 fichier: site/tools/sync_app.py
-lignes: 60
-maj: 2026-11-23
+lignes: 61
+maj: 2026-11-28
 ---
 # sync_app.py
 
@@ -28,8 +28,8 @@ Tout ce qui suit est CONFIRMÉ (branche du site v5, PR #109, 22/11 ; script ré�
 2. **Total** : `total = nombre de valeurs distinctes de (twin ou id)` sur `T` (jumeaux comptés une fois, actions uniques comptées), comme `totalTweaks` de [[catalog.ts]]. Aujourd'hui **218**.
 3. **Titre arrondi** : si le total est 1 à 3 sous une dizaine, « Nearly 220 tweaks », sinon le nombre exact (règle décidée avec Sofiene le 09/10). Écrit dans `<h2 class="s-h2" id="feat-h">` et dans la description « … tweaks, free to start ».
 4. **Compteurs exacts** : classes `n-all` (`<span>` et `<b>`), chiffre « 218 tweaks » du bandeau du héros (`<span>N tweaks</span>`), « All N » et « unlocks all N » (tableau, lien vers la page Tweaks, étape « Sign in and unlock », FAQ).
-5. **Plan gratuit** : `n_free = len(free.json["tweaks"])`, aujourd'hui **73** (comme `FREE.size` de [[store.tsx]]). Écrit dans « 73 of 218 » (`<span class="txt">`), les classes `n-free`, « Free opens 73 tweaks » (FAQ) et la largeur de la barre `#free-bar` (`100 × 73 / 218` = 33,5 %).
-6. Écrit `site/src/page.html` et affiche `sections [...] total 218 free 73 heading Nearly 220 tweaks`.
+5. **Plan gratuit** (28/11, q75 : « 68 free tweaks » partout) : lance d'abord [[sync_tweaks.py]] (`runpy`) et reprend son `n_free`, aujourd'hui **68** (tweaks distincts de la page Tweaks, sans les outils de Restaurer). Écrit dans « 68 of 218 » (`<span class="txt">`), les classes `n-free`, « Free opens 68 tweaks plus the Restore tools » (FAQ) et la largeur de la barre `#free-bar` (`100 × 68 / 218` = 31,2 %).
+6. Écrit `site/src/page.html` et affiche `sections [...] total 218 free 68 heading Nearly 220 tweaks` (la page Tweaks est refaite au début, par [[sync_tweaks.py]]).
 7. Lance [[sync_tweaks.py]] avec `runpy.run_path` (même processus).
 
 Depuis le 22/11, le script ne touche plus `i18n.ts` : l'accueil v5 n'a plus de fausse fenêtre de l'app (constantes `EX` et `MODS`, groupes « Mouse and keyboard » et « Power », phrase de redémarrage).
@@ -49,6 +49,6 @@ Depuis le 22/11, le script ne touche plus `i18n.ts` : l'accueil v5 n'a plus de f
 - Les notes du vault sur les tweaks ont leur propre générateur (`docs/tools/catalogue_vault.py`, voir [[Catalogue des tweaks]]) : les deux sont à lancer quand le catalogue change.
 
 ## À savoir avant de modifier
-- **Deux façons de compter les tweaks gratuits coexistent** : ce script écrit **73** sur l'accueil (taille brute de `free.json`, avec les variantes « revert » et les outils de Restaurer), alors que [[sync_tweaks.py]] écrit **68** sur la page Tweaks (tweaks distincts, jumeaux réunis). Les deux chiffres sont visibles sur le site le même jour. À VÉRIFIER avec Sofiene : lequel doit être affiché.
+- Un seul chiffre du plan gratuit sur le site depuis le 28/11 (q75) : celui de [[sync_tweaks.py]], 68. L'app compte encore la taille brute de `free.json` (73 entrées, [[store.tsx]]).
 - Le compteur des modules (`count`) ignore les actions uniques ; le total les compte. C'est voulu (même logique que l'app).
 - La règle « Nearly » ne s'applique qu'au titre et à la description ; les compteurs restent exacts.

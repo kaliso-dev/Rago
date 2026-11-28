@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, ci, github]
-maj: 2026-11-23
+maj: 2026-11-28
 ---
 # CI GitHub Actions
 
@@ -31,7 +31,7 @@ Les trois workflows de `.github/workflows/`. Secrets et variables : [[Variables 
   6. **Tests du moteur** : `cargo test --manifest-path src-tauri/Cargo.toml`.
   7. `tauri-apps/tauri-action@v0` : `npm run build` + `cargo build --release` + NSIS, avec `RAGO_SCRIPTS_SECRET`, `TAURI_SIGNING_PRIVATE_KEY(_PASSWORD)`, `VITE_SUPPORT_URL`. Sur un tag `app-v*` de prod : brouillon de release.
   8. Artefact **`rago-optimizer-setup`** (prod) ou **`rago-optimizer-setup-STAGING`** : le `.exe` et son `.exe.sig`. Durée de conservation non fixée dans le fichier : celle du dépôt (90 jours par défaut chez GitHub, À VÉRIFIER dans les réglages).
-- Durée (runs réussis depuis le 04/11, API GitHub) : **≈ 7,7 min en médiane**, 5 à 13 min (jusqu'à 28 sans cache). Le fichier `app/ci/build-windows.yml` est une ancienne copie, **pas** le workflow actif.
+- Durée (runs réussis depuis le 04/11, API GitHub) : **≈ 7,7 min en médiane**, 5 à 13 min (jusqu'à 28 sans cache).
 - Sur la branche de prod, le fichier a les mêmes déclencheurs mais pas les étapes « Mises à jour signées » et PresentMon, ni l'entrée `version` : sans effet pratique, les exe se fabriquent depuis `staging`, une PR ou à la main. Détail complet : [[app-windows.yml]].
 
 ## `licensing-tests.yml` : teste le serveur
@@ -49,7 +49,7 @@ Les trois workflows de `.github/workflows/`. Secrets et variables : [[Variables 
 - Durée : ≈ 0,7 min. Détail : [[site-check.yml]].
 
 ## Autre exécution automatique
-GitHub Pages est encore actif : le workflow automatique « pages build and deployment » tourne à chaque push de la branche de prod (84 exécutions, dernière le 10/11) et publie notamment le vault. Voir [[Fichiers de la racine du dépôt]] (`_config.yml`).
+GitHub Pages est coupé par Sofiene depuis le 28/11 (q80) : le vault n'est plus publié (404). Le workflow automatique « pages build and deployment » a pourtant encore tourné le 28/11 à 00:09 UTC : À VÉRIFIER. Voir [[Fichiers de la racine du dépôt]] (`_config.yml`).
 
 ## Code
 Carte : [[Code de la CI et du dépôt]]. Une note par workflow : [[app-windows.yml]], [[licensing-tests.yml]], [[site-check.yml]] ; branches : [[Branches du dépôt]].

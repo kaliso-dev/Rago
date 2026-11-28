@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, rust, jeux, bibliothèque]
 fichier: app/src-tauri/src/games.rs
-lignes: 1948
-maj: 2026-11-11
+lignes: 1993
+maj: 2026-11-28
 ---
 # games.rs
 
@@ -27,7 +27,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11). Ajouts du 11/11 pour 
 ### Méthodes de `Library` (et commandes Tauri de [[lib.rs]])
 | Méthode | Commande | Rôle |
 |---|---|---|
-| `list(refresh)` | `games_list(refresh)` | jeux détectés + ajoutés à la main − masqués ; triés par dernière partie puis par nom |
+| `list(refresh)` | `games_list(refresh)` | jeux détectés + ajoutés à la main − masqués ; triés par dernière partie puis par nom. La détection range à part les jeux masqués trouvés (`hidden_found`) |
 | `art(id)` | `game_art(id)` | image officielle en `data:` URL, copiée dans `art\` à la première demande |
 | `launch(id)` | `game_launch(id)` | lance le jeu et note la dernière partie |
 | `launchers(refresh)` | `launchers_list(refresh)` | launchers installés, avec ceux ouverts en ce moment |
@@ -36,7 +36,9 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11). Ajouts du 11/11 pour 
 | `preset_icons()` | `preset_icons` | logos des jeux des presets (variantes de `pri_game`) trouvés sur le PC |
 | `add(exe)` | `game_add(path)` | ajoute un `.exe` choisi par le joueur |
 | `remove(id)` | `game_remove(id)` | oublie un jeu ajouté, masque un jeu détecté (rien n'est désinstallé), efface son image |
-| `unhide_all()` | `games_unhide` | réaffiche les jeux masqués |
+| `hidden()` | `games_hidden` | jeux masqués toujours installés (`hidden_found`), triés par nom : liste « Show hidden games » de [[Games.tsx]] (q85, 28/11) ; `remove(id)` y range aussitôt un jeu détecté qu'on retire |
+| `unhide(id)` | `game_unhide(id)` | réaffiche un seul jeu masqué (le retire de `hidden`, enregistre, détecte à nouveau) |
+| `unhide_all()` | `games_unhide` | réaffiche tous les jeux masqués (appelé par aucun écran) |
 | `poll(procs)` | (boucle de fond) | jeux lancés ; rend la liste quand elle change |
 | `install_dirs()` | — | dossiers des jeux, jamais touchés par « Nettoyer » la RAM |
 | `name_for(exe)` | — | nom du jeu dont le dossier contient cet exe (barre en jeu) |

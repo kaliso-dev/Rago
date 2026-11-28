@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, tests]
 fichier: licensing/test/
 lignes: 4179
-maj: 2026-11-12
+maj: 2026-11-28
 ---
 # Tests du serveur
 
@@ -19,7 +19,8 @@ Les tests automatiques du serveur de comptes et licences : `npm test` dans `lice
 | `community.test.js` | 419 | 11 | [[community.js]] et [[gateway.js]] |
 | `network.test.js` | 193 | 5 | [[network.js]] et [[geo.js]] |
 | `sales.test.js` | 106 | 4 | [[sales.js]] |
-| `brain.test.js` | 325 | 8 | [[brain.js]], routes du [[Cerveau du vault]] |
+| `brain.test.js` | 347 | 8 | [[brain.js]], routes du [[Cerveau du vault]] |
+| `brain-files.test.js` | 210 | 5 | [[brain-files.js]], routes de l'explorateur Rago Design (27/11) |
 | `mmdb.js` | 86 | — | Outil : `writeMmdb(entries, type)` écrit un petit fichier MaxMind (arbre IPv6, enregistrements de 24 bits) pour simuler DB-IP |
 
 
@@ -38,8 +39,8 @@ Les tests automatiques du serveur de comptes et licences : `npm test` dans `lice
 - **Promotions** : `/buy?promo=…`, code refusé par Stripe, pop-up du site réglé depuis `/admin`.
 - **Comptes** : mot de passe, verrouillage contre les inconnus, contrôle d'`Origin` par hôte, 404 de l'API en JSON, code d'inscription à 6 chiffres (5 erreurs bloquent, expiration, renvoi), boutons Google/Discord, connexion Google/Discord ([[oauth.js]]).
 - **Avis et profil** : avis depuis l'app et le site, suppression, 60 derniers sur l'accueil ; photo de profil depuis l'app et le site, stockage Supabase simulé ([[reviews.js]], [[profile.js]]).
-- **Discord** : rôle Pro, une liaison par compte, récompenses VIP/MVP/boosts ([[discord.js]]).
-- **Serveur** : site servi par `SITE_DIR` sans CSP stricte, site sur une autre origine, installateur Supabase et mises à jour automatiques ([[installer.js]]), version de l'installateur, clés gardées en base, config, e-mails, staging qui refuse les clés live, base réservée au premier environnement ([[db.js]]), verrou d'avant lancement, purge des anciennes données ([[retention.js]]).
+- **Discord** : rôle Pro, une liaison par compte, récompenses VIP/MVP/boosts ([[discord.js]]) ; e-mail d'achat qui renvoie vers la page compte pour lier Discord quand le bot est réglé (28/11, q84, [[mailer.js]]).
+- **Serveur** : site servi par `SITE_DIR` sans CSP stricte, site sur une autre origine, installateur Supabase et mises à jour automatiques ([[installer.js]]), version de l'installateur, clés gardées en base, config, e-mails, staging qui refuse les clés live, base réservée au premier environnement ([[db.js]]), purge des anciennes données ([[retention.js]]).
 - **Admin** : `/admin` en 404 sans `ADMIN_KEY`, contrôles de mise en ligne (prix, webhook, portail), clés de test, prix Lifetime, et « /admin dashboard: players, Premium time, revoke, ban, gifts, sales, journal (2026-11-10) » ([[admin.js (serveur)]]).
 - **Vraie base** (seulement avec `TEST_DATABASE_URL`) : connexion coupée par la base, table verrouillée au démarrage, staging sur la base de prod arrêté avant le schéma.
 
@@ -49,6 +50,7 @@ Les tests automatiques du serveur de comptes et licences : `npm test` dans `lice
 - **`network.test.js`** : faux DB-IP (fichiers gzip écrits avec `mmdb.js`) ; rapport gardé avec ville et fournisseur mais jamais l'IP, contrôle de ce que l'app envoie, limite par adresse, sans base de villes, page `/admin/reseau`, CSV, suppression après 12 mois.
 - **`sales.test.js`** : remboursements et échecs, revenu mensuel ; jours et mois qui commencent à minuit à Paris (été et hiver) ; lecture unique puis cache et relecture en arrière-plan ; paiements en $US convertis par Stripe comptés en € (PR #84).
 - **`brain.test.js`** (PR #85 du Cerveau) : petit écrivain d'archives tar comme celles de GitHub, faux GitHub (`fetchImpl`). Tests : markdown échappé (aucun `<script>`, `onerror` ni `javascript:`) ; tableaux, listes, cases, encadrés, en-têtes ; graphe (liens, liens cassés, fichiers cités, phrase de contexte) ; archive avec noms longs ; lecture GitHub (une archive par commit, cache d'une minute, panne, dépôt privé sans jeton, jeton envoyé, branche absente) ; vault réel lu sur le disque ; plusieurs cerveaux (une archive par dépôt, cerveau RAGO-OS lu dans son dépôt, fichiers pris dans le bon dépôt, `CERVEAUX`, cerveau vide) ; routes protégées, page sans code en ligne, `ETag` et 304, gzip, fichier hors liste en 404, sélecteur et `?c=rago-os` gardé par cookie (12/11).
+- **`brain-files.test.js`** (27/11) : faux GitHub (arborescence et blobs envoyés en plusieurs morceaux, compte des appels). Tests : cache LRU borné et types envoyés, `CERVEAUX` avec `fichiers` ; arborescence sans contenu (pas de `.env`, pas de dossiers), un appel par fichier puis le cache, fichier de plus de 8 Mo relu en flux, plus de 25 Mo jamais téléchargé ; « Ajoute rago-design au jeton CERVEAU_GITHUB_TOKEN » sans jeton et avec un jeton sans accès, panne réseau ; routes derrière la clé admin (rien demandé à GitHub avant), page sans code en ligne avec les 5 cerveaux, `ETag` et 304, PNG avec CSP `sandbox` et cache d'un an, SVG, `.html` en `text/plain`, police en téléchargement, 413, 404 hors arborescence, jamais d'archive complète, cerveaux graphe intacts.
 
 ## Intégration continue
 

@@ -1,7 +1,7 @@
 ---
 type: référence
 tags: [technique, configuration, variables]
-maj: 2026-11-25
+maj: 2026-11-28
 ---
 # Variables d'environnement
 
@@ -15,13 +15,12 @@ Obligatoires en prod (sinon le serveur refuse de démarrer) : `DATABASE_URL`, `S
 | Base | `NODE_ENV` (`production`), `PORT` (8787), `PUBLIC_URL`, `SITE_URL`, `TRUST_PROXY=1`, `APP_ENV` (`staging` sur le serveur de test ; sinon `RAILWAY_ENVIRONMENT_NAME`) | sans `DATABASE_URL` : base en mémoire |
 | Supabase | `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `AVATAR_BUCKET` (`avatars`) | [[Supabase]] |
 | Installateur et mises à jour | `INSTALLER_VERSION`, `INSTALLER_OBJECT` (`downloads/RagoOptimizer-Setup.exe`, repli), `INSTALLER_FILENAME`, `INSTALLER_URL`, `INSTALLER_PATH`, `UPDATE_ROLLOUT` (100), `UPDATE_PAUSED`, `UPDATE_NOTES` | [[Mise à jour automatique]] |
-| Stripe | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_PRICE_LIFETIME`, `STRIPE_PRICE_ROUTE` (option Rago Route, 3 $/mois, 13/11 ; vide = pas vendue et Rago Route fermé en prod), `STRIPE_PRICE_ROUTE_YEARLY` (la même à 17,99 $/an ; vide = vendue au mois seulement), `STRIPE_PRICE_ID` (ancien, plus vendu), `STRIPE_PORTAL_LOGIN_URL`, `TRIAL_DAYS` (3 ; 0 = sans essai ; staging), `CHECKOUT_CANCEL_URL`, `PRICE_LABEL`, `SUBSCRIPTION_GRACE_DAYS` (3) | [[Paiements Stripe]] |
+| Stripe | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_MONTHLY`, `STRIPE_PRICE_YEARLY`, `STRIPE_PRICE_LIFETIME`, `STRIPE_PRICE_ROUTE` (option Rago Route, 3 $/mois, 13/11 ; vide = pas vendue et Rago Route fermé en prod), `STRIPE_PRICE_ROUTE_YEARLY` (la même à 17,99 $/an ; vide = vendue au mois seulement), `STRIPE_PRICE_ID` (ancien, plus vendu), `STRIPE_PORTAL_LOGIN_URL`, `TRIAL_DAYS` (3 ; 0 = sans essai ; staging), `TRIAL_IP_SALT` (27/11, q104 : sel secret de l'empreinte de l'IP pour « un essai par réseau » ; longue valeur au hasard, une par environnement, **jamais changée** ensuite ; vide = réseau non vérifié ; **à créer dans Railway staging puis production**), `CHECKOUT_CANCEL_URL`, `PRICE_LABEL`, `SUBSCRIPTION_GRACE_DAYS` (3) | [[Paiements Stripe]] |
 | Clés | `LICENSE_SIGNING_KEY`, `SESSION_SECRET` (générées et gardées dans `server_secrets` si absentes), `SCRIPTS_SECRET` (= secret GitHub `RAGO_SCRIPTS_SECRET`), `LICENSE_TOKEN_DAYS` (30) | **immuables** |
 | E-mails | `RESEND_API_KEY`, `MAIL_FROM`, `MAIL_REPLY_TO`, `EMAIL_VERIFICATION` (vide = code à l'inscription quand les e-mails partent ; 0 = coupé ; 1 = forcé) | sans clé : e-mails dans les logs |
-| Support et admin | `SUPPORT_URL`, `ADMIN_KEY` (≥ 16 caractères, ouvre `/admin`), `SELF_SERVICE_RESET_DAYS` (0 = PC libéré par le support seulement), `FREE_TWEAKS` (11), `PREMIUM_TWEAKS` (198) (chiffres affichés sur la page compte) | défaut de `FREE_TWEAKS` (11) différent des 73 réglages gratuits décidés le 04/11 ; valeur sur Railway **À VÉRIFIER** |
+| Support et admin | `SUPPORT_URL`, `ADMIN_KEY` (≥ 16 caractères, ouvre `/admin`), `SELF_SERVICE_RESET_DAYS` (0 = PC libéré par le support seulement), `FREE_TWEAKS` (68), `PREMIUM_TWEAKS` (218) (chiffres affichés sur la page compte) | défauts passés de 11 et 198 à 68 et 218 le 28/11 (q75, « 68 free tweaks » partout), dans `staging` ; à ne pas mettre dans Railway, sauf pour les changer |
 | Affiliation | `AFFILIATE_GOAL` (3), `AFFILIATE_HOLD_DAYS` (0), `AFFILIATE_REWARD_MONTHS` (6), `AFFILIATE_REWARD_MAX` (1), `AFFILIATE_MAX_REFERRALS` (3), `AFFILIATE_DISCOUNT_PERCENT` (5), `AFFILIATE_DISCOUNT_DURATION` (`once`) | [[Promotions et affiliation]] |
-| Cerveau du vault | `CERVEAU_GITHUB_TOKEN` (jeton GitHub « fine-grained », dépôt `kaliso-dev/rago` seulement, plus `kaliso-dev/Rago-Client` (privé) depuis le 25/11, et `kaliso-dev/RAGO-OS-` ou `kaliso-dev/network-server-rago` s'ils deviennent privés, **Contents : Read-only**), `CERVEAUX` (vide = cerveaux Rago Optimizer, RAGO-OS, Rago Client et Serveur Minecraft Rago, 25/11), `CERVEAU_BRANCH` (`staging`), `CERVEAU_REPO` (`kaliso-dev/rago`), `CERVEAU_SOURCE`, `CERVEAU_DIR` (local) | sans jeton, le [[Cerveau du vault]] ne lit le dépôt que tant qu'il est public ; **à mettre dans Railway, staging et prod, avant que le dépôt passe en privé** (PR #85 du Cerveau ; en prod depuis la PR #87 du 10/11) |
-| Lancement | `LAUNCH_AT`, `PREVIEW_KEY` | inutiles depuis le 10/10 |
+| Cerveau du vault | `CERVEAU_GITHUB_TOKEN` (jeton GitHub « fine-grained », dépôt `kaliso-dev/rago` seulement, plus `kaliso-dev/Rago-Client` (privé) depuis le 25/11, **plus `kaliso-dev/rago-design` (privé) depuis le 27/11** (sinon le cerveau Rago Design affiche « Ajoute rago-design au jeton CERVEAU_GITHUB_TOKEN »), et `kaliso-dev/RAGO-OS-` ou `kaliso-dev/network-server-rago` s'ils deviennent privés, **Contents : Read-only**), `CERVEAUX` (vide = cerveaux Rago Optimizer, RAGO-OS, Rago Client et Serveur Minecraft Rago, 25/11, et l'explorateur Rago Design, 27/11 ; `id|Nom|dossier|dépôt|branche|fichiers`), `CERVEAU_BRANCH` (`staging`), `CERVEAU_REPO` (`kaliso-dev/rago`), `CERVEAU_SOURCE`, `CERVEAU_DIR` (local) | sans jeton, le [[Cerveau du vault]] ne lit le dépôt que tant qu'il est public ; **dans Railway en staging et en prod, jeton « All repositories »** (Sofiene, 28/11 ; q98 réglée) (PR #85 du Cerveau ; en prod depuis la PR #87 du 10/11) |
 | Connexion Google/Discord | `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `DISCORD_LOGIN=1` (bouton Discord ; utilise `DISCORD_CLIENT_ID`/`SECRET`) | [[Connexion Google et Discord]] |
 | Discord, rôle Pro (les 5 ensemble) | `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `DISCORD_BOT_TOKEN`, `DISCORD_GUILD_ID`, `DISCORD_ROLE_ID` | **à retirer du staging** (sinon rôles donnés sur le vrai Discord) |
 | Discord, récompenses | `DISCORD_VIP_ROLE_ID`, `DISCORD_MVP_ROLE_ID`, `DISCORD_BOOST2_ROLE_ID` | |
@@ -33,7 +32,7 @@ Obligatoires en prod (sinon le serveur refuse de démarrer) : `DATABASE_URL`, `S
 
 Sur staging, à **ne pas** mettre : `LICENSE_SIGNING_KEY`, `SESSION_SECRET` (le staging fabrique les siennes), toutes les `DISCORD_*` (sauf serveur Discord de test), `INSTALLER_OBJECT`. Clés Stripe : toujours `sk_test_` et les prix/webhook de test.
 
-**Absentes de `licensing/.env.example`** (lues par `config.js` mais pas dans le modèle, au 10/11) : `ADMIN_KEY`, `APP_ENV`, `AVATAR_BUCKET`, `FREE_TWEAKS`, `GEOIP_ASN_URL`, `GEOIP_CITY_URL`, `INSTALLER_FILENAME`, `INSTALLER_PATH`, `INSTALLER_URL`, `PORT`, `PREMIUM_TWEAKS`, `RAILWAY_ENVIRONMENT_NAME`, `STRIPE_PRICE_ID`, `UPDATE_NOTES`, `UPDATE_PAUSED`, `UPDATE_ROLLOUT`. Lues hors de `config.js` : `DEV_SEED` ([[server.js]]), `RAILWAY_GIT_COMMIT_SHA` et `RAILWAY_GIT_BRANCH` ([[admin.js (serveur)]]), `TEST_DATABASE_URL` ([[Tests du serveur]]). `npm run local` retire les variables réelles ([[local.js]]).
+**Absentes de `licensing/.env.example`** (lues par `config.js` mais pas dans le modèle, au 10/11) : `ADMIN_KEY`, `APP_ENV`, `AVATAR_BUCKET`, `GEOIP_ASN_URL`, `GEOIP_CITY_URL`, `INSTALLER_FILENAME`, `INSTALLER_PATH`, `INSTALLER_URL`, `PORT`, `RAILWAY_ENVIRONMENT_NAME`, `STRIPE_PRICE_ID`, `UPDATE_NOTES`, `UPDATE_PAUSED`, `UPDATE_ROLLOUT`. Lues hors de `config.js` : `DEV_SEED` ([[server.js]]), `RAILWAY_GIT_COMMIT_SHA` et `RAILWAY_GIT_BRANCH` ([[admin.js (serveur)]]), `TEST_DATABASE_URL` ([[Tests du serveur]]). `npm run local` retire les variables réelles ([[local.js]]).
 
 ## GitHub (Settings → Secrets and variables → Actions)
 | Type | Nom | Usage |
@@ -45,7 +44,7 @@ Sur staging, à **ne pas** mettre : `LICENSE_SIGNING_KEY`, `SESSION_SECRET` (le 
 | Variable | `SITE_URL`, `STAGING_SITE_URL`, `SUPPORT_URL`, `RAGO_UPDATER_PUBKEY` | liens de l'app, clé publique de mise à jour |
 
 ## Netlify
-`STAGING_ACCOUNT_URL` (aperçus et staging), `PREVIEW_KEY`, `LAUNCH_AT` ([[Netlify]]).
+`STAGING_ACCOUNT_URL` (aperçus et staging) ([[Netlify]]). `PREVIEW_KEY` et `LAUNCH_AT` (protection d'avant lancement) ne sont plus lues depuis le 28/11 (q79) : Sofiene peut les supprimer de Netlify et de Railway.
 
 ## App, à la compilation (posées par la CI)
 `RAGO_API_BASE`, `RAGO_LICENSE_PUBKEY`, `RAGO_SCRIPTS_SECRET` (Rust, `build.rs`) ; `VITE_SITE_URL`, `VITE_ACCOUNT_URL`, `VITE_SUPPORT_URL`, `VITE_RAGO_SERVER` (interface) ; `TAURI_CONFIG` (facultatif : identifiant de l'app, sinon lu dans `tauri.conf.json`). Effets : [[Architecture de l'app]].

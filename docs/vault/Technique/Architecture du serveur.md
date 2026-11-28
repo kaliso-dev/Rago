@@ -1,7 +1,7 @@
 ---
 type: technique
 tags: [technique, serveur, architecture]
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # Architecture du serveur
 
@@ -51,10 +51,10 @@ Autres dossiers : `scripts/admin.js` (`npm run admin -- <commande>`, support), `
 - En-têtes de sécurité stricts (`secureHeaders`), sauf images des e-mails et photos (`cross-origin`).
 - **Contrôle d'origine** des POST de formulaires (pas l'API ni le webhook) : refus 403 si `Origin` n'est pas le serveur.
 - **Limite de taille** : 64 Ko par requête, 1 Mo pour le webhook, 5 Mo + 64 Ko pour une photo.
-- Verrou d'avant lancement sur `/signup`, `/buy`, `/download`, `/affiliate` jusqu'à `LAUNCH_AT` (passé depuis le 10/10, donc inactif), contourné par le cookie `rago_preview` (`/acces/<PREVIEW_KEY>`).
+- Plus de verrou d'avant lancement : `LAUNCH_AT`, `PREVIEW_KEY`, `/acces/<clé>` et le cookie `rago_preview` sont retirés dans `staging` le 28/11 (q79) ; la prod les a encore (inactifs depuis le 10/10).
 - **Limites de débit en mémoire** (`rateLimiter`, une `Map` par processus, remise à zéro au redémarrage) : connexion 10 par email et IP et 50 par IP en 15 min, blocage après 20 échecs sur un email sauf pour une IP déjà connue ; inscription 10/h par IP et 5 e-mails de code/h par adresse ; code d'inscription 30 essais / 15 min ; mot de passe oublié 5/h par IP et 3/h par e-mail ; retour Google/Discord 30/h ; changement de mot de passe 10 / 15 min ; photo et avis 20/h ; Discord 10/h ; téléchargement 30/h ; connexion de l'app par le navigateur 30/h ; refresh 30/h par licence ; jeton Rago Route 60/h ; API compte 300/h ; mises à jour 120/h par IP (fichier 20/h) ; tests réseau 30/h par IP ; admin 10 essais/h. Tableau complet : [[app.js]].
 - Adresse du visiteur : avec `TRUST_PROXY=1` (Railway), `X-Real-IP`, sinon le **dernier** saut de `X-Forwarded-For` (les précédents sont écrits par le client) ; sans, l'adresse de la connexion.
-- Cookies : `rg_session` (session web, 30 jours, `httpOnly`, `SameSite=Lax`, `Secure` en prod), `rg_claim` (achat à rattacher, 2 jours, signé avec `SESSION_SECRET`), `rg_ref` (code d'affilié, 30 jours), `rg_signup` (inscription en attente du code, 24 h, chemin `/signup`), `rg_oauth` (connexion Google/Discord en cours : fournisseur, `state`, vérificateur PKCE, page de retour ; 10 min, chemin `/auth`), `rg_discord` (liaison du Discord en cours, 10 min, chemin `/account/discord`), `rago_preview` (30 jours), `rago_admin` (admin, 7 jours, chemin `/admin`, `SameSite=Strict`).
+- Cookies : `rg_session` (session web, 30 jours, `httpOnly`, `SameSite=Lax`, `Secure` en prod), `rg_claim` (achat à rattacher, 2 jours, signé avec `SESSION_SECRET`), `rg_ref` (code d'affilié, 30 jours), `rg_signup` (inscription en attente du code, 24 h, chemin `/signup`), `rg_oauth` (connexion Google/Discord en cours : fournisseur, `state`, vérificateur PKCE, page de retour ; 10 min, chemin `/auth`), `rg_discord` (liaison du Discord en cours, 10 min, chemin `/account/discord`), `rago_admin` (admin, 7 jours, chemin `/admin`, `SameSite=Strict`).
 - Erreurs : sous `/api/` toujours au format `{ "error": { "code", "message" } }` (contrat de l'app) ; ailleurs une page HTML.
 
 ## 5. Tâches périodiques

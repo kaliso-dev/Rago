@@ -13,6 +13,7 @@
 <tr><td>Your public name, profile photo (resized to 256 × 256 pixels, with its metadata removed) and your review: rating, comment, app version and dates</td><td>Showing your review on our site and your profile in the app. Your public name, photo, rating and comment are public.</td></tr>
 <tr><td>If you link your Discord account: its Discord user ID and username</td><td>Adding you to our Discord server and giving you the Premium role while your Premium is active, then removing it when Premium ends. We don't keep your Discord sign-in: it's revoked right after linking. You can unlink anytime from your account page.</td></tr>
 <tr><td>If you start a free trial: your email, the subscription ID and Stripe's fingerprint of your card (a code that recognizes the same card, not its number)</td><td>Giving each person and each card one free trial</td></tr>
+<tr><td>If you start a free trial: a fingerprint of your IP address (a keyed hash that recognizes the same network, not the address itself) and the date</td><td>Giving each network one free trial</td></tr>
 <tr><td>If you join our Discord server: your Discord ID, when your Discord account was created, when you joined and left, and which invite you used (and so who invited you)</td><td>Counting the friends each member invites, to give the VIP and MVP roles and their rewards, and not counting accounts created to cheat</td></tr>
 <tr><td>A log of license events (purchase, activation, dispute, blocked activation with IP address)</td><td>Security and support</td></tr>
 <tr><td>IP address, kept briefly in memory</td><td>Limiting sign-in and download attempts</td></tr>
@@ -31,7 +32,7 @@
 <li><strong>rg_signup</strong>: remembers the account you're creating while you type the code we emailed you, for 24 hours. Necessary.</li>
 <li><strong>rg_oauth</strong>: checks that the Google or Discord account coming back to our site is the sign-in you started, for 10 minutes. Only set when you sign in with Google or Discord. Necessary.</li>
 <li><strong>rg_discord</strong>: checks that the Discord account coming back from Discord's authorization page is linked to your account, for 10 minutes. Only set when you link Discord. Necessary.</li>
-<li><strong>rago_preview</strong> and <strong>rago_admin</strong>: let our team open the site before a launch and the admin pages. Only set for team members. Necessary.</li>
+<li><strong>rago_admin</strong>: lets our team open the admin pages. Only set for team members. Necessary.</li>
 <li><strong>rg_ref</strong> (cookie on the account server) and <strong>rago_ref</strong> (browser storage on this site): remember an affiliate code from a share link for 30 days.</li>
 <li><strong>rago_promo_seen</strong>, <strong>rago_promo_seen_code</strong> and <strong>rago_promo_claimed</strong> (browser storage on this site): remember that the welcome offer was shown, so it isn't shown again for 30 days, and the discount code you claimed, so it is applied at checkout. Clearing your browser data removes them.</li>
 </ul>
@@ -57,6 +58,7 @@
 <li>Your review and profile photo: until you delete them or your account. A replaced photo is deleted right away.</li>
 <li>Security log: 12 months.</li>
 <li>Free trial records (email, card fingerprint): 2 years after the trial started.</li>
+<li>Fingerprint of the IP address of a free trial: 6 months after the trial started.</li>
 <li>Discord server records: while you're a member, then 12 months after you leave.</li>
 <li>Sign-up codes: deleted within a day.</li>
 <li>Network test results: 12 months.</li>

@@ -1,4 +1,5 @@
-//! Scripts batch des réglages, générés par tools/build_catalog.py et embarqués dans le binaire.
+//! Scripts batch des réglages, générés par tools/build_catalog_v6.py (`npm run catalog`, qui lance aussi
+//! tools/build_catalog.py pour l'ancien programme) et embarqués dans le binaire.
 //!
 //! Tous les scripts sont chiffrés dans l'exe (voir seal.rs) : aucune commande n'y est en clair. Ceux du plan
 //! gratuit et les variantes de retour arrière s'ouvrent avec une clé reconstruite dans le binaire (ils doivent

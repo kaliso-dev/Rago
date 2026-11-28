@@ -3,7 +3,7 @@ type: code
 tags: [code, app, react, page, presets, support]
 fichier: app/src/pages/Share.tsx
 lignes: 541
-maj: 2026-11-25
+maj: 2026-11-28
 ---
 # Share.tsx
 
@@ -77,7 +77,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11, commit `ee77d4f`), ave
 ## Erreurs et cas limites
 - Le code se recalcule à chaque changement de la liste. Le hook suit le contenu (`setupKey` = la liste jointe par des virgules) et non la référence du tableau, qui change à chaque rendu du store.
 - Le nom donné à un preset importé sans nom est « Preset d'un ami ».
-- Le commentaire de [[lib.rs]] au-dessus de `save_preset_file` parle encore d'un « code RAGO1-… » : les codes créés sont en `RAGO2_` depuis la 1.2.0 (voir [[share.ts]]). Commentaire en retard, sans effet.
+- Le commentaire de [[lib.rs]] au-dessus de `save_preset_file` parle du code `RAGO2_…` (corrigé le 28/11, q83 ; voir [[share.ts]]).
 
 ## Simulateur
 Avec `npm run window` ([[api.ts]], `mockApi`) : « Enregistrer en fichier .rago » télécharge le fichier par le navigateur, « Ouvrir un fichier .rago » passe par un sélecteur de fichier du navigateur, le rapport est un texte d'exemple écrit comme celui de [[report.rs]] (en-tête, ligne de ce qui est masqué, PC de démo, réglages appliqués et historique de la démo), et « Afficher dans le dossier » ne fait rien.

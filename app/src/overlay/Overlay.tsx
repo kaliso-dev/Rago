@@ -259,7 +259,7 @@ export function Overlay() {
           </button>
         </div>
         {cleaned && (
-          <p className={`ignote${cleaned.bad ? " bad" : ""}`}>
+          <p className={`ignote${cleaned.bad ? " bad igcf" : ""}`}>
             <I n={cleaned.bad ? "alert" : "check"} />
             {cleaned.text}
           </p>

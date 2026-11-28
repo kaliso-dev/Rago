@@ -1,11 +1,11 @@
 ---
 type: règle
 tags: [technique, sécurité, règle]
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # Clés et secrets
 
-**Jamais de valeur de secret ici ni ailleurs** (chat, Linear, commit, capture) : seulement les noms. Voir [[Règles de travail]].
+**Jamais de valeur de secret ici ni ailleurs** (chat, Rago Hub, commit, capture) : seulement les noms. Voir [[Règles de travail]].
 
 ## Interdits absolus
 - Ne jamais changer la clé de signature des licences (table `server_secrets`, variable `LICENSE_SIGNING_KEY`), ne jamais vider `server_secrets`, **ne jamais lancer `npm run keys`**. Un jeton devenu invalide déclencherait la [[Remise à zéro]] chez tous les joueurs.
@@ -27,7 +27,7 @@ Les valeurs ne sont écrites nulle part ailleurs (ni chat, ni vault). La clé de
 Liste complète, rangée par service avec leurs défauts : [[Variables d'environnement]].
 - **GitHub secrets** : `RAGO_API_BASE`, `RAGO_LICENSE_PUBKEY`, `RAGO_SCRIPTS_SECRET`, `STAGING_RAGO_API_BASE`, `STAGING_RAGO_LICENSE_PUBKEY`, `TAURI_SIGNING_PRIVATE_KEY`, `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`. **Variables** : `SITE_URL`, `SUPPORT_URL`, `STAGING_SITE_URL`, `RAGO_UPDATER_PUBKEY`.
 - **Railway** : `NODE_ENV`, `PUBLIC_URL`, `DATABASE_URL`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `SCRIPTS_SECRET`, `INSTALLER_VERSION`, `INSTALLER_OBJECT`, `UPDATE_ROLLOUT`, `UPDATE_PAUSED`, `STRIPE_PRICE_LIFETIME` (le montant attendu, `LIFETIME_PRICE`, est une constante du code dans `billing.js`, pas une variable), `ADMIN_KEY` (ouvre `/admin`), `LICENSE_SIGNING_KEY` et `SESSION_SECRET` (facultatives : sinon dans `server_secrets`), `DISCORD_*` (dont `DISCORD_LOGIN=1`), clés Google OAuth ; staging : `APP_ENV=staging`, `ROUTE_TESTERS` (e-mails autorisés à avoir un jeton Rago Route sur le serveur de test, séparés par des virgules ; pas un secret, 08/11, [[Proxy]]). Liste complète : `licensing/.env.example`.
-- **Netlify** : `PREVIEW_KEY`, `LAUNCH_AT`, `STAGING_ACCOUNT_URL`.
+- **Netlify** : `STAGING_ACCOUNT_URL` (`PREVIEW_KEY` et `LAUNCH_AT` ne servent plus depuis le 28/11, q79 : à supprimer).
 - Sauvegarde hors ligne de la clé de signature : `npm run admin -- export-keys`.
 
 ## Où les clés vivent dans le code

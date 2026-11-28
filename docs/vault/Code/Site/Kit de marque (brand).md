@@ -3,13 +3,13 @@ type: code
 tags: [code, marque, design]
 fichier: brand/
 lignes: 96
-maj: 2026-11-22
+maj: 2026-11-28
 ---
 # Kit de marque (brand)
 
 Le dossier `brand/` du dépôt : kit de marque **v5 « Match day »** du 22/11/2026 ([[Charte graphique]]). Résumé (`README.md`), charte en images (`charte/`), voix en anglais (`voice-en.md`), jetons (`tokens/`) et fichiers du logo (`logo/`). Fiche parente : [[Code du site]].
 
-CONFIRMÉ (branche du site v5, PR #109 vers `staging`, 22/11). Le kit a été copié depuis le dossier partagé `rago-redesign/rendus-v5/marque/` (`logo/` sans le sous-dossier `abandonnes/`, `tokens/`, `charte-1…5.jpg`). Retirés le même jour : la charte v1.2 `charte.html`, l'outil de rendu `tools/export-logo.js` et ses polices Geist, et les fichiers abandonnés du logo (`rago-mark-white.svg`, `rago-mark-mono.svg`, `rago-wordmark-mono.svg`, `png/rago-mark-white-512.png`, `installer/header.png`, `installer/sidebar.png`). « lignes » = `README.md` (23) + `voice-en.md` (73).
+CONFIRMÉ (branche du site v5, PR #109 vers `staging`, 22/11). Le kit a été copié depuis le kit `rendus-v5/marque/` (aujourd'hui dans le dépôt privé `kaliso-dev/rago-design`) (`logo/` sans le sous-dossier `abandonnes/`, `tokens/`, `charte-1…5.jpg`). Retirés le même jour : la charte v1.2 `charte.html`, l'outil de rendu `tools/export-logo.js` et ses polices Geist, et les fichiers abandonnés du logo (`rago-mark-white.svg`, `rago-mark-mono.svg`, `rago-wordmark-mono.svg`, `png/rago-mark-white-512.png`, `installer/header.png`, `installer/sidebar.png`). « lignes » = `README.md` (23) + `voice-en.md` (73).
 
 ## Plan du dossier
 | Chemin | Rôle | Note |
@@ -49,7 +49,7 @@ CONFIRMÉ (branche du site v5, PR #109 vers `staging`, 22/11). Le kit a été co
 | `web/` | `favicon.svg`, `favicon.ico` (16/32/48), `favicon-32.png`, `apple-touch-icon.png` (180), `og-image.png`, `og-launch.png`, `og-route.png` (1200 × 630) |
 | `installer/` | fichiers de Tauri et NSIS : `icon.ico`, `icon.png`, `32x32.png`, `128x128.png`, `128x128@2x.png`, `sidebar.bmp` et `@2x`, `header.bmp` et `@2x` |
 
-Les SVG contiennent un manifeste C2PA dans `<metadata>` (provenance du fichier). Le logo d'Adam (création proposée) est un autre sujet : [[Logo création d'Adam]].
+Les SVG contiennent un manifeste C2PA dans `<metadata>` (provenance du fichier).
 
 ## Écarts connus (22/11)
 - `voice-en.md` dit encore « App sections (12) … 199 tweaks in total » (218 tweaks distincts aujourd'hui, 10 sections de tweaks).

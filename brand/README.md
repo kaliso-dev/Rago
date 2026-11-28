@@ -7,7 +7,7 @@ Remplace le kit v1.2 du 7 octobre (Geist, verre, R transparent). La charte compl
 - `rago-mark.svg` : le R seul. `rago-app-icon.svg` (tuile blanche, 256) et `rago-app-icon-32.svg`, `rago-favicon.svg` (16 px), `rago-app-tile.svg` (plein cadre : avatars, Apple).
 - `rago-lockup-app.svg` (R rouge + AGO blanc, comme dans l'app), `rago-lockup-app-ink.svg` (fond clair), `rago-lockup.svg` (tuile + RAGO, barres du site), `rago-wordmark-white.svg` / `-ink.svg` (nom complet). Texte vectorisé en Barlow Condensed Black Italic.
 - `rago.ico` (16 à 256), `png/` (icônes 16 à 1024, avatar `rago-tile-512.png`, lockups 1200), `web/` (favicons, apple-touch 180, `og-image`, `og-launch`, `og-route` en 1200 × 630), `installer/` (fichiers Tauri et NSIS).
-- Le site utilise `web/*` : `favicon.*`, `apple-touch-icon.png`, `og-image.png` et `og-launch.png` sont copiés dans `site/`, `og-route.png` dans `site/media/`. Après une copie, relancer `python3 site/tools/build.py` (l'adresse des images de partage change avec leur contenu).
+- Le site utilise `web/*` : `favicon.*`, `apple-touch-icon.png` et `og-image.png` sont copiés dans `site/` (`og-launch` servait au compte à rebours d’avant lancement, retiré le 28/11), `og-route.png` dans `site/media/`. Après une copie, relancer `python3 site/tools/build.py` (l'adresse des images de partage change avec leur contenu).
 - App : `sh app/tools/sync_icons.sh` reprend `brand/logo` (icônes, installeur, favicon).
 
 ## Couleurs, typo, formes
@@ -20,4 +20,4 @@ Remplace le kit v1.2 du 7 octobre (Geist, verre, R transparent). La charte compl
 Le site, les pages compte et l'app sont en anglais US : référence **`voice-en.md`**. Tagline : *Every millisecond counts.*
 
 ## Régénérer
-Les fichiers du kit sont produits par les scripts de la maquette (`/mnt/project-files/rago-redesign/rendus-v5/outils/marque/` : `gen_brand.py`, `gen_tokens.py`, `gen_charte.py`), Python 3 avec fontTools, brotli et uharfbuzz, Playwright, ImageMagick pour les .ico. Ils écrivent dans le dossier du projet, puis on copie ici.
+Les fichiers du kit sont produits par les scripts de la maquette (dépôt privé `kaliso-dev/rago-design`, dossier `rendus-v5/outils/marque/` ; chemin d'origine `/mnt/project-files/rago-redesign/`, voir le README de ce dépôt : `gen_brand.py`, `gen_tokens.py`, `gen_charte.py`), Python 3 avec fontTools, brotli et uharfbuzz, Playwright, ImageMagick pour les .ico. Ils écrivent dans le dossier du projet, puis on copie ici.

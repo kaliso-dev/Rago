@@ -1,9 +1,11 @@
 // Stripe Checkout (subscription, or the one-time Lifetime price), billing portal and webhooks.
 import Stripe from 'stripe';
+import { createHmac } from 'node:crypto';
 import { audit } from './db.js';
 import { fulfillCheckoutSession, revokeForCharge, setLicenseStatus, syncSubscription } from './licensing.js';
 import { codeFull, getAffiliate, voidReferrals } from './affiliates.js';
-import { addRouteWithPremium, followPremium, isRouteCheckout, isRouteSubscription, routePriceText, syncRouteSubscription } from './route-addon.js';
+import { onInvoicePaid, onPaymentFailed } from './dunning.js';
+import { addRouteWithPremium, followPremium, isRouteCheckout, isRouteSubscription, routeOfCharge, routePriceText, stopOrphanRoutes, stopRouteForCharge, syncRouteSubscription } from './route-addon.js';
 
 export function createStripe(cfg) {
   return cfg.stripeSecretKey ? new Stripe(cfg.stripeSecretKey) : null;
@@ -88,7 +90,7 @@ const routeText = (trialEnds, interval) => trialEnds
   ? `Rago Route is included in the free trial, then ${routePriceText('month')} on top of Premium, from ${trialEnds}, as its own subscription on this card.`
   : `With Rago Route: ${routePriceText(interval)} on top of Premium, as its own subscription on this card, charged today and every ${interval === 'year' ? 'year' : 'month'}.`;
 
-async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, ref, promotionCode, trialEnd, replaces, trial = false, withRoute = false } = {}) {
+async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, ref, promotionCode, trialEnd, replaces, trial = false, withRoute = false, email = null, trialIp = null } = {}) {
   // Free trial (2026-11-04): only on a subscription, never with a reward still running (trialEnd). After the trial, the
   // player pays monthly (decision of 2026-11-10): a trial checkout always takes the monthly price, whatever was picked.
   const trialOk = trial && interval !== 'lifetime' && !trialEnd && cfg.trialDays > 0 && !!cfg.stripePriceMonthly;
@@ -96,12 +98,13 @@ async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, r
   const trialDays = trialOk && choice?.interval === 'month' ? cfg.trialDays : 0;
   // Rago Route with Premium: subscriptions only (Lifetime adds it from the account).
   const route = withRoute && !!choice.interval && !!cfg.stripePriceRoute;
-  const metadata = { product: RAGO_PRODUCT, ...(choice.interval ? { interval: choice.interval } : {}), ...(choice.plan ? { plan: choice.plan } : {}), ...(ref ? { ref } : {}), ...(trialDays ? { trial: String(trialDays) } : {}), ...(route ? { route: '1' } : {}) };
+  const metadata = { product: RAGO_PRODUCT, ...(choice.interval ? { interval: choice.interval } : {}), ...(choice.plan ? { plan: choice.plan } : {}), ...(ref ? { ref } : {}), ...(trialDays ? { trial: String(trialDays) } : {}), ...(trialDays && trialIp ? { trial_ip: trialIp } : {}), ...(route ? { route: '1' } : {}) };
   const common = {
     line_items: [{ price: choice.price, quantity: 1 }],
     success_url: `${cfg.publicUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: cfg.cancelUrl,
-    ...(customerId ? { customer: customerId } : { customer_email: user?.email }),
+    // Signed out: the email checked on /buy (2026-11-27, q103), pre-filled in Checkout.
+    ...(customerId ? { customer: customerId } : { customer_email: user?.email || email || undefined }),
     client_reference_id: user?.id,
     // A code from the link is already applied; otherwise the buyer can type one (affiliate code, RAGO15…).
     ...(promotionCode ? { discounts: [{ promotion_code: promotionCode }] } : { allow_promotion_codes: true }),
@@ -127,6 +130,9 @@ async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, r
       ...common,
       mode: 'subscription',
       payment_method_collection: 'always',
+      // A card only for a free trial (2026-11-27, q104: « carte requise pour essai gratuit pas paypal »): « one trial
+      // per person » compares the card. Paying without a trial keeps every method of the Stripe account (PayPal…).
+      payment_method_types: ['card'],
       subscription_data: { metadata, trial_period_days: trialDays, trial_settings: { end_behavior: { missing_payment_method: 'cancel' } } },
       custom_text: custom(`${trialDays} days free, then your card is charged on ${ends} and at each renewal. ${route ? `${routeText(ends)} ` : ''}Cancel anytime before ${ends} from your account and you pay nothing. One free trial per person. Rago Optimizer Premium works on one Windows PC. You create your account right after.`),
     });
@@ -138,6 +144,20 @@ async function buildCheckout(stripe, cfg, user, { interval, customerId, terms, r
     subscription_data: { metadata, ...(trialEnd && trialEnd > Date.now() / 1000 + 2 * 86400 ? { trial_end: trialEnd } : {}) },
     custom_text: custom(`${route ? `${routeText(null, choice.interval)} ` : ''}Rago Optimizer Premium works on one Windows PC. Cancel anytime from your account. You create your account right after paying.`),
   });
+}
+
+/** How long a network keeps its free trial used (2026-11-27, q104: 6 months, validated by Sofiene). */
+export const TRIAL_IP_DAYS = 183;
+
+/**
+ * The fingerprint of the buyer's IP for « one free trial per network » (q104): HMAC-SHA256 with TRIAL_IP_SALT, never the
+ * IP itself. No salt set, or no IP: null, and only the email and card rules apply.
+ */
+export const trialIpHash = (cfg, ip) => (cfg.trialIpSalt && ip && ip !== 'unknown' ? createHmac('sha256', cfg.trialIpSalt).update(String(ip)).digest('hex') : null);
+
+/** Whether this network started a free trial in the last 6 months. */
+export async function trialIpUsed(db, hash, now = Date.now()) {
+  return !!hash && !!(await db.get('SELECT 1 FROM trial_ips WHERE ip_hash = ? AND started_at > ? LIMIT 1', [hash, now - TRIAL_IP_DAYS * 86400 * 1000]));
 }
 
 /**
@@ -160,8 +180,15 @@ export async function settleTrial(db, stripe, session, sub, license, log = conso
   } catch (err) {
     log.error?.('[stripe] trial card not read:', err.message);
   }
-  const before = await db.get(`SELECT subscription_id FROM trials WHERE subscription_id <> ? AND (email = ?${card ? ' OR card_fingerprint = ?' : ''}) LIMIT 1`,
+  let before = await db.get(`SELECT subscription_id FROM trials WHERE subscription_id <> ? AND (email = ?${card ? ' OR card_fingerprint = ?' : ''}) LIMIT 1`,
     card ? [sub.id, email, card] : [sub.id, email]);
+  // One trial per network too (2026-11-27, q104): the hash of the IP that opened the checkout, kept 6 months. /buy
+  // already refuses the trial on a used network; this catches two checkouts opened at the same time.
+  const ipHash = /^[0-9a-f]{64}$/.test(session.metadata.trial_ip || '') ? session.metadata.trial_ip : null;
+  if (!before && ipHash) {
+    const used = await db.get('SELECT 1 FROM trial_ips WHERE ip_hash = ? AND subscription_id <> ? AND started_at > ?', [ipHash, sub.id, Date.now() - TRIAL_IP_DAYS * 86400 * 1000]);
+    if (used) before = { subscription_id: 'same network' };
+  }
   let chargedNow = false;
   if (before) {
     try {
@@ -173,6 +200,7 @@ export async function settleTrial(db, stripe, session, sub, license, log = conso
   }
   await db.run(`INSERT INTO trials (subscription_id, email, card_fingerprint, license_id, started_at, charged_now) VALUES (?, ?, ?, ?, ?, ?)
     ON CONFLICT (subscription_id) DO NOTHING`, [sub.id, email, card, license?.id || null, Date.now(), chargedNow]);
+  if (ipHash && !chargedNow) await db.run('INSERT INTO trial_ips (ip_hash, subscription_id, started_at) VALUES (?, ?, ?) ON CONFLICT (subscription_id) DO NOTHING', [ipHash, sub.id, Date.now()]);
   await audit(db, chargedNow ? 'trial.refused' : 'trial.started', { licenseId: license?.id || null, userId: license?.user_id || null, detail: { subscription: sub.id, ...(before ? { earlier: before.subscription_id } : {}) } });
   return chargedNow ? 'charged_now' : 'trial';
 }
@@ -355,13 +383,26 @@ async function cancelSubscriptions(stripe, licenses, log) {
   }
 }
 
+/** A Checkout paid with another email than the one /buy checked, and that email already has Premium (q103). */
+async function flagChangedEmail(db, session, log) {
+  const asked = String(session.customer_email || '').trim().toLowerCase();
+  const paid = String(session.customer_details?.email || '').trim().toLowerCase();
+  if (!asked || !paid || asked === paid) return false;
+  const held = await db.get(`SELECT l.id FROM licenses l LEFT JOIN users u ON u.id = l.user_id WHERE l.status = 'active' AND l.plan <> 'reward'
+    AND (l.email = ? OR u.email = ?) AND COALESCE(l.stripe_session_id, '') <> ? LIMIT 1`, [paid, paid, session.id || '']);
+  if (!held) return false;
+  log?.error?.(`[stripe] checkout ${session.id}: paid with ${paid} instead of ${asked}, which already has Premium. Second purchase: check it and refund it in Stripe if needed.`);
+  await audit(db, 'purchase.email_changed_has_premium', { licenseId: held.id, detail: { checkout: session.id } });
+  return true;
+}
+
 /**
  * Handles a verified Stripe event. Returns a short label for logs.
  * `onLicense(license, claimToken)` runs when a new license was created (to send the email).
  * Subscription events re-read the subscription from Stripe, so events arriving out of order can't
  * bring back an old state.
  */
-export async function handleStripeEvent(db, event, { stripe, cfg = {}, onLicense, log } = {}) {
+export async function handleStripeEvent(db, event, { stripe, cfg = {}, onLicense, log, mailer = null } = {}) {
   const seen = await db.get('SELECT 1 FROM stripe_events WHERE id = ?', [event.id]);
   if (seen) return 'duplicate';
   let label = 'ignored';
@@ -379,6 +420,9 @@ export async function handleStripeEvent(db, event, { stripe, cfg = {}, onLicense
       if (!isRagoCheckout(obj)) { label = 'not_rago'; break; }
       const sub = obj.mode === 'subscription' && obj.subscription && stripe
         ? await stripe.subscriptions.retrieve(idOf(obj.subscription)) : null;
+      // q103 (2026-11-27): /buy checked the email it pre-filled. A buyer who typed another one in Checkout, already with
+      // Premium, paid twice: flagged for Sofiene (log and /admin journal), never refunded automatically.
+      await flagChangedEmail(db, obj, log);
       const out = await fulfillCheckoutSession(db, obj, sub);
       // Free trial: one per person; the email says when the first payment comes (or that it was charged now).
       const trial = out.license && stripe ? await settleTrial(db, stripe, obj, sub, out.license, log) : null;
@@ -400,6 +444,8 @@ export async function handleStripeEvent(db, event, { stripe, cfg = {}, onLicense
         ? idOf(obj.subscription ?? obj.parent?.subscription_details?.subscription) : obj.id;
       if (!subId) break;
       const sub = stripe ? await stripe.subscriptions.retrieve(subId) : obj;
+      // A payment arrived: an open failure (q110) is over, nothing is revoked.
+      if (event.type === 'invoice.paid') await onInvoicePaid(db, obj);
       if (isRouteSubscription(sub)) {
         label = `route:${await syncRouteSubscription(db, sub)}`;
       } else {
@@ -409,16 +455,28 @@ export async function handleStripeEvent(db, event, { stripe, cfg = {}, onLicense
       }
       break;
     }
+    // A subscription payment refused (2026-11-27, q110): after a free trial, Premium ends now; a subscriber who paid
+    // before gets 3 days (emails, then the hourly sweep ends it). Lifetime has no subscription: never here.
+    case 'invoice.payment_failed': {
+      label = await onPaymentFailed(db, stripe, obj, { mailer, log });
+      break;
+    }
     case 'charge.refunded':
     case 'charge.dispute.created': {
       // Full refunds only; a partial refund (e.g. a goodwill discount) keeps the license.
       if (event.type === 'charge.refunded' && !obj.refunded) break;
       const reason = event.type === 'charge.refunded' ? 'refunded' : 'disputed';
+      // A Rago Route payment (2026-11-27): only the option stops. Before, its refund revoked the monthly or yearly
+      // Premium of the same Stripe customer.
+      const route = await routeOfCharge(db, stripe, obj, log);
+      if (route) { label = `route:${await stopRouteForCharge(db, stripe, route, reason, log)}`; break; }
       let customer = idOf(obj.customer);
       if (!customer && obj.charge && stripe) customer = idOf((await stripe.charges.retrieve(idOf(obj.charge))).customer);
       const revoked = await revokeForCharge(db, { paymentIntent: idOf(obj.payment_intent), customer }, reason);
       await voidReferrals(db, revoked.map((l) => l.id), reason);
       await cancelSubscriptions(stripe, revoked, log);
+      // A refunded Lifetime (or subscription) with Rago Route: the option stops now, not at the hourly sweep.
+      if (revoked.length) await stopOrphanRoutes(db, stripe, log);
       label = `revoked:${revoked.length}`;
       break;
     }
@@ -434,7 +492,7 @@ export async function handleStripeEvent(db, event, { stripe, cfg = {}, onLicense
 /** The events the webhook destination sends (docs/MISE-EN-LIGNE.md, step 6). */
 export const WEBHOOK_EVENTS = Object.freeze(['checkout.session.completed', 'checkout.session.async_payment_succeeded',
   'customer.subscription.created', 'customer.subscription.updated', 'customer.subscription.deleted',
-  'customer.subscription.paused', 'customer.subscription.resumed', 'invoice.paid', 'charge.refunded', 'charge.dispute.created']);
+  'customer.subscription.paused', 'customer.subscription.resumed', 'invoice.paid', 'invoice.payment_failed', 'charge.refunded', 'charge.dispute.created']);
 
 /** Licenses bought with the test keys (Checkout Session id cs_test_…) that still give Premium. */
 export const activeTestLicenses = (db) =>
@@ -573,6 +631,9 @@ export async function stripeChecks(stripe, cfg, { db = null, webhook = {} } = {}
     const gaps = [];
     if (!conf.features?.subscription_cancel?.enabled) gaps.push('la résiliation n’est pas proposée');
     if (!conf.business_profile?.terms_of_service_url || !conf.business_profile?.privacy_policy_url) gaps.push('il manque les liens Conditions et Confidentialité');
+    // q111 (2026-11-27, « on coupe cette option ») : one license per subscription, so the quantity must not change.
+    const update = conf.features?.subscription_update;
+    if (update?.enabled && (update.products || []).some((p) => p.adjustable_quantity?.enabled)) gaps.push('« Changer de formule » laisse changer la quantité : décoche-la (Paramètres → Facturation → Portail client → Abonnements)');
     add('Portail client', gaps.length ? 'warn' : 'ok', gaps.length ? `${gaps.join(', ')}.` : 'Enregistré, résiliation proposée.');
   }
 

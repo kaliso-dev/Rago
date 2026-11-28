@@ -1,7 +1,7 @@
 ---
 type: historique
 tags: [historique]
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # Pull requests
 
@@ -17,7 +17,7 @@ Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08
 - **153 PR** : 137 fusionnées, 15 fermées sans fusion, 1 ouverte (#136 accueil du site v6). Fermées sans fusion le 26/11 : #71 (bot communauté vers la prod, code déjà en prod par la #105) et #106 (vault de la 1.3.0, repris par la #153) ; le 27/11 : #143 (ouverte par erreur vers la prod).
 - Cible des #95 à #153 : 10 vers la prod (#101, #103, #105, #114, #117, #143, #145, #150, #151, #152), 49 vers `staging`. Les #150 à #152 ([[Rago Hub]]) sont allées directement en prod ; leur `.claude/` a été recopié dans `staging` le 27/11 (q130). Pour les #1 à #94, compté le 11/11 : 47 vers la prod, 43 vers `staging`, 1 vers une autre branche.
 - PR #107 à #141 : la refonte v5 et v6 du [[New Brand Rago]]. PR #142 à #149 : cerveaux des autres projets dans le [[Cerveau du vault]] et vault du passage au nouveau compte ; #150 à #152 : [[Rago Hub]] ; #153 : vault regroupé.
-- Fermées sans fusion, entre autres : #16, #21, #24, #26, #28, #46, #47, #50, #51, #69. Les branches de ces PR sont gardées (décision du 01/11, [[Branches et environnements]]).
+- Fermées sans fusion, entre autres : #16, #21, #24, #26, #28, #46, #47, #50, #51, #69. Leurs branches ont été supprimées le 28/11 (q81, q138) ; voir [[Branches du dépôt]].
 - Jusqu'au 12/10, une PR vers `staging` était souvent suivie d'une PR « port en prod » qui reprenait le même travail (#25 → #27, #29 → #30, #31 + #32 → #33, #34 à #37 → #38, #39 + #41 + #42 → #43, #44 → #45). Depuis la 1.2, la prod n'a plus reçu que des PR ciblées (#59, #61, #63, #66 à #68, #72, #81, #87) : le 10/11, `staging` avait environ 160 commits de plus que la prod, et **le code de l'app sur la branche de prod était encore la 1.1.14** (les exe sont construits depuis `staging`).
 
 ## Tableau
@@ -174,7 +174,18 @@ Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08
 | 152 | Rago Hub : hook v3 (tâches en direct, texte en cours, outils hub.py) | `rago-hub-hook` → prod | 26/11 11:22 | 26/11 11:24 | fusionnée | [[Rago Hub]] ; recopiée dans `staging` le 27/11 ; dernier commit de la prod au 27/11 (`ac4107a`) | Rago Hub (À VÉRIFIER) |
 | 153 | Vault : version finale regroupée sur staging | `vault-final` → `staging` | 26/11 18:56 | 26/11 19:00 | fusionnée | Vault regroupé avant le passage au nouveau compte ; reprend les #71 et #106 | Rago Hub (chef) |
 | 154 | Vault : PR #143 fermée, PR #71/#106 fermées, Rago Hub en prod | `claude/pr143-vault-update-8po627` → `staging` | 27/11 | 27/11 | fusionnée | Vault seulement (et point 4 de `CLAUDE.md`) | Rago Hub (fil HUB-767f02) |
+| 157 | Rago Route : abonnement à part aussi pour le Lifetime | `claude/rago-route-lifetime-subscription-wpg03a` → `staging` | 27/11 | 27/11 | fusionnée (`ade181b`) | Décision du 27/11 (q101, q108) : option Rago Route seule pour un Lifetime, remboursement d'un paiement de l'option sans toucher au Premium, site et vault ([[Paiements Stripe]]) ; les #154 à #156 sont décrites par leurs fils | fil HUB-d1451f |
 | 158 | Hook Rago Hub dans staging (q130) + vault : q130 et q99 traitées | `claude/pr143-vault-update-8po627` → `staging` | 27/11 | 27/11 | fusionnée | `.claude/` recopié de la prod (`ac4107a`) ; vault | Rago Hub (fil HUB-767f02) |
+| 159 | Page compte : résilier sur place ; un Premium par e-mail ; essai à la carte, un par réseau | `claude/rago-account-cancel-wpg03a` → `staging` | 27/11 | 27/11 | fusionnée (`d2391b1`) | q102 à q105 du 27/11 ([[Paiements Stripe]], [[Table trial_ips]]) | fil HUB-d1451f |
+| 160 | Paiements refusés : fin immédiate après l'essai, 3 jours de grâce sinon, rattrapage (q110, q111) | `claude/rago-failed-payments-wpg03a` → `staging` | 27/11 | 27/11 | fusionnée (`f5d0782`) | [[dunning.js]], [[Table payment_failures]], [[Paiements Stripe]] | fil HUB-d1451f |
+| 161 | Paiements refusés (q110, q111) (prod) | `claude/rago-failed-payments-prod-wpg03a` → prod | 27/11 | 27/11 | fusionnée (`c4e0d31`) | Commit serveur de la #160 seul (cherry-pick de `364a961` sur `ac4107a`), sans #157 ni #159 ni la refonte ([[dunning.js]]) | fil HUB-d1451f |
+| 165 | Page compte : « Discord reward » partout, formule gratuite pour un Premium terminé (q113, q114) | `claude/rago-account-page-rewards-nrvczv` → `staging` | 27/11 | 28/11 | fusionnée | [[views.js]] : nom d'une récompense selon `licenses.source`, carte Formule « Free » pour un Premium terminé ou impayé, phrase propre à l'achat de test (q115) | fil HUB-0940b8 |
+| 166 | Sortir design/rago-redesign vers le dépôt privé rago-design (réparer le Cerveau) | `claude/move-rago-redesign` → `staging` | 28/11 | 28/11 | fusionnée | Panne du [[Cerveau du vault]] causée par la #156 (archive de 239 Mo, limite 120 Mo) : maquettes, kit et scripts déplacés dans le dépôt privé `kaliso-dev/rago-design`, `design/` retiré, vault à jour ; aucun code touché ([[New Brand Rago]]) | fil HUB-f17370 (Mac) |
+| 167 | Cerveau : explorateur « Rago Design » (images chargées à la demande) | `claude/cerveau-rago-design-explorer-7m3b9m` → `staging` | 27/11 | 28/11 | fusionnée (`b0516ed`) | 5ᵉ choix du menu du [[Cerveau du vault]] : fichiers du dépôt privé `kaliso-dev/rago-design` (arborescence par l'API GitHub, fichiers à la demande en flux, 25 Mo max, cache de 50 Mo) ; `licensing/` seul ; go de Sofiene le 28/11 | HUB-36ae53 |
+| 168 | Cerveau : explorateur « Rago Design » (prod, portage de la #167) | `claude/cerveau-rago-design-explorer-prod-7m3b9m` → prod | 28/11 | 28/11 | fusionnée (`2b8a471`) | Partie `licensing/` de la #167 seule (11 fichiers, sans #157 ni #159) ; 120 tests réussis | HUB-36ae53 |
+| 173 | Prod : e-mail d'achat « Link your Discord » (q84) + `FREE_TWEAKS` = 68 par défaut (q75) | `claude/rago-prod-mail-discord-28-11` → prod | 28/11 | 28/11 | fusionnée | [[mailer.js]], [[config.js]] seuls, sans rien d'autre de `staging` | fil HUB-8a2cf4 |
+| 174 | Site + serveur : décisions du 28/11 (q75, q77, q79, q82, q83, q84) | `claude/rago-decisions-28-11-jd9kyh` → `staging` | 28/11 | 28/11 | fusionnée | [[sync_app.py]], [[page.html]], [[mailer.js]], [[config.js]], [[app.js]], [[netlify.toml]], [[Fichiers de la racine du dépôt]] | fil HUB-8a2cf4 |
+| 176 | Site v7 « fonctionnel » : premier jet (part de la #136, brouillon) | `claude/rago-site-functional-clean-ug9dj8` → `staging` | 28/11 | — | **brouillon**, ouverte | [[page.html]], [[v5.js]] ; contient aussi les commits de la #136 | fil HUB-5284af |
 
 ## Ce qui est arrivé sur `staging` sans PR
 Certains fils ont poussé leurs commits directement sur `staging`, après un accord de Sofiene dans le fil (CONFIRMÉ par `git branch -r --contains`) :
@@ -182,10 +193,7 @@ Certains fils ont poussé leurs commits directement sur `staging`, après un acc
 - **Vault** : des commits de vault seuls, poussés par les fils sur `staging` (règle du 10/11, q57 : Claude peut pousser seul ce qui ne touche que le vault, [[Décisions]]). Exemple : `9d63ce8` (10/11).
 
 ## Branches poussées mais jamais fusionnées
-- `claude/project-thread-tzbch5` (fil « Sauvegarder les clés et régler Supabase », 10/11) : 2 commits de vault **jamais arrivés sur `staging`** (`8246bd4` : l'e-mail de Supabase parle d'un dépassement de quota, pas d'une suppression ; `803b9d6` : décision de Sofiene sur Supabase). Le contenu est repris dans [[Journal]], [[Décisions]], [[Supabase]], [[Clés et secrets]], [[Prochaines étapes]] et [[État actuel]] (PR #85 du [[Cerveau du vault]], 10/11).
-- `claude/project-thread-8teqin` (charte 2.2, PR #69 fermée) : gardée, travail abandonné ([[Décisions]]).
-- Les branches des versions non retenues 1.1.11 à 1.1.13 : voir [[Versions 1.1.11 à 1.1.13]].
-- Une branche temporaire sans préfixe `claude/` existe encore sur GitHub (4 commits du 29/10) ; elle servait au trailer de la 1.2, abandonné le 10/11 (voir [[Décisions]]). La supprimer revient à Sofiene.
+Toutes supprimées le 28/11 (décision de Sofiene, q138), sauf `trailer-4k-footage` (rushes du trailer 1.2, gardée). La charte 2.2 (`claude/project-thread-8teqin`, PR #69) est copiée sur le Mac de Sofiene dans `Rago data /charte-2.2/`. Détail et têtes des branches supprimées : [[Branches du dépôt]].
 
 ## Liens
 [[Fils du projet]] · [[Chronologie du projet]] · [[Journal]] · [[Historique des versions]] · [[Publier une version]]

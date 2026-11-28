@@ -284,8 +284,10 @@ RBW_TOUCHED = re.compile(r'(?i)SysMain|PcaSvc|\\DPS\b|sc (config|stop) DPS|\\BAM
                          r'|\\BFE\b|\\AppInfo\b|DCOMLaunch|PlugPlay|CDPUserSvc|DisableCMD|ScriptBlockLogging'
                          r'|EnableActivityFeed|EnablePrefetcher|Start_TrackDocs|\\AppCompat"')
 
-# Priorité par jeu (2026-10-21) : ce que les six jeux d'origine font vraiment (stratégie QoS DSCP 46, priorité haute
-# processeur et disque par IFEO), sans leur centaine de valeurs PerfOptions que Windows ne lit pas.
+# Priorité par jeu (2026-10-21) : ce que les six jeux d'origine font vraiment (stratégie QoS DSCP 46, priorité
+# processeur et disque par IFEO), sans leur centaine de valeurs PerfOptions que Windows ne lit pas. Processeur en
+# « supérieure à la normale » (6) depuis le 2026-11-13 et non plus « haute » (3) : en haute, le jeu prenait le
+# processeur à Discord (capture et encodage du stream) et aux autres programmes dès qu'il était plein (choix de Sofiene).
 # (variante, nom affiché, exe du jeu)
 GAMES = [
     ('pubg', 'PUBG', ['TslGame.exe']),
@@ -313,7 +315,7 @@ def game_priority(exes):
         lines.append(f'Reg.exe add "{q}" /v "Application Name" /t REG_SZ /d "{exe}" /f')
         lines += [f'Reg.exe add "{q}" /v "{k}" /t REG_SZ /d "{v}" /f' for k, v in QOS]
         p = 'HKLM\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Image File Execution Options\\' + exe + '\\PerfOptions'
-        lines.append(f'Reg.exe add "{p}" /v "CpuPriorityClass" /t REG_DWORD /d "3" /f')
+        lines.append(f'Reg.exe add "{p}" /v "CpuPriorityClass" /t REG_DWORD /d "6" /f')  # supérieure à la normale
         lines.append(f'Reg.exe add "{p}" /v "IoPriority" /t REG_DWORD /d "3" /f')
     return '\n'.join(lines)  # comme les scripts d'origine de pri_game
 
@@ -377,11 +379,11 @@ def game_presets():
     out = []
     for vid, name, tag, match, base in GAME_PRESETS:
         if base is COMPETITIVE:
-            desc = I(f'{name} at high priority, plus input, network and power for competitive play.',
-                     f'{name} en priorité haute, avec entrées, réseau et alimentation réglés pour le compétitif.')
+            desc = I(f'{name} at above normal priority, plus input, network and power for competitive play.',
+                     f'{name} en priorité supérieure à la normale, avec entrées, réseau et alimentation réglés pour le compétitif.')
         else:
-            desc = I(f'{name} at high priority, with power and network tuned for smooth play.',
-                     f'{name} en priorité haute, avec alimentation et réseau réglés pour un jeu fluide.')
+            desc = I(f'{name} at above normal priority, with power and network tuned for smooth play.',
+                     f'{name} en priorité supérieure à la normale, avec alimentation et réseau réglés pour un jeu fluide.')
         out.append({'id': 'game_' + vid, 'name': I(name), 'desc': desc, 'tweaks': [f'pri_game:{vid}'] + base,
                     'game': True, 'tag': tag, 'match': match})
     return out
@@ -1013,7 +1015,7 @@ par réglage appliqué, pour annuler après une déconnexion ou une fin de licen
 
 Priorité par jeu (pri_game), 1.2.0 (`add_games`, après l'audit) :
 - Valorant visait `ValorantClient-Win64-Shipping.exe`, qui n'existe pas : rien ne s'appliquait. La variante écrit
-  maintenant la stratégie QoS et la priorité haute de `VALORANT-Win64-Shipping.exe` ;
+  maintenant la stratégie QoS et la priorité de `VALORANT-Win64-Shipping.exe` ;
 - Fortnite, CS2, Apex et GTA V : nom d'appli de la stratégie QoS faux (`cs2.exe.exe`, `FortniteClient-Win64.exe`),
   donc marquage réseau sans effet ; Apex DirectX 12 (`r5apex_dx12.exe`), GTA V Enhanced (`GTA5_Enhanced.exe`) et
   CS:GO (`csgo.exe`) ajoutés ;
@@ -1021,7 +1023,11 @@ Priorité par jeu (pri_game), 1.2.0 (`add_games`, après l'audit) :
   111 valeurs PerfOptions par exe que Windows ignore (et un `CpuPriorityClass` 8, qui n'existe pas) ;
 - dix jeux ajoutés (`GAMES`) : PUBG, Roblox, Rainbow Six Siege, Overwatch 2, Marvel Rivals, The Finals, Escape from
   Tarkov, Rocket League, League of Legends, Minecraft Bedrock (`Minecraft.Windows.exe`). Seulement ce que Windows lit :
-  stratégie QoS DSCP 46, `CpuPriorityClass` et `IoPriority` à 3 (haute) dans les PerfOptions de l'exe ;
+  stratégie QoS DSCP 46, `CpuPriorityClass` à 6 (supérieure à la normale) et `IoPriority` à 3 (haute) dans les
+  PerfOptions de l'exe ;
+- `CpuPriorityClass` à 6 au lieu de 3 (haute) pour toutes les variantes depuis le 2026-11-13 : en haute, le jeu
+  passait avant Discord (capture et encodage du stream) et les autres programmes dès que le processeur était plein,
+  d'où des streams qui saccadent. L'app ramène à 6 au démarrage les 3 qu'elle avait écrits (`repair.rs`) ;
 - chaque variante écrit aussi `Do not use NLA` (chaîne « 1 ») sous `Tcpip\\QoS` : hors d'un domaine d'entreprise,
   Windows n'appliquait pas la stratégie QoS sans elle (GAME V1).
 

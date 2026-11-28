@@ -3,7 +3,7 @@ type: code
 tags: [code, site, python, catalogue]
 fichier: site/tools/sync_tweaks.py
 lignes: 168
-maj: 2026-11-22
+maj: 2026-11-28
 ---
 # sync_tweaks.py
 
@@ -75,7 +75,7 @@ Le 10/11 : aucun avertissement, aucune note (218 clés de chaque côté).
 ## Erreurs et cas limites
 - Un module sans icône dans `ICON` de [[page.html]] fait planter le script (`KeyError`).
 - Un marqueur `<!-- tw:… -->` absent fait planter `put()` (`ValueError`).
-- `n_free` compte les fiches distinctes dont l'id est dans `free.json` : **68**, alors que l'accueil affiche **73** (taille brute de `free.json`). À VÉRIFIER : lequel est le bon chiffre public.
+- `n_free` compte les fiches distinctes dont l'id est dans `free.json` : **68**, le chiffre public partout depuis le 28/11 (q75) ; [[sync_app.py]] le reprend pour l'accueil.
 
 ## Liens avec le reste
 - Lancé par [[sync_app.py]] (ou à la main) ; suivi de [[build.py]].

@@ -96,21 +96,26 @@ ${lines.map(([k, v], i) => `<tr><td style="padding:12px 18px;color:#8E8E98;font-
         ? 'Thanks for getting Rago Optimizer Premium. Create your account to get your license and download Rago Optimizer for Windows. If you already have an account with this email, just sign in.'
         : 'Thanks for getting Rago Optimizer Premium. Your license is on your account: download Rago Optimizer for Windows, sign in with the same email and click Activate.';
       const href = claimUrl || `${cfg.publicUrl}/account`;
-      const discord = cfg.supportUrl
-        ? 'Premium players get the Premium role on our Discord: join the server, open a ticket and give the email of your Rago Optimizer account. Staff check your license and add the role.'
-        : '';
+      // Discord Pro role (q84, 28/11/2026): with the role bot set up (cfg.discord), the player links Discord from the
+      // account page and the bot gives the role by itself. Without the bot, staff still add it from a ticket.
+      const accountUrl = `${cfg.publicUrl}/account`;
+      const discord = cfg.discord
+        ? { text: 'Premium players get the Premium role on our Discord. Link your Discord from your account page: the role is added automatically.', url: accountUrl, label: 'Link your Discord' }
+        : cfg.supportUrl
+          ? { text: 'Premium players get the Premium role on our Discord: join the server, open a ticket and give the email of your Rago Optimizer account. Staff check your license and add the role.', url: cfg.supportUrl, label: 'Join the Discord' }
+          : null;
       const html = `<p style="${P}">${esc(intro)}</p>
 ${table}${button(href, claimUrl ? 'Create your account' : 'Open your account')}
 ${claimUrl ? `<p style="${SMALL}">This link only works for your purchase. Keep it private.</p>` : ''}
 <p style="${SMALL}">${esc(waiver)}${cancelHtml} <a href="${esc(cfg.siteUrl)}/terms.html" style="${LINK}">Terms of Sale</a> &middot; <a href="${esc(cfg.siteUrl)}/terms.html#cancel" style="${LINK}">Cancellation</a></p>
-${discord ? `<p style="${SMALL}">${esc(discord)} <a href="${esc(cfg.supportUrl)}" style="${LINK}">Join the Discord</a></p>` : ''}`;
+${discord ? `<p style="${SMALL}">${esc(discord.text)} <a href="${esc(discord.url)}" style="${LINK}">${esc(discord.label)}</a></p>` : ''}`;
       const text = [
         `${trial ? 'Free trial started' : 'Payment confirmed'}. ${intro}`,
         ...lines.map(([k, v]) => `${k}: ${v}`),
         `${claimUrl ? 'Create your account' : 'Your account'}: ${href}`,
         `${waiver}${cancelText}`,
         `Terms: ${cfg.siteUrl}/terms.html  Cancellation: ${cfg.siteUrl}/terms.html#cancel`,
-        ...(discord ? [`${discord} ${cfg.supportUrl}`] : []),
+        ...(discord ? [`${discord.text} ${discord.label}: ${discord.url}`] : []),
       ].join('\n');
       return send(to, trial ? `Your ${trial.days}-day free trial of Rago Optimizer Premium` : 'Your Rago Optimizer Premium license', layout(cfg, trial ? 'Free trial started' : 'Payment confirmed', html), text);
     },
@@ -129,6 +134,30 @@ ${discord ? `<p style="${SMALL}">${esc(discord)} <a href="${esc(cfg.supportUrl)}
       const body = `${what}. ${until ? `Premium stays active until ${until}. ` : ''}No more charges. When it ends, Rago Optimizer puts back the settings its tweaks changed and goes back to the free plan. Changed your mind? Resume from the app's Settings or your account page before that date.`;
       return send(to, `${what}: Rago Optimizer Premium`,
         layout(cfg, sub.trial ? 'Free trial canceled' : 'Subscription canceled', `<p style="${P}">${esc(body)}</p>${button(`${cfg.publicUrl}/account`, 'Open your account')}`),
+        `${body}\nYour account: ${cfg.publicUrl}/account`);
+    },
+    // Failed payments (2026-11-27, q110). Texts to be validated by Sofiene.
+    /** A subscriber's payment failed: 3 days to update the card (`reminder`: the same, 2 days later). */
+    paymentFailed(to, { deadline, reminder = false }) {
+      const by = day(deadline);
+      const body = `We couldn't charge your card for Rago Optimizer Premium. Update your card before ${by}, or your Premium ends that day: Rago Optimizer then goes back to the free plan and puts back the settings its Premium tweaks changed.`;
+      const subject = reminder ? `Reminder: update your card before ${by} to keep Premium` : 'Payment failed: update your card to keep Premium';
+      return send(to, subject,
+        layout(cfg, reminder ? 'Your Premium ends soon' : 'Payment failed', `<p style="${P}">${esc(body)}</p>${button(`${cfg.publicUrl}/account`, 'Update your card')}<p style="${SMALL}">On your account page, open Invoices and billing to change the card. Already done? You can ignore this email.</p>`),
+        `${body}\nUpdate your card from your account (Invoices and billing): ${cfg.publicUrl}/account`);
+    },
+    /** The first payment after a free trial failed: the subscription is canceled now, back to the free plan. */
+    trialPaymentFailed(to) {
+      const body = "Your free trial of Rago Optimizer Premium ended and we couldn't charge your card, so your subscription is canceled and you're back on the free plan. Nothing was charged. At its next check, Rago Optimizer puts back the settings its Premium tweaks changed. Want Premium again? Get it from your account anytime.";
+      return send(to, "Your free trial ended and the payment failed: you're back on the free plan",
+        layout(cfg, 'Back on the free plan', `<p style="${P}">${esc(body)}</p>${button(`${cfg.publicUrl}/account`, 'Open your account')}`),
+        `${body}\nYour account: ${cfg.publicUrl}/account`);
+    },
+    /** A subscriber's payment stayed refused for 3 days: Premium ended. */
+    premiumEndedUnpaid(to) {
+      const body = "We couldn't charge your card for 3 days, so your Rago Optimizer Premium subscription is canceled and your account is back on the free plan. At its next check, Rago Optimizer puts back the settings its Premium tweaks changed. Get Premium again anytime from your account.";
+      return send(to, 'Your Rago Optimizer Premium ended: payment failed',
+        layout(cfg, 'Premium ended', `<p style="${P}">${esc(body)}</p>${button(`${cfg.publicUrl}/account`, 'Open your account')}`),
         `${body}\nYour account: ${cfg.publicUrl}/account`);
     },
     passwordReset(to, url) {

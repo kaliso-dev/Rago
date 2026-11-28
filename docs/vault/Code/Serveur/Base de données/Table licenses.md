@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, base-de-données]
 fichier: licensing/supabase/schema.sql
 lignes: 20-48, 123
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # Table licenses
 
@@ -21,7 +21,7 @@ Une ligne par achat (Stripe), licence offerte (support, admin) ou récompense (a
 | `email` | TEXT | NOT NULL | E-mail de l'achat ; `deleted-…` après suppression du compte | [[licensing.js]], [[support.js]] |
 | `status` | TEXT | NOT NULL, défaut `active` | `active` ou `revoked` | [[licensing.js]] (`setLicenseStatus`), [[support.js]] |
 | `status_reason` | TEXT | — | Raison : `refunded`, `disputed`, `manual`, `subscription_ended`, `replaced`, `duplicate`, `banned`, `deleted`, `test_mode`, ou saisie libre (`affiliate_fraud`…) | [[licensing.js]], [[billing.js]], [[admin.js (serveur)]] |
-| `source` | TEXT | NOT NULL, défaut `stripe` | `stripe`, `grant` (offerte), `affiliate`, `discord` (récompenses) | [[licensing.js]] |
+| `source` | TEXT | NOT NULL, défaut `stripe` | `stripe`, `grant` (offerte), `affiliate`, `discord` (récompenses) ; écrit à la création ; pour une licence `reward`, donne son nom sur la page compte (« Gift », « Affiliate reward », « Discord reward », q113 du 27/11) | [[licensing.js]], [[views.js]] |
 | `stripe_session_id` | TEXT | UNIQUE | Session Checkout (`cs_…`) : un achat ne crée qu'une licence | [[licensing.js]] (`fulfillCheckoutSession`) |
 | `stripe_payment_intent` | TEXT | — | Paiement (remboursements, litiges) | [[licensing.js]] |
 | `stripe_customer_id` | TEXT | — | Client Stripe (portail, réutilisé au prochain achat) | [[licensing.js]] |
@@ -59,6 +59,6 @@ Tables liées : [[Table users]], [[Table devices]], [[Table referrals]], [[Table
 
 ## À savoir avant de modifier
 
-- Les commentaires du schéma sont en retard : `status_reason` n'y cite que `refunded | disputed | manual`, `source` que `stripe | grant` et `plan` que `month | year | lifetime`.
+- Les commentaires du schéma listent toutes les valeurs écrites par le code depuis le 28/11 (q83) : `status_reason` (refunded, disputed, manual, subscription_ended, payment_failed, replaced, duplicate, banned, deleted, test_mode), `source` (stripe, grant, affiliate, discord), `plan` (month, year, lifetime, reward).
 - Un compte n'a qu'une licence active à la fois (vérifié par le code, pas par une contrainte).
 - Toute modification du schéma passe par [[schema.sql]] (changements idempotents seulement) : le serveur le rejoue à chaque démarrage ([[db.js]]).

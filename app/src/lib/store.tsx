@@ -1,12 +1,29 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { markChanged } from "./analysis";
 import { api, asLicenseError, isTauri, type AppliedView, type DoneEvent, type HistoryEntry, type ItemStatus, type LicenseError, type LicenseStatus, type ResetDone, type RunItem, type SystemInfo } from "./api";
-import { autoVariant, availability, catalog, retired, tweakModule, tweaks, type Lang, type Tweak, needsReboot } from "./catalog";
+import { autoVariant, availability, catalog, distinctKey, retired, tweakModule, tweaks, type Lang, type Tweak, needsReboot } from "./catalog";
 import { translate, type Key } from "./i18n";
 import free from "../data/free.json";
 
 /** Réglages ouverts sans licence. Le moteur Rust applique la même liste. */
 export const FREE = new Set<string>(free.tweaks);
+/** Nombre de réglages gratuits annoncé, compté comme le total (`totalTweaks`, 218) et comme la page Tweaks du site
+ * (site/tools/sync_tweaks.py) : une fiche par jumeau, la première rencontrée dans l'ordre du catalogue, gratuite si son
+ * id est dans free.json. free.json liste 73 ids, soit 68 fiches (Sofiene, 28/11, q75 : « 68 free tweaks » partout). */
+export const FREE_COUNT = (() => {
+  const seen = new Set<string>();
+  let n = 0;
+  for (const m of catalog.modules)
+    for (const s of m.sections)
+      for (const t of s.tweaks) {
+        if ("ref" in t) continue;
+        const k = distinctKey(t.id);
+        if (seen.has(k)) continue;
+        seen.add(k);
+        if (FREE.has(t.id)) n++;
+      }
+  return n;
+})();
 /** Réglages gratuits (des « tweak », pas les actions) appliqués en même temps sans licence (1.3.0 : 30). Le moteur
  * Rust applique la même limite (catalog::over_free_slots). */
 export const FREE_SLOTS: number = (free as { slots?: number }).slots ?? 0;

@@ -1,7 +1,7 @@
 ---
 type: carte
 tags: [technique]
-maj: 2026-11-12
+maj: 2026-11-28
 ---
 # Architecture
 
@@ -14,11 +14,11 @@ Monorepo GitHub `kaliso-dev/rago`, **public** (constaté le 10/11 ; Sofiene : «
 | `licensing/` | Serveur Node : comptes, licences, Stripe, mises à jour de l'app, tests réseau, bot Discord, pages de compte | [[Architecture du serveur]], [[API du serveur]] |
 | `licensing/supabase/schema.sql` | Schéma Postgres complet, rejoué à chaque démarrage | [[Supabase]] |
 | `site/` | Site de vente statique ; sources dans `site/src/`, pages publiées générées par `site/tools/build.py` | [[Netlify]], [[Site]], code : [[Code du site]], [[Fichiers publiés du site]] |
-| `netlify/`, `netlify.toml` | Fonction edge `launch-gate` (compte à rebours du lancement, inactive), script des aperçus `preview.sh`, redirections | [[Netlify]], code : [[netlify.toml]], [[preview.sh]], [[launch-gate.js]] |
+| `netlify/`, `netlify.toml` | Script des aperçus `preview.sh`, redirections (la fonction edge `launch-gate` est retirée le 28/11, q79) | [[Netlify]], code : [[netlify.toml]], [[preview.sh]] |
 | `proxy/` | Rago Route côté serveurs : `rago-route.py` (sortie et relais), `mcping.py`, `install.sh` généré par `fabriquer-install.py` | [[Infrastructure Rago Route]] |
 | `brand/` | Kit de marque : `tokens/` (CSS, JSON), `logo/`, `charte/` (images de la charte v5), `voice-en.md` | [[Charte graphique]], [[Voix et ton]], code : [[Kit de marque (brand)]], [[tokens.css (marque)]] |
 | `.github/workflows/` | `app-windows.yml`, `licensing-tests.yml`, `site-check.yml` | [[CI GitHub Actions]], code : [[Code de la CI et du dépôt]] |
-| `Dockerfile`, `_config.yml`, `.gitignore`, `.dockerignore` (racine) | `Dockerfile` : variante site + serveur sur un seul domaine, **non utilisée** (Railway utilise `licensing/Dockerfile`) ; `_config.yml` : réglage de GitHub Pages, **encore actif** et qui publie `docs/` (OBSERVÉ le 10/11) | [[Railway]], [[Fichiers de la racine du dépôt]] |
+| `_config.yml`, `.gitignore` (racine) | le `Dockerfile` et le `.dockerignore` de la racine (variante site + serveur jamais utilisée) sont supprimés le 28/11 (q82) : Railway construit `licensing/Dockerfile` ; `_config.yml` : réglage de GitHub Pages, coupé par Sofiene le 28/11 (q80), le vault n'est plus publié | [[Railway]], [[Fichiers de la racine du dépôt]] |
 | `docs/vault/`, `docs/tools/catalogue_vault.py` | Ce vault et le générateur des notes `Tweaks/` ; `docs/vault/Code/` : une note par fichier de code, rangées par brique, chacune avec sa note carte | [[Mettre à jour le vault]], [[Code du site]], [[Code de la CI et du dépôt]] |
 | `README.md`, `DEVELOPPEMENT.md`, `CLAUDE.md`, `app/README.md`, `licensing/README.md`, `licensing/docs/API.md`, `licensing/docs/MISE-EN-LIGNE.md` | Guides en français écrits pour Sofiene (et consignes pour Claude) ; certains chiffres (198 réglages, 11 gratuits) et le raccourci de la barre en jeu (Ctrl+Maj+R au lieu d'Alt+X) sont en retard sur le code, le vault fait foi | [[Sources]], [[Fichiers de la racine du dépôt]] |
 
@@ -45,7 +45,7 @@ Monorepo GitHub `kaliso-dev/rago`, **public** (constaté le 10/11 ; Sofiene : «
 4. **Mise à jour de l'app** : CI → artefact `.exe` + `.exe.sig` → Sofiene les dépose dans le bucket `downloads` de Supabase → `INSTALLER_VERSION` sur Railway → l'app interroge `/api/v1/update/windows/x86_64/<version>` au lancement et toutes les 4 h. Détail : [[Mise à jour automatique]], [[Publier une version]].
 5. **Téléchargement** : `/download` → lien signé Supabase de 5 min vers le `.exe` le plus récent du bucket. Le site affiche la version par `/api/v1/installer`.
 6. **Test réseau** : l'app mesure, puis `POST /api/v1/network/report` ; le serveur ajoute ville et fournisseur (bases DB-IP) et oublie l'IP ; `/admin/reseau` résume. Détail : [[Test réseau]], [[Proxy]].
-7. **Rago Route** (staging) : l'app demande `POST /api/v1/route/token` (jeton `typ: route`, 6 h, licence Premium active) → l'envoie chiffré à la sortie Vultr, qui le vérifie avec la clé publique du serveur. Détail : [[Infrastructure Rago Route]].
+7. **Rago Route** (en prod depuis la 1.3.0, 22/11) : l'app demande `POST /api/v1/route/token` (jeton `typ: route`, 6 h, licence Premium active) → l'envoie chiffré à la sortie Vultr, qui le vérifie avec la clé publique du serveur. Détail : [[Infrastructure Rago Route]].
 8. **Rôle Discord** : liaison depuis `/account/discord` (OAuth2) → le bot donne ou retire le rôle Pro selon la licence, toutes les 5 min et après chaque webhook. Détail : [[Bot communauté Discord]], [[Architecture du serveur]].
 
 ## Environnements

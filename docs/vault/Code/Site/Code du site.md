@@ -1,7 +1,7 @@
 ---
 type: carte
 tags: [code, site, netlify, marque, carte]
-maj: 2026-11-24
+maj: 2026-11-28
 ---
 # Code du site
 
@@ -33,7 +33,6 @@ Tout est CONFIRMÉ d'après le code de `staging` (10/11, commit `ee77d4f`), mis 
 | [[sync_partners.py]] | écrit les cartes partenaires dans `page.html` et `partners.html` |
 | [[sync_app.py]] | recopie les textes et compteurs de l'app dans `page.html`, puis lance `sync_tweaks.py` |
 | [[sync_tweaks.py]] | écrit la liste des tweaks de `tweaks.html` depuis le catalogue de l'app |
-| [[make_planet.py]] | dessine le globe filaire de la section Rago Route en SVG, dans `src/page.html` (lancé à la main) |
 | [[make_legal.py]] | génère `terms.html`, `privacy.html`, `404.html` au design v5 (texte lu dans `src/legal/`) |
 
 ### Publication (Netlify)
@@ -41,9 +40,7 @@ Tout est CONFIRMÉ d'après le code de `staging` (10/11, commit `ee77d4f`), mis 
 |---|---|
 | [[netlify.toml]] | configuration Netlify : dossier publié, commandes par contexte, en-têtes, redirections |
 | [[preview.sh]] | aperçus et `staging` : liens de compte vers le serveur de staging, ou coupés |
-| [[launch-gate.js]] | fonction edge du compte à rebours d'avant le 10/10 (avec `countdown.js` et les tests), inactive |
 | [[Fichiers publiés du site]] | inventaire de `site/` : ce qui est généré, par quoi, et ce qui est posé à la main |
-| [[recherche-conversion (site)]] | note de recherche du 04/10 rangée dans `site/` (non publiée, en partie périmée) |
 
 ### Marque (`brand/`)
 | Note | Rôle en une ligne |
@@ -58,7 +55,7 @@ Tout est CONFIRMÉ d'après le code de `staging` (10/11, commit `ee77d4f`), mis 
 ### 1. De l'app au site (quand le catalogue change)
 ```
 app/src/data/catalog.json ─┐
-app/src/data/free.json ────┼─> sync_app.py ──> site/src/page.html (dix cartes x-cap, compteurs, « Nearly 220 », « 73 of 218 »)
+app/src/data/free.json ────┼─> sync_app.py ──> site/src/page.html (dix cartes x-cap, compteurs, « Nearly 220 », « 68 of 218 »)
 app/src/lib/i18n.ts ───────┘        │
                                     └─> sync_tweaks.py ──> site/src/tweaks.html (218 fiches, nav, objectifs, « 68 free »)
 site/src/tweaks-copy.json ─────────────────┘   (icônes lues dans page.html : const ICON)
@@ -91,18 +88,16 @@ push sur la branche de prod ──> [build] : rm site/src site/tools site/*.md �
 push sur staging            ──> sh netlify/preview.sh ──> https://staging--rago-optimiser.netlify.app
 pull request                ──> sh netlify/preview.sh ──> https://deploy-preview-<N>--rago-optimiser.netlify.app
                                  (previewAccountBase = STAGING_ACCOUNT_URL, ou liens « #account-off »)
-toutes les requêtes ──> fonction edge launch-gate (laisse tout passer depuis le 10/10)
 ```
-Voir [[netlify.toml]], [[preview.sh]], [[launch-gate.js]] et [[Branches et environnements]].
+Voir [[netlify.toml]], [[preview.sh]] et [[Branches et environnements]].
 
 ### 5. Dans le navigateur
 Les pages appellent seulement les routes publiques du serveur de comptes ([[API du serveur]]) : `GET /api/v1/plans` (prix et essai), `/api/v1/promo` (pop-up), `/api/v1/reviews` (avis ; `?all=1` sur la page des avis), `/api/v1/installer` (version affichée). Le choix du serveur est le même dans toutes les pages : `localhost` et réseau local → `http://<hôte>:8787` (serveur local, `npm run local` dans `licensing/`) ; `*.netlify.app` → `previewAccountBase` ou rien ; sinon `https://account.rago-optimizer.com`. Les boutons d'achat, de compte et de téléchargement mènent aux pages du [[Serveur de licences]] (`/buy`, `/login`, `/signup`, `/affiliate`, `/download`, `/account/review`).
 
 ### 6. La marque
-Le kit v5 est produit hors du dépôt par les scripts de la maquette (`rago-redesign/rendus-v5/outils/marque/` dans le dossier partagé), copié dans `brand/logo/`, puis `brand/logo/web/` est copié à la main dans `site/` (favicons, `apple-touch-icon`, `og-image`, `og-launch`, `media/og-route.png`) ; l'app reprend ses icônes avec `app/tools/sync_icons.sh`. Les jetons de [[tokens.css (marque)]] sont recopiés à la main dans l'app et le serveur ; le site redéclare ses propres alias avec les mêmes valeurs.
+Le kit v5 est produit hors du dépôt par les scripts de la maquette (`rendus-v5/outils/marque/` du dépôt privé `kaliso-dev/rago-design`), copié dans `brand/logo/`, puis `brand/logo/web/` est copié à la main dans `site/` (favicons, `apple-touch-icon`, `og-image`, `media/og-route.png`) ; l'app reprend ses icônes avec `app/tools/sync_icons.sh`. Les jetons de [[tokens.css (marque)]] sont recopiés à la main dans l'app et le serveur ; le site redéclare ses propres alias avec les mêmes valeurs.
 
 ## Points d'attention (relevés le 10/11, revus le 22/11)
-- Deux chiffres du plan gratuit coexistent : **73** sur l'accueil (taille brute de `free.json`) et **68** sur la page Tweaks (tweaks distincts). À VÉRIFIER.
-- Les étoiles Google (`aggregateRating`, RAG-33, ajoutées le 17/10) ne sont plus dans [[page.html]] alors qu'un commentaire de [[build.py]] dit que la page les ajoute (toujours vrai en v5). À VÉRIFIER.
+- Plan gratuit : **68** partout (accueil, page Tweaks, page compte), décision de Sofiene du 28/11 (q75) ; [[sync_app.py]] reprend le compte de [[sync_tweaks.py]].
+- Étoiles Google (`aggregateRating`, RAG-33 du 17/10) : remises dans [[page.html]] le 28/11 (q77) après leur perte dans une fusion ; ajoutées aux données structurées de [[build.py]] dès 10 avis.
 - La section `#route` de [[page.html]] garde son bouton « Get notified on Discord » alors que Rago Route est en bêta dans Premium ; [[route.html]] n'a plus de texte d'attente depuis la page de vente du 11/11.
-- Le test de [[launch-gate.js]] échoue depuis la date du lancement (test daté, hors CI).

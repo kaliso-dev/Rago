@@ -10,7 +10,7 @@ OUT = os.path.join(HERE, '..')
 sys.path.insert(0, HERE)
 import sync_icons
 
-UPD = {'terms': 'November 13, 2026', 'privacy': 'November 10, 2026'}
+UPD = {'terms': 'November 13, 2026', 'privacy': 'November 28, 2026'}
 SITE = 'https://rago-optimizer.com'  # same as build.py
 ACC = 'https://account.rago-optimizer.com'
 DISCORD = 'https://discord.gg/cbCxCBx8vJ'

@@ -3,7 +3,7 @@ type: code
 tags: [code, ci, github-actions, yaml, app]
 fichier: .github/workflows/app-windows.yml
 lignes: 189
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # app-windows.yml
 
@@ -59,9 +59,6 @@ Aucun tag `app-v*` ni aucune release n'existe le 10/11 (OBSERVÉ par l'API GitHu
 
 ## Différences avec la branche de prod (10/11)
 La version de la branche de prod a les mêmes déclencheurs (PR #81) mais pas : l'entrée `version`, le groupe de concurrence par serveur et version, la vérification `https://`, l'étape « Mises à jour signées », l'étape PresentMon, ni le `.exe.sig` dans l'artefact. Peu importe pour les exe : on les fabrique depuis `staging`, une PR ou un lancement manuel.
-
-## Fichier voisin trompeur
-`app/ci/build-windows.yml` est une **ancienne copie** (07/10, push sur toutes les branches), hors de `.github/workflows/` : GitHub ne l'exécute pas.
 
 ## Liens avec le reste
 - Secrets et variables (noms, rôle) : [[Variables d'environnement]], [[Clés et secrets]] (la clé de signature des mises à jour ne doit jamais changer).

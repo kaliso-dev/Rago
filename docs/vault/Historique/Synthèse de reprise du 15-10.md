@@ -2,7 +2,7 @@
 type: historique
 tags: [historique, reprise, version]
 source: /mnt/project-files/synthese/SYNTHESE_REPRISE.md
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # Synthèse de reprise du 15-10
 
@@ -47,7 +47,7 @@ Elles sont toujours en vigueur ([[Décisions]], [[Règles de travail]]) :
 |---|---|
 | Partir de la 1.1.10 et n'ajouter que les correctifs urgents | Fait : [[Version 1.1.14]], en prod le 16/10 (base 1.1.10 et correctifs) |
 | Numéro 1.1.14 plutôt que 1.2.0 | Fait (1.1.14), puis la [[Version 1.2.0]] |
-| Sauvegarder les exe de la 1.1.10 (seule copie : des artefacts GitHub qui expirent le 08/01/2027) | Suite non connue (À VÉRIFIER) |
+| Sauvegarder les exe de la 1.1.10 (seule copie : des artefacts GitHub qui expirent le 08/01/2027) | Fait le 28/11 : copiés depuis les artefacts GitHub dans « Rago data/exe-1.1.10/ » sur le Mac de Sofiene (q89, [[Sources]]) |
 | Corriger la phrase fausse « the app measures ping before and after » dans les messages aux partenaires | Suite non connue (À VÉRIFIER) |
 | Échéances marketing de la semaine (post RBW du 16/10, anciens acheteurs du `.bat`, bilan RAG-16, places RAGO50) | Voir [[Partenaires et créateurs]] et [[Promotions et affiliation]] ; RAG-16 abandonné le 01/11 |
 

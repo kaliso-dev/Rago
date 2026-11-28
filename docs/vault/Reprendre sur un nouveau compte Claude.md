@@ -1,7 +1,7 @@
 ---
 type: règle
 tags: [règle, vault, reprise]
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # Reprendre sur un nouveau compte Claude
 
@@ -21,7 +21,7 @@ Le 25/11/2026, Sofiene passe sur un **abonnement Claude Team**, sur un nouveau c
    - `marketing/` (vidéos et leurs sources), `etude-marche-2026-11/`, `support-clients/`, `souris/`, `conseils-jeu/`, `couleurs-resolution/`, `presets-graphiques/`, `cerveau/`, `synapse/`, `admin-refonte/` : captures et documents cités par les notes ;
    - **Pas emporté** : `refonte-design/` (3,6 Go, captures de l'ancien design avant la refonte). Sofiene, 25/11 : « je ne récupère pas refonte design parce que new brand rago c'est le dernier nouveau design que j'ai fait ». Il reste seulement sur l'ancien compte.
    - `vault-patches/`, `vault-patchs/`, `vault/` : déjà appliqués au vault (vérifié pour les patchs du 13 au 14/11 : leurs commits sont dans `staging`), à garder seulement comme archive.
-2. **Le dossier partagé du projet « New Brand Rago »**, `rago-redesign/` : les 135 maquettes v5, le kit de marque et surtout **les scripts qui génèrent le CSS de l'app** (`rendus-v5/outils/`). Sans eux, les fichiers générés de `app/src/s5/` ne peuvent plus être refaits ([[New Brand Rago]], [[Maquettes v5 dans l'app (s5)]]). Téléchargé dans `Rago data ` ; le mettre aussi dans le dépôt : question q128 ([[Questions ouvertes]]).
+2. **Le dossier partagé du projet « New Brand Rago »**, `rago-redesign/` : les 135 maquettes v5, le kit de marque et surtout **les scripts qui génèrent le CSS de l'app** (`rendus-v5/outils/`). Sans eux, les fichiers générés de `app/src/s5/` ne peuvent plus être refaits ([[New Brand Rago]], [[Maquettes v5 dans l'app (s5)]]). **Fait le 27/11** : téléchargé sur le Mac de Sofiene (« Rago data », sur le Bureau) et sauvegardé en entier sur GitHub (q128, Sofiene : « oui bien sur sauvegarde tout sur le github ») : depuis le 28/11 dans le dépôt privé [`kaliso-dev/rago-design`](https://github.com/kaliso-dev/rago-design) (d'abord dans `design/rago-redesign/` de `rago`, sorti car l'archive de `staging` dépassait la limite de 120 Mo du [[Cerveau du vault]]). Un nouveau Claude le clone avec `gh repo clone kaliso-dev/rago-design` ; son `README.md` dit comment relancer les scripts.
 3. **Les artefacts claude.ai** de l'ancien compte, qu'un autre compte ne pourra peut-être plus ouvrir :
    - l'ancienne page des questions n'est **pas** emportée (Sofiene, 27/11, q129 : « ok continuons comme ça ») : les questions se posent dans le chat du Rago Hub et vivent dans [[Questions ouvertes]] ; le texte des 61 questions ouvertes au 25/11 reste archivé dans `docs/questions/questions-ouvertes-2026-11-25.md` (et `.json`) ;
    - l'artefact « Charte Rago », l'artefact « revue des maquettes » (version 16) et ceux de l'étude de marché ([[Sources]]).
@@ -31,7 +31,7 @@ Le 25/11/2026, Sofiene passe sur un **abonnement Claude Team**, sur un nouveau c
 ## Remettre en place sur le nouveau compte
 1. Créer le projet et y relier le dépôt `kaliso-dev/rago` (et les autres dépôts si besoin) ; reconnecter GitHub au compte `kaliso-dev` et installer l'app GitHub de Claude sur les dépôts.
 2. Coller les **instructions du projet** (texte de Sofiene, recopié ci-dessous).
-3. Reconnecter les connecteurs qui servent au projet : GitHub, Railway, Netlify, Stripe (lecture des ventes), Supabase, Linear, Resend, Firecrawl (lecture de sites), Kling (vidéos). Aucun secret n'est dans ce vault : les clés restent dans Railway, Netlify et GitHub ([[Clés et secrets]], [[Variables d'environnement]]).
+3. Reconnecter les connecteurs qui servent au projet : GitHub, Railway, Netlify, Stripe (lecture des ventes), Supabase, Resend, Firecrawl (lecture de sites), Kling (vidéos). Aucun secret n'est dans ce vault : les clés restent dans Railway, Netlify et GitHub ([[Clés et secrets]], [[Variables d'environnement]]).
 4. Si besoin, déposer dans le dossier du nouveau projet ce qui a été emporté (copie dans `/Users/kaliso/Desktop/Rago data `), sous les mêmes noms de dossiers, pour que les chemins cités par les notes restent justes.
 5. Premier fil : demander au nouveau Claude de lire le vault (ci-dessous) et de dire ce qui ne correspond plus.
 

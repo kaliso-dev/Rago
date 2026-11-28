@@ -2,7 +2,7 @@
 type: marketing
 tags: [marketing, rago-route, concurrence, site, conversion]
 source: https://claude.ai/artifact/NyWmDzuXV8iHKP7dmRbhYG
-maj: 2026-11-27
+maj: 2026-11-28
 ---
 # Page de vente Rago Route
 
@@ -11,13 +11,13 @@ Page de vente de [[Proxy|Rago Route]] ([[route.html]]), faite le 11/11 à la dem
 - **Dossier d'analyse** (Claude Doc) : « Rago Route : analyse et page de vente », https://claude.ai/artifact/NyWmDzuXV8iHKP7dmRbhYG. Ses analyses des joueurs et des concurrents restent valables ; ses parties sur la page et les clips décrivent les versions du 11/11, remplacées le 13/11.
 - **Huit analyses détaillées** (11/11, avec leurs sources) : `/mnt/project-files/rago-route-page/refonte/analyses/` ([[Sources]]).
 - **Captures de la version du 13/11** : `/mnt/project-files/rago-route-page/version-13-11/` (haut de page, fonctions et prix sur ordinateur ; haut et prix sur téléphone). Les autres dossiers de `rago-route-page/` montrent les versions du 11/11.
-- **État (13/11, soir)** : la nouvelle page est vérifiée en local (ordinateur et téléphone, aucune erreur, pas de défilement horizontal), **sur `staging` depuis le 13/11 au soir** (carte de choix : « Oui, envoie sur staging ») ; rien en prod. Sur ordinateur, la page fait 6 600 px de haut au lieu de 14 750.
+- **État (27/11)** : page vérifiée en local le 13/11 (ordinateur et téléphone, aucune erreur, pas de défilement horizontal), **en prod depuis le 22/11** avec la 1.3.0 ; Rago Route est **sorti en Beta avec la 1.3.0 le 22/11 et annoncé sur Discord** (Sofiene, 27/11). Sur ordinateur, la page fait 6 600 px de haut au lieu de 14 750.
 
 ## Le vrai problème des joueurs (OBSERVÉ, 11/11)
 - La plainte qui revient le plus : le ping affiché ne bouge pas pendant que le jeu gèle, puis saute. Sur 71 fils Reddit et Hypixel lus, les joueurs disent *lag spikes*, *rubberbanding*, *timed out*, *freezing* ; « jitter » et « bufferbloat » n'apparaissent jamais. La page vend donc la régularité (moins d'attente quand des paquets se perdent), **pas un ping plus bas**.
 - Test réseau de Rago ([[Test réseau]], 29/10 au 04/11) : **34 des 88 tests** vers Hypixel ont au moins un signe (gigue de 10 ms ou plus dans 32, pics dans 11, pertes dans 6). Ce sont des tests, pas des joueurs ni des connexions : la page ne l'affiche plus ; le test P0-8 doit recompter par PC et par pays.
 - Ce que Rago Route ne règle pas, et la page le dit : la distance (Hypixel est en Amérique du Nord, à 94 ms environ de Paris), un serveur qui lague, les FPS, une connexion de la maison pleine.
-- **Objection n°1 : la peur du blocage de compte.** Hypixel bloque un compte dont l'activité paraît anormale, et des joueurs racontent ces blocages avec ExitLag. Avec Rago Route, Hypixel voit l'adresse de Paris, la même pour tous les joueurs, et il coupe déjà les connexions venant de Frankfurt (09/11, [[Proxy]]). Avant l'annonce (décision du 27/11, q99, [[Décisions]]) : le test P0-9 (3 à 5 comptes de l'équipe en même temps par Paris, puis une semaine normale) **et** un message à Hypixel pour déclarer l'adresse de sortie de Paris. La réponse de la FAQ sur les blocages reste cachée (porte de test) jusqu'à la fin du test.
+- **Objection n°1 : la peur du blocage de compte.** Hypixel bloque un compte dont l'activité paraît anormale, et des joueurs racontent ces blocages avec ExitLag. Avec Rago Route, Hypixel voit l'adresse de Paris, la même pour tous les joueurs, et il coupe déjà les connexions venant de Frankfurt (09/11, [[Proxy]]). Décision du 27/11 (q99, [[Décisions]]) : le test P0-9 (3 à 5 comptes de l'équipe en même temps par Paris, puis une semaine normale) **et** un message à Hypixel pour déclarer l'adresse de sortie de Paris ; Rago Route étant déjà sorti et annoncé (22/11), ce sont des vérifications à faire au plus vite, plus une condition d'annonce. La réponse de la FAQ sur les blocages reste cachée (porte de test) jusqu'à la fin du test.
 
 ## Concurrents (pages lues le 11/11)
 Lu avec WebFetch : citations à revoir dans un navigateur avant de les reprendre. Détail, pages et dates : analyses 4 et 5.
@@ -51,7 +51,7 @@ Pas revendiqué : le nombre de routes (d'autres en ont 3 à 5), « instant » (l
 
 ## La page, section par section
 Depuis le 13/11, la page va droit au but : ce que fait Rago Route, chaque fonction avec une petite animation simple et sa preuve, ce qu'il ne fait pas, puis le prix. Détail du code et des textes dans [[route.html]].
-1. **« Lose packets, not fights. »** (titre À VÉRIFIER, question q105) : ce que c'est en trois phrases, les boutons « Start 3-day free trial » et « Already Premium? Add it », le prix près du bouton ; à droite, une animation : deux routes vers la sortie de Rago à Paris, un paquet perdu sur la route 1 dont la copie arrive par la route 2.
+1. **« Lose packets, not fights. »** (titre gardé par Sofiene le 27/11, q105 : « on garde le premier titre qui est percutant ») : ce que c'est en trois phrases, les boutons « Start 3-day free trial » et « Already Premium? Add it », le prix près du bouton ; à droite, une animation : deux routes vers la sortie de Rago à Paris, un paquet perdu sur la route 1 dont la copie arrive par la route 2.
 2. **« One lost packet freezes everything behind it. »** : le problème en deux phrases, puis les **six fonctions** (deux routes, paquets de secours, renvoi rapide, session gardée, téléphone derrière une porte, compteurs de l'app), chacune avec son animation et sa preuve datée.
 3. **Trois faits** (rien dans le jeu, chiffré et signé, fair play) et **« What it won't do »**.
 4. **« Three steps, then play. »**
@@ -62,7 +62,7 @@ Retiré le 13/11 : la scène dessinée du jeu et les emplacements de clips de ga
 
 ## Choix faits pour vendre honnêtement
 - Les boutons d'essai (en-tête, héros, carte « Premium + Rago Route », fin, barre du téléphone) mènent au vrai paiement **avec Rago Route coché** (`/buy?interval=month&trial=1&route=1`), l'annuel à `/buy?interval=year&route=1` ; « Already Premium? Add it » et la carte de l'option mènent à `/buy/route`. Un compte qui a déjà Premium et clique sur l'essai est envoyé par le serveur sur `/buy/route`, pour qu'il n'achète pas un 2e Premium ([[Paiements Stripe]]).
-- Près de chaque bouton d'essai : « Card required: free for 3 days, then $5.99 + $3 a month, charged automatically unless you cancel before. », et en bas « Cancel in two clicks in the app, or anytime from your account » ; hors Windows : « The 3 days start when you pay, so start your trial at your PC. » La frise dit « After 3 days », jamais « day 3 ».
+- Près de chaque bouton d'essai : « Card required: free for 3 days, then $5.99 + $3 a month, charged automatically unless you cancel before. », et en bas « Cancel anytime from the app or from your account page » (27/11, q102) ; « Card required for the trial, one per person, card and network » (q104) ; hors Windows : « The 3 days start when you pay, so start your trial at your PC. » La frise dit « After 3 days », jamais « day 3 ».
 - La carte « Premium + Rago Route » montre la frise (Today, After 3 days, Anytime), ce qui est compris, l'annuel (« Skip the trial: $47.98 a year for both », 6 mois offerts sur les deux), « one per person » ; la carte de l'option donne toutes les fonctions, l'abonnement à part résiliable, l'arrêt avec le Premium, la bêta sans promesse de ping ni de hitreg, et le lien vers les CGV (section 4a, [[Conformité juridique]]). Dessous : « Secure checkout with Stripe · Prices in US dollars · Cancel anytime · No refunds: try it free first · Premium without Rago Route ».
 - Logos : les aperçus de ChatGPT montrent le bloc d'herbe, le H de Hypixel et un personnage proche de Steve ; la page garde des icônes neutres avec les noms écrits (Minecraft, Hypixel), pour ne pas utiliser leurs marques.
 - Jamais : « the only », « the first », « zero risk », « guaranteed », « no ban », « instant », « FEC » seul, « up to X % » sans source, un meilleur hitreg, « we'll remind you » ([[Voix et ton]]).
@@ -83,11 +83,12 @@ La page n'affiche que des mesures, chacune avec ses conditions et sa date ; les 
 - Direction artistique : aucune police ni couleur nouvelle, celles de l'accueil.
 - Image de partage `media/og-route.png` (1 200 × 630) : le titre « Lose packets, not fights. » et le paquet perdu sur la route 1 dont la copie arrive par la route 2.
 
-## Avant l'annonce
-- **Tests P0-1 à P0-9** (protocoles dans le dossier, partie 6) : ping sur Windows avec et sans (P0-1), pertes simulées avec et sans (P0-2), ressenti à l'aveugle (P0-3), vraies coupures (P0-4), téléphone sur Windows (P0-5), Minemen (P0-6), cinq soirées de jeu normal et une vraie capture de l'onglet (P0-7), nouvel export du test réseau par PC et par pays (P0-8), blocage de compte avec 3 à 5 comptes de l'équipe (P0-9, en premier).
-- **Questions ouvertes** ([[Questions ouvertes]]) : q97 (autres régions), q100 (bouton « Get notified on Discord » de l'accueil), q101 (Lifetime et Rago Route), q102 (annuler depuis le site en 2 clics), q103 (abonné non connecté qui paie un 2e abonnement), q104 (« Card required » alors que PayPal passe aussi), q105 (titre de la page).
-- **En prod avant la sortie** : la [[Version 1.3.0]] sur `/download` et la route `/route/token` du [[Serveur de licences]].
-- **Ailleurs sur le site** : `privacy.html` ne parle pas encore de Rago Route ; la carte Lifetime de l'accueil ne le cite pas (la carte Premium a la case « Add Rago Route » depuis le 13/11) ; la phrase d'essai de l'accueil dit encore « charged automatically on day 3 » et « Cancel in two clicks from your account » ([[page.html]]).
-- **En publiant en prod** : retirer du HTML les blocs en attente (cachés à l'écran, leur texte reste lisible dans le code source).
+## Après la sortie (22/11) : ce qui reste
+- **Au plus vite** : test P0-9 et message à Hypixel (voir « Objection n°1 »).
+- **Tests P0-1 à P0-9** (protocoles dans le dossier, partie 6 ; ils ouvrent les blocs cachés de la page) : ping sur Windows avec et sans (P0-1), pertes simulées avec et sans (P0-2), ressenti à l'aveugle (P0-3), vraies coupures (P0-4), téléphone sur Windows (P0-5), Minemen (P0-6), cinq soirées de jeu normal et une vraie capture de l'onglet (P0-7), nouvel export du test réseau par PC et par pays (P0-8), blocage de compte avec 3 à 5 comptes de l'équipe (P0-9, en premier).
+- **Questions ouvertes** ([[Questions ouvertes]]) : q100 (bouton « Get notified on Discord » de l'accueil). q97 traitée le 27/11 (Paris reste la seule sortie tant que les abonnés ne financent pas d'autres serveurs) ; q101 traitée le 27/11 (PR #157) ; q102 à q105 traitées le 27/11 (résiliation sur la page compte, un Premium par e-mail, carte seule et un essai par réseau, titre gardé).
+- **En prod depuis le 22/11** : la [[Version 1.3.0]] sur `/download` et la route `/route/token` du [[Serveur de licences]].
+- **Ailleurs sur le site** : `privacy.html` ne parle pas encore de Rago Route ; la carte Lifetime de l'accueil dit « Rago Route is a separate subscription, also for Lifetime » et le bandeau devient « Already Premium or Lifetime? » (27/11, décision de Sofiene : le Lifetime n'inclut pas Rago Route, q101 et q108 traitées ; la carte Premium a la case « Add Rago Route » depuis le 13/11) ; la phrase d'essai de l'accueil dit « charged automatically on day 3 », « Cancel from the app or from your account page » et « One trial per person, card and network » (27/11) ([[page.html]]).
+- **Blocs en attente** : toujours dans le HTML de prod (cachés à l'écran) ; à retirer ou ouvrir selon les tests. Les blocs en attente (cachés à l'écran, leur texte reste lisible dans le code source).
 - **Pas de mail de rappel** avant le prélèvement de l'essai : seul le mail du début donne la date ; les études du vault en recommandent un ([[Paiements Stripe]]). À décider.
 - **Proposition** : noter dans Stripe si un essai vient de la page Rago Route ou de l'accueil, pour mesurer la page sans traceur.

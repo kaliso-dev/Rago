@@ -62,14 +62,15 @@ s = re.sub(r'(<span class="n-all">)\d+', lambda m: m.group(1) + str(total), s)
 s = re.sub(r'(<b class="n-all">)\d+', lambda m: m.group(1) + str(total), s)
 s = re.sub(r'(<span>)\d+( tweaks</span>)', lambda m: m.group(1) + str(total) + m.group(2), s)  # hero ticker
 s = re.sub(r'(All |unlocks all )\d+( tweaks|<)', lambda m: m.group(1) + str(total) + m.group(2), s)  # comparison table, links, FAQ
-# tweaks open in the free plan, like the app (store.tsx FREE.size: the list of free.json, Restore tools included)
-n_free = len(json.load(open(os.path.join(APP, 'data', 'free.json')))['tweaks'])
+# tweaks open in the free plan: the same count as the Tweaks page (sync_tweaks.py: the free tweaks of its list, Restore tools
+# not counted), "68 free tweaks" everywhere on the site and the account page (Sofiene, q75, 28/11/2026)
+import runpy
+tw = runpy.run_path(os.path.join(HERE, 'sync_tweaks.py'))
+n_free = tw['n_free']
 s = re.sub(r'(<span class="txt">)\d+ of \d+(</span>)', lambda m: f'{m.group(1)}{n_free} of {total}{m.group(2)}', s)
 s = re.sub(r'(<(?:span|b) class="n-free">)\d+', lambda m: m.group(1) + str(n_free), s)
 s = re.sub(r'(Free opens )\d+( tweaks)', lambda m: f'{m.group(1)}{n_free}{m.group(2)}', s)
 s = re.sub(r'(<i style="width:)[\d.]+(%" id="free-bar">)', lambda m: f'{m.group(1)}{round(100 * n_free / total, 1)}{m.group(2)}', s)
 open(p, 'w').write(s)
 print('sections', [m['id'] for m in cat['modules']], 'total', total, 'free', n_free, 'heading', heading)
-# the Tweaks page: same catalog
-import runpy
-runpy.run_path(os.path.join(HERE, 'sync_tweaks.py'))
+# the Tweaks page (same catalog) was re-synced above by sync_tweaks.py
