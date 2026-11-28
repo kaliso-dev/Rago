@@ -701,6 +701,29 @@ details.s-q p{padding:0 0 calc(24 * var(--u));font-size:calc(15.5 * var(--u));li
   .x-pt{padding:clamp(calc(10 * var(--u)),1.6vh,calc(18 * var(--u))) 0 clamp(calc(12 * var(--u)),1.8vh,calc(20 * var(--u)))}
   .x-pt .x-k{margin-bottom:clamp(calc(8 * var(--u)),1.2vh,calc(14 * var(--u)))}
 }
+/* tarifs (v7, Sofiene 28/11 : « refaire les cartes pour donner envie ») : Premium mis en avant (plus large, surélevé,
+   pastille « jours gratuits »), coches et cadenas dessinés à la place des carrés, rassurance à côté du titre */
+.x-plans-hd .x-sh{font-size:clamp(calc(44 * var(--u)),4.6vw,calc(88 * var(--u)));max-width:15ch}
+.v7-plans-side{display:flex;flex-direction:column;align-items:flex-end;gap:calc(18 * var(--u))}
+.v7-reassure{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:calc(8 * var(--u)) calc(22 * var(--u));font-family:var(--cond);font-weight:800;font-size:calc(15 * var(--u));letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2)}
+.v7-reassure li{display:flex;align-items:center;gap:calc(8 * var(--u))}
+.v7-reassure svg{width:calc(17 * var(--u));height:calc(17 * var(--u));color:var(--red)}
+.v7-reassure b{color:var(--ink)}
+@media (min-width:1081px){
+  .x-plans-c{grid-template-columns:minmax(0,1fr) minmax(0,1.14fr) minmax(0,1fr);align-items:stretch;padding-top:calc(28 * var(--u))}
+  .x-pc.red{margin-top:calc(-28 * var(--u));padding-top:clamp(calc(36 * var(--u)),3vw,calc(52 * var(--u)));padding-bottom:clamp(calc(36 * var(--u)),3vw,calc(52 * var(--u)))}
+}
+.x-pc.red .x-pc-bg{box-shadow:0 calc(40 * var(--u)) calc(110 * var(--u)) calc(-20 * var(--u)) rgba(255,59,48,.45),0 0 0 1px rgba(255,255,255,.12) inset}
+.x-pc.red .x-pc-pr b{font-size:clamp(calc(60 * var(--u)),5.4vw,calc(100 * var(--u)))}
+.v7-sticker{position:absolute;right:clamp(calc(20 * var(--u)),2vw,calc(32 * var(--u)));top:clamp(calc(64 * var(--u)),6vw,calc(100 * var(--u)));display:grid;place-items:center;width:clamp(calc(92 * var(--u)),7.4vw,calc(124 * var(--u)));aspect-ratio:1;border-radius:50%;background:var(--paper);color:var(--bg);font-family:var(--cond);font-weight:900;font-style:italic;font-size:clamp(calc(17 * var(--u)),1.35vw,calc(22 * var(--u)));line-height:.95;text-align:center;text-transform:uppercase;transform:rotate(-12deg);box-shadow:0 calc(14 * var(--u)) calc(30 * var(--u)) calc(-10 * var(--u)) rgba(0,0,0,.5)}
+.v7-sticker b{display:block;font-size:2.1em;line-height:.8}
+.x-pc.red .x-addon em{color:var(--bg);opacity:.85}
+.x-pc.red .x-pc-dots{display:none}
+.x-pc-f li::after{width:calc(16 * var(--u));height:calc(16 * var(--u));margin-top:2px;transform:none;-webkit-mask:var(--v7-ck) center/contain no-repeat;mask:var(--v7-ck) center/contain no-repeat}
+.x-pc-f li.lk::after{box-shadow:none;background:currentColor;-webkit-mask-image:var(--v7-lk);mask-image:var(--v7-lk)}
+.x-pc.paper .x-pc-f li:not(.lk)::after{background:var(--red)}
+.x-plans{--v7-ck:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3.6 12.8L9.2 18.2L20.6 6' fill='none' stroke='%23000' stroke-width='3.6'/%3E%3C/svg%3E");--v7-lk:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 10.4H20V22H4Z'/%3E%3Cpath d='M7.6 10.8V7.6A4.4 4.4 0 0 1 16.4 7.6V10.8' fill='none' stroke='%23000' stroke-width='2.8'/%3E%3C/svg%3E")}
+@media (max-width:1080px){.v7-plans-side{align-items:flex-start}.v7-reassure{justify-content:flex-start}}
 /* benchmark « Measured, not promised. » (chiffres provisoires, voir le commentaire dans la section) */
 .v7-bench{max-width:calc(1100 * var(--u));margin:clamp(calc(30 * var(--u)),4vw,calc(56 * var(--u))) 0 0;border-radius:var(--x-r,calc(22 * var(--u)));background:var(--bg-2);box-shadow:inset 0 0 0 1px var(--line-2);overflow:hidden}
 .v7-bench table{width:100%;border-collapse:collapse}
@@ -986,7 +1009,10 @@ details.s-q p{padding:0 0 calc(24 * var(--u));font-size:calc(15.5 * var(--u));li
   <div class="x-wrap">
     <div class="x-plans-hd" id="pricing">
       <h2 class="x-h x-sh" data-x="chars">Start free. <span class="r">Unlock everything</span> with Premium.</h2>
-      <div class="s-bill" id="billing" role="group" aria-label="Billing" data-x="up"><button type="button" data-v="month">Monthly</button><button type="button" data-v="year" class="on">Yearly</button></div>
+      <div class="v7-plans-side" data-x="up">
+        <ul class="v7-reassure"><li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg><span><b class="js-td">3</b> days of Premium free</span></li><li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Cancel in two clicks</li><li><svg class="i" aria-hidden="true"><use href="#i-check"/></svg>Secure checkout with Stripe</li></ul>
+        <div class="s-bill" id="billing" role="group" aria-label="Billing"><button type="button" data-v="month">Monthly</button><button type="button" data-v="year" class="on">Yearly</button></div>
+      </div>
     </div>
     <div class="x-plans-c" data-x-own>
       <article class="x-pc paper">
@@ -1003,7 +1029,7 @@ details.s-q p{padding:0 0 calc(24 * var(--u));font-size:calc(15.5 * var(--u));li
         <p class="x-pc-k"><i></i>Recommended</p>
         <div class="x-pc-dots" aria-hidden="true"></div>
         <h3 class="x-pc-t">Premium</h3>
-        <div class="x-pc-pr"><b id="p-amt">$2.50</b><span id="p-per">/ month</span></div><p class="bil" id="p-note">Billed $29.99 yearly. 6 months free.</p>
+        <div class="x-pc-pr"><b id="p-amt">$2.50</b><span id="p-per">/ month</span></div><p class="bil" id="p-note">Billed $29.99 yearly. 6 months free.</p><p class="v7-sticker" aria-hidden="true"><b class="js-td">3</b> days free</p>
         <ul class="x-pc-f"><li><span><b>All <span class="n-all">218</span> tweaks</b>, with RBW Mod, Game mode and Expert mode</span></li><li><span>Packet Optimizer for hitreg and knockback, tuned to your line</span></li><li><span><b><span class="n-presets">20</span> presets</b>, 15 made for a game: Valorant, Fortnite, CS2…</span></li><li><span>Optimize and play: your preset applied, then your game starts</span></li><li><span>21 tweaks to switch mid-match from the in-game bar</span></li><li><span>No limit on the tweaks you keep on</span></li><li><span>Every new tweak and preset from future versions</span></li><li><span>The Premium role on Discord</span></li><li class="dim"><span>One license, one PC.</span></li></ul>
         <label class="s-addon x-addon" for="with-route"><input type="checkbox" id="with-route" class="sr-only"><i class="cb" aria-hidden="true"><svg class="i" aria-hidden="true"><use href="#i-check"/></svg></i><span><b>Add Rago Route<em id="addon-pr">+$17.99/year</em></b><small>The anti-lag tunnel for Minecraft, in beta: two roads for every packet. Included in the free trial. <a href="route.html">What it does</a></small></span></label>
         <div class="x-pc-cta"><a class="x-btn ink js-trial" href="/buy?interval=month&amp;trial=1"><span class="x-fl"></span><svg class="i" aria-hidden="true"><use href="#i-zap"/></svg><span class="x-bl">Start 3-day free trial</span></a>
@@ -1650,6 +1676,7 @@ const REF = (() => {
     // after the trial, monthly only (2026-11-10): the trial always starts on the monthly plan, the toggle sets "buy now"
     $$(".js-trial").forEach(a => a.href = acct(`${CONFIG.checkoutPath}?interval=month&trial=1${rq}${tail}`));
     $$(".js-route-only").forEach(a => a.href = acct(CONFIG.routePath));
+    $$(".js-td").forEach(e => e.textContent = CONFIG.trialDays);
     const tn = $("#trial-note"), d = CONFIG.trialDays;
     if (tn) tn.textContent = `Card required. Free for ${d} days${rt ? ", Rago Route included" : ""}, then the monthly plan at ${fmt(CONFIG.priceMonth)} a month${rt ? ` and Rago Route at ${ro} a month` : ""}, charged automatically on day ${d} unless you cancel before. Cancel in two clicks from your account. One trial per person.`;
     setLife();
