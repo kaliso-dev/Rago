@@ -3,7 +3,7 @@ type: code
 tags: [code, serveur, tests]
 fichier: licensing/test/
 lignes: 4179
-maj: 2026-11-12
+maj: 2026-11-27
 ---
 # Tests du serveur
 
@@ -19,7 +19,8 @@ Les tests automatiques du serveur de comptes et licences : `npm test` dans `lice
 | `community.test.js` | 419 | 11 | [[community.js]] et [[gateway.js]] |
 | `network.test.js` | 193 | 5 | [[network.js]] et [[geo.js]] |
 | `sales.test.js` | 106 | 4 | [[sales.js]] |
-| `brain.test.js` | 325 | 8 | [[brain.js]], routes du [[Cerveau du vault]] |
+| `brain.test.js` | 347 | 8 | [[brain.js]], routes du [[Cerveau du vault]] |
+| `brain-files.test.js` | 210 | 5 | [[brain-files.js]], routes de l'explorateur Rago Design (27/11) |
 | `mmdb.js` | 86 | — | Outil : `writeMmdb(entries, type)` écrit un petit fichier MaxMind (arbre IPv6, enregistrements de 24 bits) pour simuler DB-IP |
 
 
@@ -49,6 +50,7 @@ Les tests automatiques du serveur de comptes et licences : `npm test` dans `lice
 - **`network.test.js`** : faux DB-IP (fichiers gzip écrits avec `mmdb.js`) ; rapport gardé avec ville et fournisseur mais jamais l'IP, contrôle de ce que l'app envoie, limite par adresse, sans base de villes, page `/admin/reseau`, CSV, suppression après 12 mois.
 - **`sales.test.js`** : remboursements et échecs, revenu mensuel ; jours et mois qui commencent à minuit à Paris (été et hiver) ; lecture unique puis cache et relecture en arrière-plan ; paiements en $US convertis par Stripe comptés en € (PR #84).
 - **`brain.test.js`** (PR #85 du Cerveau) : petit écrivain d'archives tar comme celles de GitHub, faux GitHub (`fetchImpl`). Tests : markdown échappé (aucun `<script>`, `onerror` ni `javascript:`) ; tableaux, listes, cases, encadrés, en-têtes ; graphe (liens, liens cassés, fichiers cités, phrase de contexte) ; archive avec noms longs ; lecture GitHub (une archive par commit, cache d'une minute, panne, dépôt privé sans jeton, jeton envoyé, branche absente) ; vault réel lu sur le disque ; plusieurs cerveaux (une archive par dépôt, cerveau RAGO-OS lu dans son dépôt, fichiers pris dans le bon dépôt, `CERVEAUX`, cerveau vide) ; routes protégées, page sans code en ligne, `ETag` et 304, gzip, fichier hors liste en 404, sélecteur et `?c=rago-os` gardé par cookie (12/11).
+- **`brain-files.test.js`** (27/11) : faux GitHub (arborescence et blobs envoyés en plusieurs morceaux, compte des appels). Tests : cache LRU borné et types envoyés, `CERVEAUX` avec `fichiers` ; arborescence sans contenu (pas de `.env`, pas de dossiers), un appel par fichier puis le cache, fichier de plus de 8 Mo relu en flux, plus de 25 Mo jamais téléchargé ; « Ajoute rago-design au jeton CERVEAU_GITHUB_TOKEN » sans jeton et avec un jeton sans accès, panne réseau ; routes derrière la clé admin (rien demandé à GitHub avant), page sans code en ligne avec les 5 cerveaux, `ETag` et 304, PNG avec CSP `sandbox` et cache d'un an, SVG, `.html` en `text/plain`, police en téléchargement, 413, 404 hors arborescence, jamais d'archive complète, cerveaux graphe intacts.
 
 ## Intégration continue
 

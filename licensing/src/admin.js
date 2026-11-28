@@ -18,7 +18,8 @@ import { createSales } from './sales.js';
 import { deleteAccount } from './support.js';
 import * as AV from './admin-views.js';
 import { BrainError, createBrain } from './brain.js';
-import { brainPage } from './brain-views.js';
+import { brainPage, explorerPage } from './brain-views.js';
+import { contentType, createExplorer, MAX_FILE } from './brain-files.js';
 
 const DAY = 86400000;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -695,7 +696,61 @@ export function mountAdmin(app, deps) {
     if (c.req.query('c')) {
       setCookie(c, BRAIN_COOKIE, b.id, { ...cookieOpts, maxAge: 365 * 24 * 3600 });
     }
-    return c.html(brainPage(cfg, { brains: brain.brains, current: b }));
+    return c.html((b.kind === 'files' ? explorerPage : brainPage)(cfg, { brains: brain.brains, current: b }));
+  });
+
+  // File explorer brains (Rago Design, 27/11, brain-files.js): the tree from the GitHub API, each file only when asked.
+  const explorers = new Map();
+  const explorerOf = (c) => {
+    const b = chosenBrain(c);
+    if (b.kind !== 'files') return null;
+    if (!explorers.has(b.id)) explorers.set(b.id, createExplorer({ repo: b.repo, branch: b.branch, dir: b.dir, token: cfg.brainToken }, { fetchImpl, log }));
+    return explorers.get(b.id);
+  };
+  app.get('/admin/cerveau/arbre.json', async (c) => {
+    const x = explorerOf(c);
+    if (!x) return c.json({ error: 'Ce cerveau n’est pas un explorateur de fichiers.' }, 404);
+    const fresh = c.req.query('frais') === '1' && allow(`cerveau:${ip(c)}`, 60, 60 * 60 * 1000);
+    let t;
+    try { t = await x.tree({ fresh }); } catch (err) {
+      if (err instanceof BrainError) return c.json({ error: err.message }, 503);
+      throw err;
+    }
+    c.header('Cache-Control', 'private, no-cache');
+    const etag = `"arbre-${t.sha.slice(0, 20)}-${t.files.length}"`;
+    c.header('ETag', etag);
+    if (x.error) c.header('X-Cerveau-Erreur', encodeURIComponent(x.error));
+    if (c.req.header('if-none-match') === etag) return c.body(null, 304);
+    return c.json({ ...t, maxFile: MAX_FILE });
+  });
+  // One file of the explorer, streamed (never more than MAX_FILE). Its blob sha in ?v= lets the browser keep it a year.
+  app.get('/admin/cerveau/brut', async (c) => {
+    const x = explorerOf(c);
+    if (!x) return c.json({ error: 'Ce cerveau n’est pas un explorateur de fichiers.' }, 404);
+    const path = String(c.req.query('chemin') || '');
+    let got;
+    try { got = await x.open(path); } catch (err) {
+      if (err instanceof BrainError) return c.json({ error: err.message }, 503);
+      throw err;
+    }
+    if (!got) return c.json({ error: 'Ce fichier n’est pas dans le dépôt.' }, 404);
+    const { file, body } = got;
+    if (!body) return c.json({ error: `Fichier trop gros pour être ouvert ici (plus de ${MAX_FILE / 1048576} Mo) : ouvre-le sur GitHub.`, github: true }, 413);
+    const etag = `"${file.b}"`;
+    const name = path.slice(path.lastIndexOf('/') + 1);
+    const type = contentType(path);
+    const headers = {
+      'Content-Type': type,
+      'Cache-Control': c.req.query('v') === file.b ? 'private, max-age=31536000, immutable' : 'private, max-age=60',
+      ETag: etag,
+      'Content-Length': String(file.s),
+      'Content-Disposition': `${type === 'application/octet-stream' ? 'attachment' : 'inline'}; filename*=UTF-8''${encodeURIComponent(name)}`,
+    };
+    if (c.req.header('if-none-match') === etag) {
+      if (body.cancel) body.cancel().catch(() => {});
+      return c.body(null, 304, { ETag: etag, 'Cache-Control': headers['Cache-Control'] });
+    }
+    return c.body(body, 200, headers);
   });
   app.get('/admin/cerveau/donnees.json', async (c) => {
     // ?frais=1 (the page's refresh button) looks at GitHub now instead of within the minute.

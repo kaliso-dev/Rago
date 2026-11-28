@@ -2,8 +2,8 @@
 type: code
 tags: [code, serveur, javascript, admin, vault]
 fichier: licensing/src/brain-views.js
-lignes: 115
-maj: 2026-11-22
+lignes: 174
+maj: 2026-11-27
 ---
 # brain-views.js
 
@@ -13,11 +13,12 @@ La page HTML du [[Cerveau du vault]] (`GET /admin/cerveau`) : une application pl
 
 ## Ce que le fichier expose
 - `brainPage(cfg, { brains, current })` → le document HTML complet, en français (`lang="fr"`), `noindex`. `cfg.envName` est posé en `data-env` (prod ou staging). `current` = le cerveau ouvert (`{ id, name }`) : son nom est dans le titre de l'onglet et sous « Cerveau », et `data-src` / `data-file` portent `?c=<id>`.
+- `explorerPage(cfg, { brains, current })` (27/11) → la page d'un cerveau explorateur de fichiers (Rago Design) : même cadre (logo, menu des cerveaux, colonne `cv-side`, tiroir sur téléphone), filtre `#dx-filter`, arborescence `#dx-tree`, pied `#dx-sync` et ↻ `#dx-refresh` ; à droite la barre `.dx-bar` (menu, fil d'Ariane `#dx-crumbs`, boutons Vignettes / Liste `data-mode`, lien GitHub `#dx-gh`) et le contenu `#dx-body`. Racine `#dx` avec `data-tree`, `data-raw`, `data-brain`, `data-repo`, `data-branch`, `data-name`. Script : `/assets/cerveau-fichiers.js` ([[cerveau-fichiers.js]]). Icônes `grid`, `list`, `ext` ajoutées.
 - `switcher(brains, current)` (interne) : le menu déroulant `details#cv-brains.cv-brains` (marche sans JavaScript) : `summary` « Cerveau » + nom du cerveau ouvert + chevron, puis la liste `.cv-brains-menu`, un lien `/admin/cerveau?c=<id>` par cerveau (nom et dépôt), celui ouvert avec `aria-current="page"` et une coche ; rien s'il n'y a qu'un cerveau. Icônes `chevron` et `check` ajoutées.
 
 ## Fonctionnement détaillé
 - **Mêmes règles que tout `/admin`** : CSP stricte, donc **aucun script ni style en ligne** ; tout le comportement est dans `/assets/cerveau.js` (chargé en `defer`) et tout le style dans `/assets/tokens.css` et `/assets/cerveau.css`. Les icônes sont des SVG en ligne (tracés seulement). Le HTML est construit avec le gabarit `html` de [[views.js]], qui échappe les valeurs.
-- `ASSETS = '20261122a'` : ajouté aux adresses de `cerveau.css` et `cerveau.js` (`?v=`). **À changer à chaque modification de ces deux fichiers**, sinon les navigateurs gardent l'ancienne version.
+- `ASSETS = '20261127a'` (27/11) : ajouté aux adresses de `cerveau.css`, `cerveau.js` et `cerveau-fichiers.js` (`?v=`). **À changer à chaque modification de ces deux fichiers**, sinon les navigateurs gardent l'ancienne version.
 - Polices Geist et Geist Mono préchargées (la toile garde Geist pour ses étiquettes, Sofiene, 22/11 : la toile reste celle du vrai Cerveau), `tokens.css?v=5` (le cadre passe en Barlow v5), icône du site `?v=5`, couleur de thème `#070708`. `MARK` = l'icône v5 (R rouge sur tuile blanche) depuis le 22/11.
 - Structure (identifiants utilisés par [[cerveau.js]]) :
   - `#cv` (racine, `data-src`, `data-file`, `data-brain`, `data-env`) ; case cachée `#cv-nav` qui ouvre le tiroir sur téléphone (sans JavaScript, par `<label for>`).
@@ -28,7 +29,7 @@ La page HTML du [[Cerveau du vault]] (`GET /admin/cerveau`) : une application pl
   - `<noscript>` : « Le Cerveau a besoin de JavaScript pour dessiner le graphe. »
 
 ## Liens avec le reste
-Appelé par [[admin.js (serveur)]] pour `GET /admin/cerveau`. Le lien du menu est dans [[admin-views.js]] (section « Projet »). Styles : [[cerveau.css]].
+Appelé par [[admin.js (serveur)]] pour `GET /admin/cerveau` (`explorerPage` quand le cerveau a `kind: 'files'`). Le lien du menu est dans [[admin-views.js]] (section « Projet »). Styles : [[cerveau.css]].
 
 ## Tests
 `brain.test.js` vérifie que la page n'a ni `<script>` sans `src`, ni attribut `style=`, ni `on…=` ([[Tests du serveur]]).

@@ -2,8 +2,8 @@
 type: code
 tags: [code, serveur, javascript, admin]
 fichier: licensing/src/admin.js
-lignes: 733
-maj: 2026-11-12
+lignes: 788
+maj: 2026-11-27
 ---
 # admin.js (serveur)
 
@@ -44,9 +44,11 @@ Ajouté le 10/11/2026 (PR #77), refait le même jour (PR #82), retouché par la 
 | POST `/admin/code-promo` | Code `^[A-Z0-9-]{2,40}$`, 1 à 99 %, `once` ou `forever` ; coupon `rago-promo-<pct>-<durée>`, code réservé aux premiers achats ; audit `admin.promo_code`. |
 | POST `/admin/test-licenses` | `endTestLicenses` ([[billing.js]]) puis `discord.syncAll()` ; audit `admin.test_licenses_ended` ; relit les services (pour que la liste des licences de test disparaisse) et renvoie vers `/admin/services?n=test-ended&count=<n>`. |
 | GET `/admin/reseau`, `/admin/reseau.csv` | [[network.js]] sur 30, 90 (défaut) ou 365 jours ; CSV `rago-tests-reseau-<date>.csv`. |
-| GET `/admin/cerveau` | La page du [[Cerveau du vault]] ([[brain-views.js]]). `?c=<id>` choisit le cerveau (`rago`, `rago-os`) et le garde dans le cookie `rago_cerveau` (un an, mêmes options que le cookie admin) ; sans `?c=`, le cookie, sinon le premier cerveau. Les deux routes suivantes suivent la même règle. |
+| GET `/admin/cerveau` | La page du [[Cerveau du vault]] ([[brain-views.js]]). `?c=<id>` choisit le cerveau (`rago`, `rago-os`, `rago-client`, `rago-minecraft`, `rago-design` ; pour un explorateur, la page `explorerPage`) et le garde dans le cookie `rago_cerveau` (un an, mêmes options que le cookie admin) ; sans `?c=`, le cookie, sinon le premier cerveau. Les deux routes suivantes suivent la même règle. |
 | GET `/admin/cerveau/donnees.json` | Tout le vault en graphe ([[brain.js]] `read()`) ; `?frais=1` relit GitHub tout de suite (60 fois par heure et par IP, clé `cerveau:<ip>`) ; `Cache-Control: private, no-cache`, `ETag` et réponse 304, gzip si le navigateur l'accepte, en-tête `X-Cerveau-Erreur` quand la dernière lecture a échoué ; 503 `{error}` si rien n'a pu être lu. |
 | GET `/admin/cerveau/fichier?chemin=` | Un fichier du dépôt ([[brain.js]] `file()`), 404 s'il n'est pas dans la liste. |
+| GET `/admin/cerveau/arbre.json` (27/11) | Cerveau explorateur (`kind: 'files'`, Rago Design) : l'arborescence ([[brain-files.js]] `tree()`) + `maxFile` ; `?frais=1` (même limite que `donnees.json`) ; `Cache-Control: private, no-cache`, `ETag`, 304, `X-Cerveau-Erreur` ; 503 `{error}` (ex. « Ajoute rago-design au jeton CERVEAU_GITHUB_TOKEN ») ; 404 si le cerveau n'est pas un explorateur. Un explorateur par cerveau, créé au premier appel avec `cfg.brainToken`. |
+| GET `/admin/cerveau/brut?chemin=&v=` (27/11) | Un fichier de l'explorateur, envoyé en flux ([[brain-files.js]] `open()`) : `Content-Type` de `contentType`, `Content-Length`, `ETag` = empreinte du blob (304), `Cache-Control: private, max-age=31536000, immutable` si `v` = l'empreinte (sinon `max-age=60`), `Content-Disposition` `inline` (ou `attachment` pour un type inconnu) ; 413 au-delà de 25 Mo, 404 hors arborescence, 503 si GitHub refuse. |
 
 Menu de chaque page (`navFor`) : nombre de joueurs, achats non rattachés, état global des services.
 

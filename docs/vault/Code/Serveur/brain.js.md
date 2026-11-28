@@ -2,8 +2,8 @@
 type: code
 tags: [code, serveur, javascript, admin, vault]
 fichier: licensing/src/brain.js
-lignes: 765
-maj: 2026-11-25
+lignes: 790
+maj: 2026-11-27
 ---
 # brain.js
 
@@ -30,9 +30,9 @@ Le côté serveur du [[Cerveau du vault]] : lit le dépôt (sur GitHub, ou sur l
 | `renderMarkdown(src, ctx)` | Markdown → HTML (voir plus bas). |
 | `inline(src, ctx)` | La mise en forme dans une ligne. |
 | `buildVault(notes, files, meta)` | Toutes les données de la page (voir plus bas). `meta.vault` = dossier du cerveau (`docs/vault/` par défaut), `meta.brain`, `meta.brains`. |
-| `DEFAULT_BRAINS` | Les cerveaux par défaut : `rago` (« Rago Optimizer », `docs/vault/` du dépôt `CERVEAU_REPO`, branche `CERVEAU_BRANCH`) `rago-os` (« RAGO-OS », `docs/vault/` de `kaliso-dev/RAGO-OS-`, branche `main`), `rago-client` (« Rago Client », `docs/vault/` de `kaliso-dev/Rago-Client`) et `rago-minecraft` (« Serveur Minecraft Rago », `docs/vault/` de `kaliso-dev/network-server-rago`), ces deux derniers sur la branche par défaut de leur dépôt (25/11). |
-| `parseBrains(texte)` | Lit `CERVEAUX` (`id|Nom|dossier|dépôt|branche;…`) ; id en minuscules, chiffres et tirets, dossier sans `..` ; liste vide ou invalide → `DEFAULT_BRAINS`. |
-| `createBrain(cfg, { fetchImpl, log })` | `{ source, repo, branch, brains, pick(id), read({ fresh, id }), error(id), file(chemin, id) }`. Un id inconnu donne le premier cerveau. |
+| `DEFAULT_BRAINS` | Les cerveaux par défaut : `rago` (« Rago Optimizer », `docs/vault/` du dépôt `CERVEAU_REPO`, branche `CERVEAU_BRANCH`) `rago-os` (« RAGO-OS », `docs/vault/` de `kaliso-dev/RAGO-OS-`, branche `main`), `rago-client` (« Rago Client », `docs/vault/` de `kaliso-dev/Rago-Client`) et `rago-minecraft` (« Serveur Minecraft Rago », `docs/vault/` de `kaliso-dev/network-server-rago`), ces deux derniers sur la branche par défaut de leur dépôt (25/11), et `rago-design` (« Rago Design », `kaliso-dev/rago-design`, branche `main`, `kind: 'files'` : explorateur de fichiers, voir [[brain-files.js]], 27/11). |
+| `parseBrains(texte)` | Lit `CERVEAUX` (`id|Nom|dossier|dépôt|branche|fichiers;…`) ; id en minuscules, chiffres et tirets, dossier sans `..` ; 6ᵉ champ `fichiers` (ou `files`) = explorateur (`kind: 'files'`, dossier `/` = tout le dépôt, `dir: ''`) ; liste vide ou invalide → `DEFAULT_BRAINS`. |
+| `createBrain(cfg, { fetchImpl, log })` | `{ source, repo, branch, brains, pick(id), read({ fresh, id }), error(id), file(chemin, id) }`. Un id inconnu donne le premier cerveau. `brains` donne `{ id, name, repo, kind? }`. Les cerveaux `kind: 'files'` n'ont **pas de source** (aucune archive) : `read` et `file` refusent avec « … est un explorateur de fichiers, pas un vault » (503 côté route), `error` donne `null` ; ils sont servis par [[brain-files.js]] (27/11). |
 
 Constantes : `VAULT = 'docs/vault/'` (vault Rago), `CHECK_EVERY = 60 s` (au plus une lecture de GitHub par minute), `MAX_TARBALL = 120 Mo` (archive refusée au-delà), `MAX_TEXT = 600 Ko` (fichier listé mais pas gardé au-delà : type `big`).
 
