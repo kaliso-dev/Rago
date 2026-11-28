@@ -93,7 +93,8 @@ export function loadConfig(env = process.env) {
     portalLoginUrl: (env.STRIPE_PORTAL_LOGIN_URL || '').trim(),
     // Price shown on the free dashboard: "$5.99 a month or $29.99 a year" (same amounts as Stripe and the site). Empty = no price shown.
     priceLabel: env.PRICE_LABEL || '',
-    freeTweaks: Number(env.FREE_TWEAKS || 11),
+    // "68 free tweaks" on the account page, like the site (Sofiene, q75, 28/11/2026).
+    freeTweaks: Number(env.FREE_TWEAKS || 68),
     premiumTweaks: Number(env.PREMIUM_TWEAKS || 198),
 
     cancelUrl: env.CHECKOUT_CANCEL_URL || `${asUrl(env.SITE_URL) || publicUrl}/#pricing`,

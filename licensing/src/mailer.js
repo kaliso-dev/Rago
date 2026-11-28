@@ -96,21 +96,26 @@ ${lines.map(([k, v], i) => `<tr><td style="padding:12px 18px;color:#8E8E98;font-
         ? 'Thanks for getting Rago Optimizer Premium. Create your account to get your license and download Rago Optimizer for Windows. If you already have an account with this email, just sign in.'
         : 'Thanks for getting Rago Optimizer Premium. Your license is on your account: download Rago Optimizer for Windows, sign in with the same email and click Activate.';
       const href = claimUrl || `${cfg.publicUrl}/account`;
-      const discord = cfg.supportUrl
-        ? 'Premium players get the Premium role on our Discord: join the server, open a ticket and give the email of your Rago Optimizer account. Staff check your license and add the role.'
-        : '';
+      // Discord Pro role (q84, 28/11/2026): with the role bot set up (cfg.discord), the player links Discord from the
+      // account page and the bot gives the role by itself. Without the bot, staff still add it from a ticket.
+      const accountUrl = `${cfg.publicUrl}/account`;
+      const discord = cfg.discord
+        ? { text: 'Premium players get the Premium role on our Discord. Link your Discord from your account page: the role is added automatically.', url: accountUrl, label: 'Link your Discord' }
+        : cfg.supportUrl
+          ? { text: 'Premium players get the Premium role on our Discord: join the server, open a ticket and give the email of your Rago Optimizer account. Staff check your license and add the role.', url: cfg.supportUrl, label: 'Join the Discord' }
+          : null;
       const html = `<p style="${P}">${esc(intro)}</p>
 ${table}${button(href, claimUrl ? 'Create your account' : 'Open your account')}
 ${claimUrl ? `<p style="${SMALL}">This link only works for your purchase. Keep it private.</p>` : ''}
 <p style="${SMALL}">${esc(waiver)}${cancelHtml} <a href="${esc(cfg.siteUrl)}/terms.html" style="${LINK}">Terms of Sale</a> &middot; <a href="${esc(cfg.siteUrl)}/terms.html#cancel" style="${LINK}">Cancellation</a></p>
-${discord ? `<p style="${SMALL}">${esc(discord)} <a href="${esc(cfg.supportUrl)}" style="${LINK}">Join the Discord</a></p>` : ''}`;
+${discord ? `<p style="${SMALL}">${esc(discord.text)} <a href="${esc(discord.url)}" style="${LINK}">${esc(discord.label)}</a></p>` : ''}`;
       const text = [
         `${trial ? 'Free trial started' : 'Payment confirmed'}. ${intro}`,
         ...lines.map(([k, v]) => `${k}: ${v}`),
         `${claimUrl ? 'Create your account' : 'Your account'}: ${href}`,
         `${waiver}${cancelText}`,
         `Terms: ${cfg.siteUrl}/terms.html  Cancellation: ${cfg.siteUrl}/terms.html#cancel`,
-        ...(discord ? [`${discord} ${cfg.supportUrl}`] : []),
+        ...(discord ? [`${discord.text} ${discord.label}: ${discord.url}`] : []),
       ].join('\n');
       return send(to, trial ? `Your ${trial.days}-day free trial of Rago Optimizer Premium` : 'Your Rago Optimizer Premium license', layout(cfg, trial ? 'Free trial started' : 'Payment confirmed', html), text);
     },
