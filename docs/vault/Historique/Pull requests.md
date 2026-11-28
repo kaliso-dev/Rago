@@ -185,6 +185,7 @@ Liste de **toutes les pull requests** du dépôt `kaliso-dev/rago`, de la #1 (08
 | 168 | Cerveau : explorateur « Rago Design » (prod, portage de la #167) | `claude/cerveau-rago-design-explorer-prod-7m3b9m` → prod | 28/11 | 28/11 | fusionnée (`2b8a471`) | Partie `licensing/` de la #167 seule (11 fichiers, sans #157 ni #159) ; 120 tests réussis | HUB-36ae53 |
 | 173 | Prod : e-mail d'achat « Link your Discord » (q84) + `FREE_TWEAKS` = 68 par défaut (q75) | `claude/rago-prod-mail-discord-28-11` → prod | 28/11 | 28/11 | fusionnée | [[mailer.js]], [[config.js]] seuls, sans rien d'autre de `staging` | fil HUB-8a2cf4 |
 | 174 | Site + serveur : décisions du 28/11 (q75, q77, q79, q82, q83, q84) | `claude/rago-decisions-28-11-jd9kyh` → `staging` | 28/11 | 28/11 | fusionnée | [[sync_app.py]], [[page.html]], [[mailer.js]], [[config.js]], [[app.js]], [[netlify.toml]], [[Fichiers de la racine du dépôt]] | fil HUB-8a2cf4 |
+| 176 | Site v7 « fonctionnel » : premier jet (part de la #136, brouillon) | `claude/rago-site-functional-clean-ug9dj8` → `staging` | 28/11 | — | **brouillon**, ouverte | [[page.html]], [[v5.js]] ; contient aussi les commits de la #136 | fil HUB-5284af |
 
 ## Ce qui est arrivé sur `staging` sans PR
 Certains fils ont poussé leurs commits directement sur `staging`, après un accord de Sofiene dans le fil (CONFIRMÉ par `git branch -r --contains`) :

@@ -32,11 +32,28 @@ Statut : EN COURS. Rien n'est sorti pour les joueurs, sauf l'admin et les e-mail
 | 24/11 | Accueil v6 suite : globe dessiné en SVG, toute la démo Rago Route dans une section (PR #136) | **PR ouverte**, aperçu Netlify `deploy-preview-136--rago-optimiser.netlify.app` |
 | 25/11 | Détail des réglages au clic sur une icône info, grilles sans vide (PR #137) ; premier test Windows de Sofiene et ses retours corrigés (PR #139) | CONFIRMÉ (git), dans `staging` |
 
+| 28/11 | Site v7 « fonctionnel » (premier jet, voir plus bas) : PR #176 en brouillon, partie de la #136 | **PR brouillon**, à comparer avec la #136 ; rien de décidé |
 ## Où en est chaque brique (25/11)
 - **App** : [[Version 1.4.1]] dans `staging`, toutes les pages et fenêtres refaites sur les maquettes. Dernier exe de test : `rago-optimizer-setup-STAGING` du run `app-windows` 45641885291 (25/11, 16 h 17 à Paris). Un seul test Windows (25/11) ; pas publiée.
 - **Site** : pages v5 et accueil v6 dans `staging` ; l'accueil du 24/11 attend la PR #136 ; refaire les autres pages en v6 : À VÉRIFIER (rien de décidé au-delà de l'accueil). En prod, le site est encore celui de la 1.3.0 ([[Site]]).
 - **Pages compte et bot** : v5 dans `staging`, v1.2 en prod ([[Serveur de licences]], [[Bot communauté Discord]]).
 - **Admin, Cerveau, e-mails** : v5 en prod et dans `staging` ([[Tableau de bord admin]], [[Cerveau du vault]]).
+
+
+## Premier jet v7 « fonctionnel » (28/11, note de travail)
+Demande de Sofiene (28/11) : l'ancien site ressemblait à n'importe quel SaaS, et le nouveau est « trop trop décoratif et pas assez fonctionnel », avec une information qui ne passe que par des cartes. Il faut des sections plus classiques et épurées, moins d'animations, en gardant la charte v5. Rien n'est décidé tant que Sofiene n'a pas validé.
+- **PR #176** (brouillon, vers `staging`, branche `claude/rago-site-functional-clean-ug9dj8`, partie de la tête de la #136 `acecac5`). La #136 reste intacte pour comparer. Aperçu Netlify : `deploy-preview-176--rago-optimiser.netlify.app` (À VÉRIFIER qu'il s'est construit).
+- **Gardé exactement** (consigne de Sofiene) : l'animation du R qui se dessine et se remplit ; le globe dessiné avec les flux vers Frankfurt et Paris ; le bloc « Four steps / Your next match / starts here. », avec toute son animation au défilement (précision de Sofiene du 28/11). Ce bloc est déplacé en fin de page et remplace la bannière « Tune your PC once ».
+- **Retiré** : le chargement (dix jaquettes), la roue « Every hit takes a trip », le paquet de cartes « Why your hits don't register », les bandeaux qui défilent, les pastilles du titre « What's new » et la bande des lanceurs, l'épinglage de la barre en jeu et de la liste des jeux, l'arc de la communauté, la bulle qui suit la souris, le défilement lissé à la molette et la barre de défilement maison. Ce dernier point passe par le mode `data-calm` de [[v5.js]].
+- **Nouveaux formats** :
+  - liste à icônes « What Rago does » ;
+  - les 10 sections de l'app en lignes, par le CSS seulement ([[sync_app.py]] n'a pas changé) ;
+  - blocs texte + écran de l'app alternés (les écrans dessinés de la v5) ;
+  - tableau Gratuit / Premium ouvert ;
+  - jeux en étiquettes.
+  Nouvel ordre : héros, ce que fait Rago, délai du coup, réglages, dans l'app, barre en jeu, tarifs, comparatif, Rago Route, jeux et chiffres, avis, communauté, FAQ, bloc final.
+- **Inchangées** : la page Rago Route, la page Tweaks, les avis, les partenaires et les pages légales, déjà en mise en page v5 classique sans les animations v6.
+- **À réconcilier** : la PR #174 (68 réglages gratuits, étoiles Google, retrait de `launch-gate`) est dans `staging`. Avant toute fusion, il faut fusionner `staging` dans la branche de la #176 puis relancer `sync_app.py` et `build.py`.
 
 ## Ce qui reste
 1. Sofiene teste l'exe de test sur Windows et répond à q121 (barre en jeu) ([[Questions ouvertes]]).
