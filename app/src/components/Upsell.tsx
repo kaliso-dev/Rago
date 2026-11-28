@@ -3,7 +3,7 @@ import { api } from "../lib/api";
 import { accountApi, formatPrice, type Plans } from "../lib/accountApi";
 import { findings, saved } from "../lib/analysis";
 import { catalog, totalTweaks, tweaks } from "../lib/catalog";
-import { FREE, FREE_REVERTS, FREE_SLOTS, useStore } from "../lib/store";
+import { FREE_COUNT, FREE_REVERTS, FREE_SLOTS, useStore } from "../lib/store";
 import type { Key } from "../lib/i18n";
 import { ACCOUNT_URL, LicenseGate, SITE_URL } from "./LicenseGate";
 import { Modal } from "./Modal";
@@ -19,7 +19,7 @@ export function Upsell() {
   const { t, lang, upsell, upsellTweak, setUpsell } = useStore();
   const close = () => setUpsell(null);
   const open = upsell === "tweak" || upsell === "preset" || upsell === "plan" || upsell === "slots" || upsell === "analysis";
-  const vars = { n: FREE.size, total: totalTweaks };
+  const vars = { n: FREE_COUNT, total: totalTweaks };
   const tw = upsell === "tweak" && upsellTweak ? tweaks.get(upsellTweak) : undefined;
   const slots = upsell === "slots";
 
@@ -85,7 +85,7 @@ export function Upsell() {
       ? { big: FREE_SLOTS, of: FREE_SLOTS, label: t("upsell.sideSlots"), sub: t("upsell.sideSlotsSub") }
       : upsell === "preset"
         ? { big: catalog.presets.length, of: 0, label: t("upsell.sidePresets"), sub: t("upsell.sidePresetsSub") }
-        : { big: totalTweaks, of: 0, label: t("upsell.sideTweaks"), sub: t("upsell.sideFree", { n: FREE.size }) };
+        : { big: totalTweaks, of: 0, label: t("upsell.sideTweaks"), sub: t("upsell.sideFree", { n: FREE_COUNT }) };
   // valeur d'un point trouvé, écrite comme sur la page Analyse : « 141 fps », « 38 j » en français, textes traduits
   const shown = (v: string) => {
     if (v.startsWith("pa.")) return t(v as Key);

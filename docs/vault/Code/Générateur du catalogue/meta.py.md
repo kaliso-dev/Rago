@@ -2,8 +2,8 @@
 type: code
 tags: [code, app, catalogue, générateur, python]
 fichier: app/tools/meta.py
-lignes: 791
-maj: 2026-11-10
+lignes: 795
+maj: 2026-11-28
 ---
 # meta.py
 
@@ -58,7 +58,7 @@ Presets : `mc_pvp` (15 réglages), `esport` (16), `laptop` (10), `privacy` (9). 
 Le fichier ne fait que construire des structures de données Python à l'import. [[build_catalog.py]] parcourt `MODULES` dans l'ordre : l'ordre des sections et des réglages ici est l'ordre d'affichage final pour les réglages de l'ancien programme (les sections v6 sont insérées **devant**, préfixées `v6_`).
 
 ## Erreurs et cas limites
-- **Réglages de carte graphique sans `requires`** (OBSERVÉ, 10/11) : `nv_preemption`, `nv_advanced`, `nv_kboost` (section NVIDIA) et `amd_advanced` (section AMD), tous `advanced`, n'ont pas de `requires` alors que les autres réglages de leur section ont `gpu:nvidia` ou `gpu:amd`. Comme le `requires` de la section n'est pas lu, l'app ne les grise pas sur un PC sans carte NVIDIA ou AMD. **À VÉRIFIER** avec Sofiene : oubli (ajouter `requires=['gpu:nvidia']` / `['gpu:amd']` ici, puis `npm run catalog`) ou choix voulu.
+- **Tous les réglages des sections NVIDIA et AMD ont leur `requires`** depuis le 28/11 (q73, décision de Sofiene : les griser comme les autres) : `nv_preemption`, `nv_advanced`, `nv_kboost` ont reçu `requires=['gpu:nvidia']` et `amd_advanced` `requires=['gpu:amd']` (PR #172). Le `requires` de la section n'étant lu par aucun code, un réglage de carte graphique ajouté ici **doit** porter son propre `requires`, sinon l'app ne le grise pas sur un PC sans la bonne carte. Restent sans `requires` : `nv_tdr` et `amd_thermal`, retirés du catalogue par [[safety.py]].
 - Un `label@ligne` faux fait échouer `LegacyBat.find` (`assert`) dans [[extract_bat.py]].
 - Un id en double, un `REF` ou un réglage de preset vers un id inconnu fait échouer [[build_catalog.py]].
 

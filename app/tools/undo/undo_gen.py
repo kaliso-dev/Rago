@@ -13,7 +13,7 @@ import os
 import re
 import sys
 
-sys.dont_write_bytecode = True  # ne rien écrire dans app/rago-hub/tools
+sys.dont_write_bytecode = True  # ne rien écrire dans app/tools
 W = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, W)
 # tools/probes.py de l'app (mêmes découpages de lignes, de boucles et de conditions que les relevés)
@@ -1010,8 +1010,8 @@ META = {'_': {'full': None, 'rest': None, 'lisez_moi': [
     "l'état d'origine (valeurs de pilote, bornes d'alimentation…) ; full n'y touche pas.",
     "retour : variante « retour » du catalogue, rien à annuler.",
     "Scripts au format .bat (CRLF, % doublés), à lancer en administrateur comme les réglages. Redémarrer le PC après.",
-    "Généré par audit/outils-annulation/undo_gen.py depuis scripts.json : à relancer après chaque changement des scripts "
-    "(DROP_LINES, SUB_LINES…) : python3 audit/outils-annulation/undo_gen.py <scripts.json> <catalog.json> <sortie.json>",
+    "Généré par app/tools/undo/undo_gen.py depuis scripts.json, relancé à chaque `npm run catalog` (build_catalog_v6.py) ; "
+    "à la main : python3 tools/undo/undo_gen.py <scripts.json> <catalog.json> <sortie.json>",
 ]}}
 
 

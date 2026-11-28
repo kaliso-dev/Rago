@@ -28,17 +28,11 @@ Posées le 25/11 par les fils des autres projets (serveur Minecraft, voir leur v
 
 Au 10/11, après les réponses de Sofiene du jour (q36 à q68 traitées, q46 le 10/11 à 15 h, voir [[Décisions]]) :
 
-Posées le 10/11 au soir (q70 à q93 ; q87 à q93 traitées le 28/11, voir [[Décisions]]), après la relecture complète du code pour le vault détaillé (dossier `Code/`) :
-- q73 : 4 réglages de carte graphique jamais grisés ([[meta.py]]).
-- q74 : provenance et licence de NVIDIA Profile Inspector ([[Configuration Tauri]]).
-- q75 : 73 ou 68 réglages gratuits affichés ; `FREE_TWEAKS` sur Railway ([[sync_tweaks.py]], [[config.js]]).
+Posées le 10/11 au soir (q70 à q93 ; q87 à q93 traitées le 28/11 ; q73, q74, q75, q82, q83 et q85 décidées le 28/11, voir [[Décisions]]), après la relecture complète du code pour le vault détaillé (dossier `Code/`) :
 - q76 : réglée le 22/11 sans réponse nécessaire : la nouvelle image de partage v5 dit « 218 tweaks » (PR #109, [[Kit de marque (brand)]]).
 - q77 : étoiles Google des avis perdues (RAG-33, [[page.html]]).
 - q79 : retirer la protection d'avant lancement ([[launch-gate.js]]).
-- q82 : supprimer les fichiers qui ne servent plus ([[recherche-conversion (site)]], [[fix_free_bat.py]]…). Pour [[LicenseGate.tsx]], le mode plein écran jamais monté est retiré le 24/11 avec la refonte des fenêtres sur les maquettes v5 (PR #131).
-- q83 : textes en retard dans le code (README, `FREE_TWEAKS`, commentaires).
 - q84 : l'e-mail d'achat renvoie vers un ticket Discord même avec le bot ([[mailer.js]]).
-- q85 : un jeu retiré de la bibliothèque ne peut plus être réaffiché ([[Games.tsx]]).
 
 Posées le 11/11 (q78 traitée le même jour : Sofiene a demandé la page de vente, voir [[Page de vente Rago Route]]) :
 - q100 : le bouton « Get notified on Discord » de l'encart Rago Route de l'accueil devient « Try 3 days free », disparaît ou reste ? (dans le code de prod de la 1.3.0, il est caché par l'attribut `hidden` ; CONFIRMÉ, 27/11) ([[page.html]])

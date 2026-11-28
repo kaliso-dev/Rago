@@ -603,6 +603,19 @@ fn game_remove(state: State<'_, AppState>, id: String) {
     state.library.remove(&id);
 }
 
+/// Jeux retirés de la bibliothèque (masqués), pour les réafficher un par un (q85, 28/11).
+#[tauri::command]
+async fn games_hidden(state: State<'_, AppState>) -> Result<Vec<games::Game>, String> {
+    let lib = Arc::clone(&state.library);
+    tauri::async_runtime::spawn_blocking(move || lib.hidden()).await.map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn game_unhide(state: State<'_, AppState>, id: String) -> Result<(), String> {
+    let lib = Arc::clone(&state.library);
+    tauri::async_runtime::spawn_blocking(move || lib.unhide(&id)).await.map_err(|e| e.to_string())
+}
+
 #[tauri::command]
 async fn games_unhide(state: State<'_, AppState>) -> Result<(), String> {
     let lib = Arc::clone(&state.library);
@@ -700,7 +713,7 @@ fn show_report(state: State<'_, AppState>, name: String) -> Result<(), String> {
     std::process::Command::new("explorer.exe").arg(format!("/select,{}", path.display())).spawn().map(|_| ()).map_err(|e| e.to_string())
 }
 
-/// Fichier de preset partagé (.rago) : le code RAGO1-… en texte, 64 Ko au plus.
+/// Fichier de preset partagé (.rago) : le code RAGO2_… en texte (depuis la 1.2.0, voir share.ts), 64 Ko au plus.
 const PRESET_FILE_MAX: u64 = 64 * 1024;
 
 fn preset_path(path: &str) -> Result<PathBuf, String> {
@@ -1473,6 +1486,8 @@ pub fn run() {
             game_add,
             game_remove,
             games_unhide,
+            games_hidden,
+            game_unhide,
             update_ready,
             update_status,
             update_install,

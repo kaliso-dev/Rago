@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import { api } from "../lib/api";
 import { formatNumber } from "../lib/i18n";
 import { totalTweaks } from "../lib/catalog";
-import { FREE, itemName, useStore } from "../lib/store";
+import { FREE_COUNT, itemName, useStore } from "../lib/store";
 import { findings, saved } from "../lib/analysis";
 import { I } from "../s5/I";
 import logo from "../assets/s5/img/rago-app-dark-128.svg";
@@ -191,7 +191,7 @@ export function RunOverlay() {
                             }}
                           >
                             <I n="sparkles" />
-                            {premiumLeft > 0 ? t("pa.premiumLeft", { n: premiumLeft }) : t("done.upsell", { n: totalTweaks - FREE.size })}
+                            {premiumLeft > 0 ? t("pa.premiumLeft", { n: premiumLeft }) : t("done.upsell", { n: totalTweaks - FREE_COUNT })}
                             <I n="right" />
                           </button>
                         )}

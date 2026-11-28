@@ -99,6 +99,7 @@ Coupe le HDCP, la protection anticopie des vidéos, sur la carte graphique NVIDI
 Coupe la préemption : le GPU finit sa tâche en cours avant de passer à une autre, au lieu de s'interrompre.
 - Gain : Effet rarement mesurable en jeu.
 - Inconvénient : L'affichage peut saccader si une autre appli charge le GPU, et la projection sans fil (Miracast) peut ne plus marcher.
+- Nécessite : `gpu:nvidia`
 
 ### DPC sur chaque cœur `nv_dpc` 🔒 🔁
 Laisse le pilote NVIDIA traiter ses petites tâches urgentes sur tous les cœurs du processeur au lieu d'un seul.
@@ -134,6 +135,7 @@ Supprime les fichiers d'installation NVIDIA restés dans le dossier C:\NVIDIA. L
 Une quarantaine de réglages internes du pilote NVIDIA et de l'alimentation, avec la télémétrie NVIDIA et Miracast coupés.
 - Gain : Effet rarement mesurable : la plupart de ces réglages ne sont pas documentés.
 - Inconvénient : La projection sans fil (Miracast) peut ne plus marcher.
+- Nécessite : `gpu:nvidia`
 
 ### PowerMizer en performance `nv_powermizer` 🔒 🔁
 Règle la gestion d'énergie NVIDIA (PowerMizer) sur performance maximale.
@@ -151,6 +153,7 @@ Raccourcit des délais internes du pilote NVIDIA avant ses passages en économie
 Bloque la carte graphique NVIDIA à sa fréquence maximale en permanence, même au bureau.
 - Gain : Peut éviter de petites baisses de fréquence en jeu ; sur portable, peut viser la puce intégrée à la place.
 - Inconvénient : Plus de chaleur, de bruit, de consommation et d'usure, même quand tu ne joues pas.
+- Nécessite : `gpu:nvidia`
 
 ## AMD
 
@@ -194,6 +197,7 @@ Désactive le service de journaux du pilote AMD.
 Pack AMD avancé : économies d'énergie coupées, GPU forcé en haute fréquence, Chill coupé, Anti-Lag activé et réglages 3D.
 - Gain : Anti-Lag peut réduire l'input lag quand le GPU est à 100 % ; le reste a un effet rarement mesurable.
 - Inconvénient : Plus de chaleur, de bruit et de conso ; overlay Radeon coupé, synchro verticale forcée sur off (risque de déchirement).
+- Nécessite : `gpu:amd`
 
 ## Intel
 

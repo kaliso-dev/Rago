@@ -2,7 +2,7 @@
 type: technique
 tags: [technique, app, architecture]
 version_app: 1.3.0
-maj: 2026-11-25
+maj: 2026-11-28
 ---
 # Architecture de l'app
 
@@ -50,7 +50,7 @@ Fermeture de la fenêtre principale : cachée si une remise est en cours ou si l
 - Réglages : `run_tweaks`, `cancel_run`, `is_running`, `get_history`, `clear_history`, `get_applied`, `undo_all_plan`, `sign_out_plan`, `take_repair_notice`, `minecraft_status`, `minecraft_restore`, `save_preset_file`, `read_preset_file`.
 - Graphismes des jeux ([[gamecfg.rs]]) : `graphics_status`, `graphics_apply`, `graphics_restore`.
 - Réseau : `net_test`, `netopt_state`, `netopt_run`, `route_start`, `route_stop`, `route_status`, `route_token`, `route_links` (2e connexions possibles et diagnostic du partage de connexion du téléphone).
-- Jeux : `games_list`, `game_art`, `game_launch`, `game_add`, `game_remove`, `games_unhide`, `launchers_list`, `launcher_launch`, `launcher_icon`, `preset_icons`.
+- Jeux : `games_list`, `game_art`, `game_launch`, `game_add`, `game_remove`, `games_hidden`, `game_unhide`, `games_unhide`, `launchers_list`, `launcher_launch`, `launcher_icon`, `preset_icons`.
 - Couleurs et résolution : `display_info`, `display_profiles`, `display_state`, `display_set_profile` (refus `premium:no_license` pour l'import d'un pro sans Premium), `display_preview`.
 - Barre en jeu et arrière-plan : `overlay_info`, `overlay_live`, `overlay_close`, `overlay_set_pin`, `overlay_open_app`, `background_get`, `background_set`, `session_state`, `session_set_prefs`, `tips_done`, `tips_mark` (réglages conseillés cochés, [[tips.rs]]).
 - Mise à jour : `update_ready`, `update_status`, `update_install`.

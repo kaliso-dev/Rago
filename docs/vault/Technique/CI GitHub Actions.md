@@ -31,7 +31,7 @@ Les trois workflows de `.github/workflows/`. Secrets et variables : [[Variables 
   6. **Tests du moteur** : `cargo test --manifest-path src-tauri/Cargo.toml`.
   7. `tauri-apps/tauri-action@v0` : `npm run build` + `cargo build --release` + NSIS, avec `RAGO_SCRIPTS_SECRET`, `TAURI_SIGNING_PRIVATE_KEY(_PASSWORD)`, `VITE_SUPPORT_URL`. Sur un tag `app-v*` de prod : brouillon de release.
   8. Artefact **`rago-optimizer-setup`** (prod) ou **`rago-optimizer-setup-STAGING`** : le `.exe` et son `.exe.sig`. Durée de conservation non fixée dans le fichier : celle du dépôt (90 jours par défaut chez GitHub, À VÉRIFIER dans les réglages).
-- Durée (runs réussis depuis le 04/11, API GitHub) : **≈ 7,7 min en médiane**, 5 à 13 min (jusqu'à 28 sans cache). Le fichier `app/ci/build-windows.yml` est une ancienne copie, **pas** le workflow actif.
+- Durée (runs réussis depuis le 04/11, API GitHub) : **≈ 7,7 min en médiane**, 5 à 13 min (jusqu'à 28 sans cache).
 - Sur la branche de prod, le fichier a les mêmes déclencheurs mais pas les étapes « Mises à jour signées » et PresentMon, ni l'entrée `version` : sans effet pratique, les exe se fabriquent depuis `staging`, une PR ou à la main. Détail complet : [[app-windows.yml]].
 
 ## `licensing-tests.yml` : teste le serveur

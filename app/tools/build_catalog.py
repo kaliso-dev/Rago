@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Génère le catalogue de Rago Hub à partir du .bat legacy et de meta.py.
+"""Première étape du catalogue : l'ancien programme (.bat legacy v5.2) et meta.py.
 
-    python3 tools/build_catalog.py
+Lancé par tools/build_catalog_v6.py (`npm run catalog`), qui ajoute ensuite les réglages v6 et écrit les fichiers
+finaux ; ne pas le lancer seul.
 
-Sorties :
+Sorties intermédiaires (réécrites par build_catalog_v6.py) :
   src/data/catalog.json          ce que l'interface affiche (sans les scripts)
   src-tauri/scripts/scripts.json les scripts batch, embarqués dans le binaire Rust
   docs/CORRECTIONS.md            la liste des corrections appliquées au .bat (les sections écrites à la main, sous la

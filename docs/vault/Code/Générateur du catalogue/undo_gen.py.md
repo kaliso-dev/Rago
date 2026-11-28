@@ -3,7 +3,7 @@ type: code
 tags: [code, app, catalogue, générateur, python, annulation]
 fichier: app/tools/undo/undo_gen.py
 lignes: 1023
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # undo_gen.py
 
@@ -22,7 +22,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, 10/11). Créé le 07/10 (comm
 ## Ce que le fichier expose
 **Ligne de commande** : `python3 undo_gen.py <scripts.json> <catalog.json> <sortie.json>`. La sortie contient une entrée `_meta` (texte `lisez_moi`) puis `{id: {variante: entrée}}`, `indent=1`. Affiche ensuite le journal `LOG` (commandes non reconnues, par catégorie).
 
-**Variable d'environnement** `RAGO_TOOLS` : dossier où trouver [[probes.py]] (par défaut `app/tools`, le dossier parent). `sys.dont_write_bytecode = True` (le commentaire cite encore l'ancien chemin `app/rago-hub/tools`).
+**Variable d'environnement** `RAGO_TOOLS` : dossier où trouver [[probes.py]] (par défaut `app/tools`, le dossier parent). `sys.dont_write_bytecode = True` (commentaire : « ne rien écrire dans app/tools », corrigé le 28/11).
 
 **Entrée produite par `main`** pour une variante :
 | Champ | Sens |
@@ -99,5 +99,5 @@ Pas de test Python. Tests Rust de [[catalog.rs]] : `retired_tweaks_cannot_run` (
 
 ## À savoir avant de modifier
 - Un nouveau réglage qui écrit dans le registre a besoin d'une règle dans [[defaults.py]] ; sinon son annulation `full` ne remet rien (valeur « non répertoriée »).
-- Le texte `META` (`lisez_moi`) parle encore d'`audit/outils-annulation/undo_gen.py` et d'une commande hors dépôt : il n'arrive pas dans `undo.json` (le build ne garde que `full`, `rest`, `rest_avant`), mais il est faux pour le dépôt actuel.
+- Le texte `META` (`lisez_moi`) donne le chemin `app/tools/undo/undo_gen.py`, relancé à chaque `npm run catalog`, et la commande à la main (corrigé le 28/11, q83) ; il n'arrive pas dans `undo.json` (le build ne garde que `full`, `rest`, `rest_avant`).
 - Une commande PowerShell nouvelle et réversible doit recevoir un traitement dans `h_powershell`, sinon elle n'a pas d'inverse.

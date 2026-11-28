@@ -3,7 +3,7 @@ type: code
 tags: [code, app, typescript, react]
 fichier: app/src/components/RunOverlay.tsx
 lignes: 265
-maj: 2026-11-25
+maj: 2026-11-28
 ---
 # RunOverlay.tsx
 
@@ -38,7 +38,7 @@ Tout ce qui suit est CONFIRMÉ (code de `staging`, PR #130 fusionnée le 23/11).
   - « Redémarre ton PC pour que tout prenne effet. » : si le lot demande un redémarrage et que quelque chose a changé ; après « stop », seulement si un élément qui le demande est allé au bout ;
   - « Optimiser et jouer » : « {jeu} va démarrer… », « {jeu} démarre. » ou « {jeu} n'a pas pu démarrer. Lance-le depuis la page Jeux. » (état `playing` du store) ;
   - si une analyse du PC existe et qu'au moins un élément est passé : pastille `button.up2` « mesurer la différence » (`pa.measureDiff`) → ferme et ouvre [[Analysis.tsx]] ;
-  - en gratuit (connecté, pas arrêté) : pastille d'offre `button.up2.prem` (icône `sparkles`). Si l'analyse a trouvé des points réglés par Premium : `pa.premiumLeft` → offre `analysis` ; sinon « Premium ouvre {n} réglages de plus, dont le preset Minecraft PvP. » avec `n` = `totalTweaks − FREE.size` (218 − 73 = 145 en 1.3.0) → offre `plan` ([[Upsell.tsx]]).
+  - en gratuit (connecté, pas arrêté) : pastille d'offre `button.up2.prem` (icône `sparkles`). Si l'analyse a trouvé des points réglés par Premium : `pa.premiumLeft` → offre `analysis` ; sinon « Premium ouvre {n} réglages de plus, dont le preset Minecraft PvP. » avec `n` = `totalTweaks − FREE_COUNT` (218 − 68 = 150 depuis le 28/11, q75 ; 218 − 73 = 145 dans la 1.3.0 en prod) → offre `plan` ([[Upsell.tsx]]).
 - Boutons de fin (`div.ra`) : « restart now » (`btn red lg`, `api.restartPc()`) si redémarrage, et « close » (`setRun(null)`, discret `gh2` à côté du bouton rouge).
 
 ### Partie droite

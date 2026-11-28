@@ -3,7 +3,7 @@ type: code
 tags: [code, app, catalogue, source, batch]
 fichier: app/legacy/
 lignes: 19477
-maj: 2026-11-10
+maj: 2026-11-28
 ---
 # Anciens scripts .bat
 
@@ -21,7 +21,7 @@ Tout ce qui suit est CONFIRMÉ (fichiers de `staging`, 10/11). Les commandes ell
 Les trois fichiers v6 ont été écrits pour l'app et envoyés par Sofiene le 06/10/2026 ; ils sont lus par [[build_catalog_v6.py]]. Tous sont entrés dans le dépôt le 07/10 (commit `6c2bcad`). Tous sont en fins de ligne CRLF.
 
 ## Premium v5.2 en détail
-- **Encodage** : UTF-8 précédé d'un **faux BOM UTF-16** (`FF FE`), posé par l'auteur pour qu'un éditeur affiche le fichier comme du charabia. [[extract_bat.py]] et [[fix_free_bat.py]] le retirent ou le gardent selon le besoin. La ligne 21 dit encore `Set Version=5.1`.
+- **Encodage** : UTF-8 précédé d'un **faux BOM UTF-16** (`FF FE`), posé par l'auteur pour qu'un éditeur affiche le fichier comme du charabia. [[extract_bat.py]] le retire. La ligne 21 dit encore `Set Version=5.1`.
 - **En-tête** (l. 1-258) : message « Thanks for your Purchase ! » par une bulle PowerShell, recherche de la carte réseau active (`adapter_name`, par `wmic`), vérification des droits administrateur, écran d'avertissement, activation des points de restauration (labels `RP` l. 205 et `restore` l. 230, repris comme réglages `rst_point` et `rst_open`).
 - **Menu principal** (`:menu`, l. 259) puis un sous-menu par option ; 372 labels en tout (310 noms distincts, certains répétés), 41 invites `set /p input` :
   | Choix | Label (ligne) | Contenu | Devenu dans l'app |

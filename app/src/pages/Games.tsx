@@ -119,6 +119,10 @@ export function Games() {
   const [picker, setPicker] = useState<Entry | null>(null);
   const [art, setArt] = useState<Record<string, string | null>>({});
   const [asking, setAsking] = useState(false);
+  /** jeux retirés de la bibliothèque, réaffichables un par un (Sofiene, 28/11, q85) */
+  const [hidden, setHidden] = useState<Game[]>([]);
+  const [showHidden, setShowHidden] = useState(false);
+  const loadHidden = () => api.gamesHidden().then(setHidden, () => setHidden([]));
   /** couleurs et résolution réglées par jeu (page Display) */
   const [display, setDisplay] = useState<Record<string, DisplayProfile>>({});
   const [screen, setScreen] = useState<DisplayInfo | null>(null);
@@ -131,6 +135,7 @@ export function Games() {
     setScanning(true);
     try {
       setGames(await api.gamesList(refresh));
+      void loadHidden();
     } catch {
       setGames((g) => g ?? []);
     } finally {
@@ -254,7 +259,16 @@ export function Games() {
     setAsking(false);
     setPick(null);
     setGames((list) => list?.filter((x) => !ids.includes(x.id)) ?? list);
+    void loadHidden();
   };
+  const unhide = async (id: string) => {
+    await api.gameUnhide(id).catch(() => {});
+    const rest = hidden.filter((g) => g.id !== id);
+    setHidden(rest);
+    if (!rest.length) setShowHidden(false);
+    await load(false);
+  };
+  const hiddenName = (g: Game) => displayName(g.client ? `${g.name} (${g.client})` : g.name);
   const openLauncher = (g: Game) => void api.launcherLaunch(launcherId(g)).catch(() => {});
   const launcherName = (g: Entry) => (g.via ? (g.via.client ?? "Minecraft") : g.launcher === "manual" ? t("games.manual") : (LAUNCHERS[g.launcher] ?? g.launcher));
   const mine = (g: Entry) => (g.clients ?? [g]).some((x) => x.id === playing?.id);
@@ -590,6 +604,31 @@ export function Games() {
             })}
           </section>
         </>
+      )}
+
+      {games != null && hidden.length > 0 && (
+        <section className={`hidg${showHidden ? " open" : ""}`}>
+          <button type="button" className="tg" aria-expanded={showHidden} onClick={() => setShowHidden((v) => !v)}>
+            <I n="eye" />
+            {showHidden ? t("s5.games.hiddenClose") : t("s5.games.hiddenShow", { n: hidden.length })}
+          </button>
+          {showHidden && (
+            <div className="panel hl">
+              {hidden.map((g) => (
+                <div className="hr" key={g.id}>
+                  <div>
+                    <b>{hiddenName(g)}</b>
+                    <span className="sub">{LAUNCHERS[g.launcher] ?? g.launcher}</span>
+                  </div>
+                  <button type="button" className="btn sm" onClick={() => void unhide(g.id)}>
+                    <I n="plus" />
+                    {t("s5.games.unhide")}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       )}
 
       {picker && (
